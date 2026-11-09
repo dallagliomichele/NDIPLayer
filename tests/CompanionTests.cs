@@ -35,6 +35,7 @@ static class CompanionTests {
     check(SpinWait.SpinUntil(()=>server.Messages.Count==baseline+2,3000)&&server.Messages.ToArray().Last()=="EMPTY","stringa vuoto parte dopo clear completato");
     playout.Cue(frame,0,"C.png");check(SpinWait.SpinUntil(()=>server.Messages.Count==baseline+3,3000),"nuova prima foto dopo clear genera nuovo evento");
     playout.Cue(new byte[1024],0);check(SpinWait.SpinUntil(()=>server.Messages.Count==baseline+4,3000),"clear in cut genera subito evento vuoto");
+    playout.Cue(frame,0,"D.png");SpinWait.SpinUntil(()=>server.Messages.Count==baseline+5,3000);bool stopped=playout.StopTransparent();check(stopped&&tcp.Flush(1500)&&SpinWait.SpinUntil(()=>server.Messages.Count==baseline+6,1500)&&server.Messages.ToArray().Last()=="EMPTY","arresto trasparente invia notifica Companion vuoto prima della chiusura");
    }
    var settings=new Settings{EscClearMs=1400,FadeMs=300,Companion=config};string project=Path.Combine(dir,"show.ndiproj");ProjectStore.Write(project,settings);var loaded=ProjectStore.Read(project);check(loaded.EscClearMs==1400&&loaded.FadeMs==300&&loaded.Companion.Port==server.Port&&loaded.Companion.OnAirCommand=="FIRST è"&&loaded.Companion.Enabled,"progetto conserva durata Esc separata e configurazione Companion");
    string guiPrefs=Path.Combine(dir,"gui.json");File.WriteAllText(guiPrefs,new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(new Settings{OutputWidth=16,OutputHeight=16,Companion=config}));int guiBaseline=server.Messages.Count;

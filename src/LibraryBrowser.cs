@@ -19,12 +19,15 @@ public sealed class LibraryBrowser:UserControl {
  readonly Dictionary<string,int> cache=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
  readonly HashSet<string> requested=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
  readonly Queue<string> order=new Queue<string>();
+ readonly ContextMenuStrip imageMenu=new ContextMenuStrip{Name="ImageContextMenu"};bool contextOutside;
+ Dictionary<string,string> numbers=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
  List<string> paths=new List<string>(); ImageList images; int generation;
  CancellationTokenSource cancellation; BlockingCollection<string> queue;
  public event EventHandler SelectionChanged;
  public event EventHandler ImageDoubleClicked;
  public event EventHandler PreferencesChanged;
  public event EventHandler<LibraryDropEventArgs> DropRequested;
+ public event EventHandler<LibraryContextEventArgs> ContextRequested;
  readonly HashSet<string> onAir=new HashSet<string>(StringComparer.OrdinalIgnoreCase);bool transitioning;
  public List<string> SelectedPaths {get{var result=new List<string>();foreach(int index in view.SelectedIndices)if(index>=0&&index<paths.Count)result.Add(paths[index]);return result;}}
  public string SelectedPath {get{if(view.SelectedIndices.Count==0)return null;int index=view.FocusedItem!=null&&view.FocusedItem.Selected?view.FocusedItem.Index:view.SelectedIndices[0];return index>=0&&index<paths.Count?paths[index]:null;}}
@@ -37,7 +40,10 @@ public sealed class LibraryBrowser:UserControl {
   bar.Controls.Add(mode);bar.Controls.Add(new Label{Text="Dimensione",AutoSize=true,Margin=new Padding(3,8,0,0)});bar.Controls.Add(size);bar.Controls.Add(sizeLabel);
   bar.Controls.Add(new Label{Text="Clic: seleziona · Doppio clic: manda in onda",AutoSize=true});
   Controls.Add(view);Controls.Add(bar);
-  view.Columns.Add("Immagine",180);view.Columns.Add("Stato",170);view.Columns.Add("Percorso",400);view.View=View.Details;view.FullRowSelect=true;
+  view.Columns.Add("Immagine",180);view.Columns.Add("Numero",75);view.Columns.Add("Stato",170);view.Columns.Add("Percorso",400);view.View=View.Details;view.FullRowSelect=true;
+  view.ContextMenuStrip=imageMenu;
+  view.MouseDown+=delegate(object sender,MouseEventArgs e){if(e.Button!=MouseButtons.Right)return;var hit=view.HitTest(e.Location);contextOutside=hit.Item==null;if(hit.Item==null)return;if(!hit.Item.Selected){view.SelectedIndices.Clear();view.SelectedIndices.Add(hit.Item.Index);}hit.Item.Focused=true;if(SelectionChanged!=null)SelectionChanged(this,EventArgs.Empty);};
+  imageMenu.Opening+=delegate(object sender,System.ComponentModel.CancelEventArgs e){if(contextOutside||SelectedPath==null){contextOutside=false;e.Cancel=true;return;}foreach(ToolStripItem item in imageMenu.Items.Cast<ToolStripItem>().ToArray())item.Dispose();imageMenu.Items.Clear();if(ContextRequested!=null)ContextRequested(this,new LibraryContextEventArgs(imageMenu,SelectedPaths.ToArray(),SelectedPath));e.Cancel=imageMenu.Items.Count==0;};
   view.DrawColumnHeader+=delegate(object sender,DrawListViewColumnHeaderEventArgs e){e.DrawDefault=true;};view.DrawItem+=DrawItem;view.DrawSubItem+=DrawSubItem;
   view.ItemDrag+=delegate{if(SelectedPaths.Count>0)view.DoDragDrop(new DataObject("NDIPlayer.Images",SelectedPaths.ToArray()),DragDropEffects.Copy|DragDropEffects.Move);};
   view.DragEnter+=delegate(object sender,DragEventArgs e){e.Effect=e.Data.GetDataPresent("NDIPlayer.Images")?DragDropEffects.Move:DragDropEffects.None;};
@@ -57,6 +63,9 @@ public sealed class LibraryBrowser:UserControl {
   sizeLabel.Text="128 px";size.Enabled=false;
  }
  public void SetPreferences(bool thumbnails,int pixels){size.Value=Math.Max(64,Math.Min(256,pixels));mode.SelectedIndex=thumbnails?1:0;RebuildCache();}
+ public void SetNumbers(IDictionary<string,string> values){numbers=new Dictionary<string,string>(values,StringComparer.OrdinalIgnoreCase);view.Invalidate();}
+ public string NumberFor(string path){string number;return numbers.TryGetValue(path,out number)?number:"";}
+ public string DisplayLabel(string path){string number=NumberFor(path);return (number.Length>0?"#"+number+" · ":"")+Path.GetFileName(path);}
  public void SelectPaths(IEnumerable<string> selected){var set=new HashSet<string>(selected,StringComparer.OrdinalIgnoreCase);view.SelectedIndices.Clear();for(int i=0;i<paths.Count;i++)if(set.Contains(paths[i]))view.SelectedIndices.Add(i);}
  public string IndicatorsFor(string path){bool selected=SelectedPaths.Contains(path,StringComparer.OrdinalIgnoreCase);string text=(selected?"SELEZIONATA":"")+(onAir.Contains(path)?(selected?" · ":"")+(transitioning?"IN DISSOLVENZA":"IN ONDA"):"");if(!File.Exists(path))text+=(text.Length>0?" · ":"")+"FILE MANCANTE";return text;}
  public void SetOnAir(OnAirStatus status){var incoming=new HashSet<string>(status.Paths,StringComparer.OrdinalIgnoreCase);if(transitioning==status.Transitioning&&onAir.SetEquals(incoming))return;onAir.Clear();onAir.UnionWith(incoming);transitioning=status.Transitioning;view.Invalidate();}
@@ -64,17 +73,17 @@ public sealed class LibraryBrowser:UserControl {
  public void SetFiles(List<string> files){string previous=SelectedPath;view.SelectedIndices.Clear();view.VirtualListSize=0;paths=new List<string>(files);RebuildCache();view.VirtualListSize=paths.Count;int index=previous==null?-1:paths.FindIndex(p=>String.Equals(p,previous,StringComparison.OrdinalIgnoreCase));if(index<0&&paths.Count>0)index=0;if(index>=0){view.SelectedIndices.Add(index);view.EnsureVisible(index);}view.Invalidate();}
  void Retrieve(object sender,RetrieveVirtualItemEventArgs e){
   if(e.ItemIndex<0||e.ItemIndex>=paths.Count){e.Item=new ListViewItem("");return;}
-  string path=paths[e.ItemIndex];var item=new ListViewItem(Path.GetFileName(path));item.SubItems.Add(IndicatorsFor(path));item.SubItems.Add(path);item.ToolTipText=path+(File.Exists(path)?"":" · FILE MANCANTE");
+  string path=paths[e.ItemIndex];var item=new ListViewItem(Path.GetFileName(path));item.SubItems.Add(NumberFor(path));item.SubItems.Add(IndicatorsFor(path));item.SubItems.Add(path);item.ToolTipText=DisplayLabel(path)+"\n"+path+(File.Exists(path)?"":" · FILE MANCANTE");
   if(ThumbnailsEnabled){int index;item.ImageIndex=cache.TryGetValue(path,out index)?index:0;if(item.ImageIndex==0&&queue!=null&&requested.Add(path))queue.Add(path);}
   e.Item=item;
  }
  void DrawItem(object sender,DrawListViewItemEventArgs e){if(view.View==View.Details)return;string path=paths[e.ItemIndex];bool selected=view.SelectedIndices.Contains(e.ItemIndex),live=onAir.Contains(path);using(var background=new SolidBrush(selected?Color.FromArgb(221,241,255):Color.White))e.Graphics.FillRectangle(background,e.Bounds);
   var icon=view.GetItemRect(e.ItemIndex,ItemBoundsPortion.Icon);int index=e.Item.ImageIndex;if(images!=null&&index>=0&&index<images.Images.Count)using(var bitmap=images.Images[index])e.Graphics.DrawImage(bitmap,icon.Left+(icon.Width-size.Value)/2,icon.Top,size.Value,size.Value);
-  var label=new Rectangle(e.Bounds.Left+5,Math.Min(icon.Bottom+1,e.Bounds.Bottom-19),Math.Max(1,e.Bounds.Width-10),18);TextRenderer.DrawText(e.Graphics,e.Item.Text,view.Font,label,File.Exists(path)?Color.Black:Color.Gray,TextFormatFlags.HorizontalCenter|TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine|TextFormatFlags.VerticalCenter|TextFormatFlags.NoPadding);
+  var label=new Rectangle(e.Bounds.Left+5,Math.Min(icon.Bottom+1,e.Bounds.Bottom-19),Math.Max(1,e.Bounds.Width-10),18);TextRenderer.DrawText(e.Graphics,DisplayLabel(path),view.Font,label,File.Exists(path)?Color.Black:Color.Gray,TextFormatFlags.HorizontalCenter|TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine|TextFormatFlags.VerticalCenter|TextFormatFlags.NoPadding);
   if(selected)using(var pen=new Pen(Color.DeepSkyBlue,3))e.Graphics.DrawRectangle(pen,e.Bounds.Left+2,e.Bounds.Top+2,Math.Max(1,e.Bounds.Width-5),Math.Max(1,e.Bounds.Height-5));
   if(live){using(var pen=new Pen(Color.Firebrick,3))e.Graphics.DrawRectangle(pen,e.Bounds.Left+6,e.Bounds.Top+6,Math.Max(1,e.Bounds.Width-13),Math.Max(1,e.Bounds.Height-13));var tag=new Rectangle(e.Bounds.Left+7,e.Bounds.Top+7,Math.Max(1,e.Bounds.Width-14),18);e.Graphics.FillRectangle(Brushes.Firebrick,tag);TextRenderer.DrawText(e.Graphics,transitioning?"DISSOLVENZA":"IN ONDA",view.Font,tag,Color.White,TextFormatFlags.HorizontalCenter|TextFormatFlags.EndEllipsis);}
  }
- void DrawSubItem(object sender,DrawListViewSubItemEventArgs e){if(view.View!=View.Details)return;string path=paths[e.ItemIndex];bool selected=view.SelectedIndices.Contains(e.ItemIndex),live=onAir.Contains(path);using(var brush=new SolidBrush(selected?Color.FromArgb(221,241,255):live?Color.FromArgb(255,230,230):Color.White))e.Graphics.FillRectangle(brush,e.Bounds);string text=e.ColumnIndex==1?IndicatorsFor(path):e.SubItem.Text;TextRenderer.DrawText(e.Graphics,text,view.Font,new Rectangle(e.Bounds.X+5,e.Bounds.Y,e.Bounds.Width-5,e.Bounds.Height),e.ColumnIndex==1&&live?Color.Firebrick:Color.Black,TextFormatFlags.EndEllipsis|TextFormatFlags.VerticalCenter);if(e.ColumnIndex==0){if(live)e.Graphics.FillRectangle(Brushes.Firebrick,e.Bounds.Left,e.Bounds.Top,4,e.Bounds.Height);if(selected)e.Graphics.DrawRectangle(Pens.DeepSkyBlue,e.Bounds.Left+1,e.Bounds.Top,Math.Max(1,e.Bounds.Width-2),Math.Max(1,e.Bounds.Height-1));}}
+ void DrawSubItem(object sender,DrawListViewSubItemEventArgs e){if(view.View!=View.Details)return;string path=paths[e.ItemIndex];bool selected=view.SelectedIndices.Contains(e.ItemIndex),live=onAir.Contains(path);using(var brush=new SolidBrush(selected?Color.FromArgb(221,241,255):live?Color.FromArgb(255,230,230):Color.White))e.Graphics.FillRectangle(brush,e.Bounds);string text=e.ColumnIndex==2?IndicatorsFor(path):e.ColumnIndex==1?NumberFor(path):e.SubItem.Text;TextRenderer.DrawText(e.Graphics,text,view.Font,new Rectangle(e.Bounds.X+5,e.Bounds.Y,e.Bounds.Width-5,e.Bounds.Height),e.ColumnIndex==2&&live?Color.Firebrick:Color.Black,TextFormatFlags.EndEllipsis|TextFormatFlags.VerticalCenter);if(e.ColumnIndex==0){if(live)e.Graphics.FillRectangle(Brushes.Firebrick,e.Bounds.Left,e.Bounds.Top,4,e.Bounds.Height);if(selected)e.Graphics.DrawRectangle(Pens.DeepSkyBlue,e.Bounds.Left+1,e.Bounds.Top,Math.Max(1,e.Bounds.Width-2),Math.Max(1,e.Bounds.Height-1));}}
  void RebuildCache(){
   generation++;CancelWorker();
   cache.Clear();requested.Clear();order.Clear();
@@ -101,7 +110,8 @@ public sealed class LibraryBrowser:UserControl {
   view.Invalidate();
  }
  void CancelWorker(){if(cancellation!=null)try{cancellation.Cancel();}catch(ObjectDisposedException){}}
- protected override void Dispose(bool disposing){if(disposing){generation++;CancelWorker();view.LargeImageList=null;if(images!=null){images.Dispose();images=null;}}base.Dispose(disposing);}
+ protected override void Dispose(bool disposing){if(disposing){generation++;CancelWorker();imageMenu.Dispose();view.LargeImageList=null;if(images!=null){images.Dispose();images=null;}}base.Dispose(disposing);}
 }
 public sealed class LibraryDropEventArgs:EventArgs {public readonly string[] Paths;public readonly string Before;public LibraryDropEventArgs(string[] paths,string before){Paths=paths;Before=before;}}
+public sealed class LibraryContextEventArgs:EventArgs {public readonly ContextMenuStrip Menu;public readonly string[] Paths;public readonly string FocusedPath;public LibraryContextEventArgs(ContextMenuStrip menu,string[] paths,string focused){Menu=menu;Paths=paths;FocusedPath=focused;}}
 }

@@ -17,21 +17,22 @@ public class CompanionSettings {
 public sealed class CompanionTcp:IDisposable {
  sealed class Work {public CompanionSettings Config;public string Command;public bool Test;public long Generation;}
  readonly object gate=new object();readonly BlockingCollection<Work> queue=new BlockingCollection<Work>(32);readonly Thread worker;
- CompanionSettings config=new CompanionSettings();bool stopping;long generation;TcpClient activeClient;
+ CompanionSettings config=new CompanionSettings();bool stopping;long generation;TcpClient activeClient;int pending;
  public volatile string Status="Companion TCP: disabilitato";
  public CompanionTcp(){worker=new Thread(Run){IsBackground=true,Name="Companion TCP"};worker.Start();}
- public void Configure(CompanionSettings value){value.Validate();lock(gate){if(stopping)return;config=value.Copy();generation++;Work discarded;while(queue.TryTake(out discarded)){}if(activeClient!=null)activeClient.Close();Status=config.Enabled?"Companion TCP: abilitato, in attesa di eventi":"Companion TCP: disabilitato";}}
- public void Presence(bool hasImage){lock(gate){if(stopping||!config.Enabled)return;string command=CompanionSettings.Line(hasImage?config.OnAirCommand:config.EmptyCommand);if(command.Length==0)return;if(!queue.TryAdd(new Work{Config=config.Copy(),Command=command,Generation=generation}))Status="Companion TCP: coda piena, evento non inviato";}}
- public void Test(CompanionSettings value){value.Validate();lock(gate){if(stopping)return;Status="Companion TCP: test connessione in corso…";if(!queue.TryAdd(new Work{Config=value.Copy(),Test=true,Generation=generation}))Status="Companion TCP: coda piena";}}
+ public void Configure(CompanionSettings value){value.Validate();lock(gate){if(stopping)return;config=value.Copy();generation++;Work discarded;while(queue.TryTake(out discarded))Interlocked.Decrement(ref pending);if(activeClient!=null)activeClient.Close();Status=config.Enabled?"Companion TCP: abilitato, in attesa di eventi":"Companion TCP: disabilitato";}}
+ public void Presence(bool hasImage){lock(gate){if(stopping||!config.Enabled)return;string command=CompanionSettings.Line(hasImage?config.OnAirCommand:config.EmptyCommand);if(command.Length==0)return;Interlocked.Increment(ref pending);if(!queue.TryAdd(new Work{Config=config.Copy(),Command=command,Generation=generation})){Interlocked.Decrement(ref pending);Status="Companion TCP: coda piena, evento non inviato";}}}
+ public void Test(CompanionSettings value){value.Validate();lock(gate){if(stopping)return;Status="Companion TCP: test connessione in corso…";Interlocked.Increment(ref pending);if(!queue.TryAdd(new Work{Config=value.Copy(),Test=true,Generation=generation})){Interlocked.Decrement(ref pending);Status="Companion TCP: coda piena";}}}
  void Run(){foreach(var work in queue.GetConsumingEnumerable()){
-  lock(gate){if(stopping)break;if(work.Generation!=generation)continue;}
+  lock(gate){if(stopping){Interlocked.Decrement(ref pending);break;}if(work.Generation!=generation){Interlocked.Decrement(ref pending);continue;}}
   try{IPAddress address=IPAddress.Parse(work.Config.Address);using(var client=new TcpClient(address.AddressFamily)){client.NoDelay=true;client.SendTimeout=1000;lock(gate){if(stopping||work.Generation!=generation)continue;activeClient=client;}
    var connect=client.BeginConnect(address,work.Config.Port,null,null);try{if(!connect.AsyncWaitHandle.WaitOne(1000))throw new TimeoutException("Connessione TCP scaduta");client.EndConnect(connect);}finally{connect.AsyncWaitHandle.Close();}
    if(!work.Test){byte[] data=Encoding.UTF8.GetBytes(work.Command+"\n");using(var stream=client.GetStream()){stream.Write(data,0,data.Length);stream.Flush();client.Client.Shutdown(SocketShutdown.Send);}}
    lock(gate)if(work.Generation==generation&&!stopping)Status=work.Test?"Companion TCP: porta raggiungibile (nessun comando inviato)":"Companion TCP: stringa inviata "+DateTime.Now.ToString("HH:mm:ss");
   }}catch(Exception e){lock(gate)if(!stopping&&work.Generation==generation)Status="Companion TCP: ERRORE · "+e.Message;}
-  finally{lock(gate){activeClient=null;}}
+  finally{lock(gate){activeClient=null;}Interlocked.Decrement(ref pending);}
  }}
+ public bool Flush(int timeoutMilliseconds){return SpinWait.SpinUntil(()=>Volatile.Read(ref pending)==0,timeoutMilliseconds);}
  public void Dispose(){lock(gate){if(stopping)return;stopping=true;generation++;if(activeClient!=null)activeClient.Close();queue.CompleteAdding();}worker.Join();queue.Dispose();}
 }
 public sealed class ProgramPresenceEventArgs:EventArgs {public readonly bool HasImage;public ProgramPresenceEventArgs(bool hasImage){HasImage=hasImage;}}

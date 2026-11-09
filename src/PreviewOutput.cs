@@ -29,7 +29,7 @@ public partial class MainWindow {
   if(previewW%2!=0)throw new ArgumentException("La larghezza deve essere pari.");
   previewOutput=new Playout(new NdiSender(previewSourceName),previewW,previewH,previewFps);SetOutputControlLock();PublishPreview();previewOutputStatus.Text="Preview NDI: "+previewSourceName;
  }
- void StopPreviewOutput(){bool running=previewOutput!=null;if(running){previewOutput.Dispose();previewOutput=null;}previewOutputStatus.Text="Preview NDI: spento";SetOutputControlLock();if(output==null)configNotice.Text="";if(running&&!Disposing&&!IsDisposed)RefreshPlacementForActiveFormat();}
+ void StopPreviewOutput(){bool running=previewOutput!=null,clean=true;if(running){clean=previewOutput.StopTransparent();previewOutput=null;}previewOutputStatus.Text="Preview NDI: spento";SetOutputControlLock();if(output==null)configNotice.Text="";if(running&&!Disposing&&!IsDisposed)RefreshPlacementForActiveFormat();if(!clean)status.Text="Preview arrestato: errore durante il clear finale";}
  void RefreshPlacementForActiveFormat(){Placement placement;if(selected==null||!settings.Images.TryGetValue(selected,out placement))placement=new Placement();ApplyPlacement(placement,false);}
  void PublishPreview(){if(previewOutput==null)return;byte[] frame=pending;if(frame==null||frame.Length!=previewW*previewH*4)frame=new byte[previewW*previewH*4];previewOutput.Cue(frame,0,selected);}
  void CheckPreviewOutput(){RefreshOutputIndicators();}
