@@ -33,7 +33,7 @@ public partial class MainWindow {
  void RefreshPlacementForActiveFormat(){Placement placement;if(selected==null||!settings.Images.TryGetValue(selected,out placement))placement=new Placement();ApplyPlacement(placement,false);}
  void PublishPreview(){if(previewOutput==null)return;byte[] frame=pending;if(frame==null||frame.Length!=previewW*previewH*4)frame=new byte[previewW*previewH*4];previewOutput.Cue(frame,0,selected);}
  void CheckPreviewOutput(){RefreshOutputIndicators();}
- void ClearProgramWithFade(){preview.CancelInteraction();if(output==null){status.Text="Programma NDI arrestato.";return;}if(output.Error!=null){status.Text="Invio fermo: arresta e riavvia NDI.";return;}if(output.Clearing)return;double milliseconds=fade.Value>0?(double)fade.Value:500;output.Cue(new byte[outW*outH*4],milliseconds/1000);status.Text="ESC: clear in dissolvenza ("+milliseconds+" ms)";}
- protected override bool ProcessCmdKey(ref Message msg,Keys keyData){if(keyData==Keys.Escape){ClearProgramWithFade();return true;}return base.ProcessCmdKey(ref msg,keyData);}
+ void ClearProgramWithFade(bool cut){preview.CancelInteraction();if(output==null){status.Text="Programma NDI arrestato.";return;}if(output.Error!=null){status.Text="Invio fermo: arresta e riavvia NDI.";return;}if(!cut&&output.Clearing)return;double milliseconds=cut?0:(double)escClearFade.Value;output.Cue(new byte[outW*outH*4],milliseconds/1000);status.Text=cut?"Doppio ESC: Programma trasparente (cut)":"ESC: clear in dissolvenza ("+milliseconds+" ms)";}
+ protected override bool ProcessCmdKey(ref Message msg,Keys keyData){if(keyData==Keys.Escape){bool repeat=(msg.LParam.ToInt64()&(1L<<30))!=0;var action=escapeGesture.Press(escapeClock.ElapsedMilliseconds,repeat);if(action!=EscapeAction.None)ClearProgramWithFade(action==EscapeAction.Cut);return true;}return base.ProcessCmdKey(ref msg,keyData);}
 }
 }

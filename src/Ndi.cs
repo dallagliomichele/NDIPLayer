@@ -54,6 +54,9 @@ public sealed class Playout:IDisposable {
  string targetPath;OnAirStatus sentStatus=new OnAirStatus();
  byte[] current,from,target; double started,duration; volatile bool stop; public volatile string Error; public long Frames;
  readonly Stopwatch clock=Stopwatch.StartNew();
+ bool lastPresence;
+ public event EventHandler<ProgramPresenceEventArgs> PresenceChanged;
+ public volatile string NotificationError;
  public Playout(IVideoSender output,int width,int height,int rate){sender=output;w=width;h=height;fps=rate;current=new byte[w*h*4];from=current;target=current;thread=new Thread(Run){IsBackground=true};thread.Start();}
  public void Cue(byte[] next,double seconds,string imagePath=null){if(next.Length!=w*h*4)throw new ArgumentException("Frame size");lock(gate){Evaluate();from=(byte[])current.Clone();fromContributors=new Dictionary<string,double>(contributors,StringComparer.OrdinalIgnoreCase);targetPath=imagePath;target=(byte[])next.Clone();started=clock.Elapsed.TotalSeconds;duration=seconds;current=seconds<=0?target:new byte[target.Length];if(seconds<=0)SetContributors(1);}}
  void SetContributors(double t){var next=new Dictionary<string,double>(StringComparer.OrdinalIgnoreCase);foreach(var entry in fromContributors)if(entry.Value*(1-t)>.000001)next[entry.Key]=entry.Value*(1-t);if(targetPath!=null&&t>0){double old;next.TryGetValue(targetPath,out old);next[targetPath]=old+t;}contributors=next;}
@@ -62,7 +65,7 @@ public sealed class Playout:IDisposable {
  public byte[] ReadSentFrame(ref long lastSequence){lock(monitorGate){if(lastSent==null||lastSequence==sequence)return null;lastSequence=sequence;return (byte[])lastSent.Clone();}}
  public OnAirStatus ReadOnAirStatus(){lock(monitorGate)return new OnAirStatus{Paths=(string[])sentStatus.Paths.Clone(),Transitioning=sentStatus.Transitioning,Sequence=sentStatus.Sequence};}
  public bool Clearing {get{lock(gate)return duration>0&&targetPath==null;}}
- void Run(){try {while(!stop){byte[] frame;string[] paths;bool transitioning;lock(gate){Evaluate();frame=duration>0?(byte[])current.Clone():current;paths=new string[contributors.Count];contributors.Keys.CopyTo(paths,0);transitioning=duration>0;}sender.Send(frame,w,h,fps);lock(monitorGate){lastSent=frame;sequence++;sentStatus=new OnAirStatus{Paths=paths,Transitioning=transitioning,Sequence=sequence};}Interlocked.Increment(ref Frames);}}catch(Exception e){Error=e.Message;}finally{sender.Dispose();}}
+ void Run(){try {while(!stop){byte[] frame;string[] paths;bool transitioning;lock(gate){Evaluate();frame=duration>0?(byte[])current.Clone():current;paths=new string[contributors.Count];contributors.Keys.CopyTo(paths,0);transitioning=duration>0;}sender.Send(frame,w,h,fps);lock(monitorGate){lastSent=frame;sequence++;sentStatus=new OnAirStatus{Paths=paths,Transitioning=transitioning,Sequence=sequence};}Interlocked.Increment(ref Frames);bool present=paths.Length>0;if(present!=lastPresence){lastPresence=present;var handler=PresenceChanged;if(handler!=null)try{handler(this,new ProgramPresenceEventArgs(present));}catch(Exception e){NotificationError=e.Message;}}}}catch(Exception e){Error=e.Message;}finally{sender.Dispose();}}
  public void Dispose(){stop=true;thread.Join();}
 }
 }

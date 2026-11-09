@@ -46,6 +46,7 @@ class Tests {
   ProjectTests.Run(Check);
   if(args.Length>0&&args[0]=="--ui")RoutingTests.ProofPath="output-sections-proof.png";
   RoutingTests.Run(Check,args.Length>0&&args[0]=="--ndi");
+  CompanionTests.Run(Check);
   using(var window=new MainWindow(Path.Combine(Path.GetTempPath(),"NDIPlayer-no-preferences-"+Guid.NewGuid()+".json"))){window.CreateControl();window.PerformLayout();Check(window.Controls.Count==3,"interfaccia costruzione");}
   Console.WriteLine(count+" test superati");
  }
