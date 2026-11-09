@@ -16,8 +16,10 @@ public class PreviewCanvas:Control {
  public event EventHandler<PreviewDragEventArgs> DragMoved;
  public event EventHandler DragCompleted;
  public event EventHandler<PreviewZoomEventArgs> ZoomRequested;
+ public event EventHandler ImageDoubleClicked;
  bool dragging;Point dragOrigin;Rectangle dragFrame;
- public PreviewCanvas(){DoubleBuffered=true;ResizeRedraw=true;BackColor=Color.FromArgb(30,32,36);SetStyle(ControlStyles.Selectable,true);TabStop=true;}
+ public PreviewCanvas(){DoubleBuffered=true;ResizeRedraw=true;BackColor=Color.FromArgb(30,32,36);SetStyle(ControlStyles.Selectable|ControlStyles.StandardClick|ControlStyles.StandardDoubleClick,true);TabStop=true;}
+ protected override void OnMouseDoubleClick(MouseEventArgs e){base.OnMouseDoubleClick(e);if(!InteractionEnabled||image==null||e.Button!=MouseButtons.Left||!FrameBounds(ClientSize,frameWidth,frameHeight).Contains(e.Location))return;CancelInteraction();if(ImageDoubleClicked!=null)ImageDoubleClicked(this,EventArgs.Empty);}
  public void CancelInteraction(){if(!dragging)return;dragging=false;Capture=false;Cursor=Cursors.Default;if(DragCompleted!=null)DragCompleted(this,EventArgs.Empty);}
  protected override void OnMouseDown(MouseEventArgs e){base.OnMouseDown(e);var frame=FrameBounds(ClientSize,frameWidth,frameHeight);if(!InteractionEnabled||image==null||e.Button!=MouseButtons.Left||!frame.Contains(e.Location))return;Focus();dragOrigin=e.Location;dragFrame=frame;dragging=true;Capture=true;Cursor=Cursors.SizeAll;if(DragStarted!=null)DragStarted(this,EventArgs.Empty);}
  protected override void OnMouseMove(MouseEventArgs e){base.OnMouseMove(e);if(!dragging)return;if(!InteractionEnabled||image==null){CancelInteraction();return;}var delta=PlacementCoordinates.DragDelta(dragOrigin,e.Location,dragFrame,frameWidth,frameHeight);if(DragMoved!=null)DragMoved(this,new PreviewDragEventArgs(delta));}

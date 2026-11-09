@@ -16,7 +16,8 @@ public static class NdiChannel {
   foreach(char c in name)if(Char.IsControl(c)||"\\/:*?\"<>|".IndexOf(c)>=0)throw new ArgumentException("Il nome NDI non può contenere caratteri di controllo oppure \\ / : * ? \" < > |.");
   return name;
  }
- public static string PreviewName(string value){string name=Validate(value);const string suffix=" - Preview";while(true){try{return Validate(name+suffix);}catch(ArgumentException){if(name.Length==0)throw;name=name.Substring(0,name.Length-1);if(name.Length>0&&Char.IsHighSurrogate(name[name.Length-1]))name=name.Substring(0,name.Length-1);}}}
+ public static string PreviewName(string value){string original=Validate(value),name=original,suffix=" - Preview";while(true){try{string candidate=Validate(name+suffix);if(String.Equals(candidate,original,StringComparison.OrdinalIgnoreCase)){suffix=" - Preview 2";continue;}return candidate;}catch(ArgumentException){if(name.Length==0)throw;name=name.Substring(0,name.Length-1);if(name.Length>0&&Char.IsHighSurrogate(name[name.Length-1]))name=name.Substring(0,name.Length-1);}}}
+ public static void ValidatePair(string program,string preview){if(String.Equals(Validate(program),Validate(preview),StringComparison.OrdinalIgnoreCase))throw new ArgumentException("Program e Preview devono avere nomi NDI diversi.");}
 }
 public interface IVideoSender:IDisposable {void Send(byte[] pixels,int width,int height,int fps);}
 public sealed class NdiSender:IVideoSender {
@@ -60,6 +61,7 @@ public sealed class Playout:IDisposable {
  // Only publish a frame after the synchronous NDI call returns successfully.
  public byte[] ReadSentFrame(ref long lastSequence){lock(monitorGate){if(lastSent==null||lastSequence==sequence)return null;lastSequence=sequence;return (byte[])lastSent.Clone();}}
  public OnAirStatus ReadOnAirStatus(){lock(monitorGate)return new OnAirStatus{Paths=(string[])sentStatus.Paths.Clone(),Transitioning=sentStatus.Transitioning,Sequence=sentStatus.Sequence};}
+ public bool Clearing {get{lock(gate)return duration>0&&targetPath==null;}}
  void Run(){try {while(!stop){byte[] frame;string[] paths;bool transitioning;lock(gate){Evaluate();frame=duration>0?(byte[])current.Clone():current;paths=new string[contributors.Count];contributors.Keys.CopyTo(paths,0);transitioning=duration>0;}sender.Send(frame,w,h,fps);lock(monitorGate){lastSent=frame;sequence++;sentStatus=new OnAirStatus{Paths=paths,Transitioning=transitioning,Sequence=sequence};}Interlocked.Increment(ref Frames);}}catch(Exception e){Error=e.Message;}finally{sender.Dispose();}}
  public void Dispose(){stop=true;thread.Join();}
 }

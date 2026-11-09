@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace ImageNdi {
 public class WindowPreferences {public bool AlwaysOnTop {get;set;}}
-public class Settings {public string Root {get;set;} public Dictionary<string,Placement> Images {get;set;} public bool Thumbnails {get;set;} public int ThumbnailSize {get;set;} public string ChannelName {get;set;} public List<PlaylistBlock> Blocks {get;set;} public string ActiveBlockId {get;set;} public int OutputWidth {get;set;} public int OutputHeight {get;set;} public int OutputFps {get;set;} public bool Dissolve {get;set;} public int FadeMs {get;set;} public Settings(){Images=new Dictionary<string,Placement>(StringComparer.OrdinalIgnoreCase);ThumbnailSize=128;ChannelName=NdiChannel.DefaultName;Blocks=new List<PlaylistBlock>();OutputWidth=1920;OutputHeight=1080;OutputFps=50;FadeMs=500;}}
+public class Settings {public string Root {get;set;} public Dictionary<string,Placement> Images {get;set;} public bool Thumbnails {get;set;} public int ThumbnailSize {get;set;} public string ChannelName {get;set;} public string PreviewChannelName {get;set;} public List<PlaylistBlock> Blocks {get;set;} public string ActiveBlockId {get;set;} public int OutputWidth {get;set;} public int OutputHeight {get;set;} public int OutputFps {get;set;} public bool Dissolve {get;set;} public int FadeMs {get;set;} public Settings(){Images=new Dictionary<string,Placement>(StringComparer.OrdinalIgnoreCase);ThumbnailSize=128;ChannelName=NdiChannel.DefaultName;Blocks=new List<PlaylistBlock>();OutputWidth=1920;OutputHeight=1080;OutputFps=50;FadeMs=500;}}
 public partial class MainWindow:Form {
  LibraryBrowser files=new LibraryBrowser(); PreviewCanvas preview=new PreviewCanvas{InteractionEnabled=true,Footer="Trascina: posizione · Rotellina: scala · INVIA per applicare"}; PreviewCanvas program=new PreviewCanvas{Heading="PROGRAMMA · NDI arrestato",Footer="Nessuna trasmissione",BorderColor=Color.FromArgb(245,100,80)}; Label status=new Label();
  NumericUpDown scale=Number(1,400,100), x=Number(-8192,16384,960), y=Number(-8192,16384,540), width=Number(16,3840,1920), height=Number(16,2160,1080), fps=Number(1,60,50), fade=Number(0,10000,500);
@@ -21,7 +21,7 @@ public partial class MainWindow:Form {
  Bitmap selectedSource;
  int activeProgramFps;
  public MainWindow():this(null){}
- public MainWindow(string preferencesPath){state=preferencesPath??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WatchoutImageNDI","settings.json");Text="NDIPlayer — 0.5.1";Width=1600;Height=900;MinimumSize=new Size(1150,650);
+ public MainWindow(string preferencesPath){state=preferencesPath??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WatchoutImageNDI","settings.json");Text="NDIPlayer — 0.6.0";Width=1600;Height=900;MinimumSize=new Size(1150,650);
   x.Name="ImageCenterX";y.Name="ImageCenterY";scale.Name="ImageScale";preview.Name="SelectionPreview";program.Name="ProgramPreview";files.Name="ImageLibrary";width.Name="OutputWidth";height.Name="OutputHeight";x.DecimalPlaces=y.DecimalPlaces=scale.DecimalPlaces=1;
   try{if(File.Exists(state))settings=new JavaScriptSerializer{MaxJsonLength=16*1024*1024}.Deserialize<Settings>(File.ReadAllText(state));if(settings==null||settings.Images==null)settings=new Settings();}catch(Exception){status.Text="Preferenze non leggibili: ripristinate.";}
   try{ProjectStore.Normalize(settings);}catch{settings=new Settings();}
@@ -35,7 +35,7 @@ public partial class MainWindow:Form {
   files.PreferencesChanged+=delegate{settings.Thumbnails=files.ThumbnailsEnabled;settings.ThumbnailSize=files.ThumbnailSize;Save();};
   var top=new FlowLayoutPanel{Dock=DockStyle.Top,Height=82,AutoScroll=true};Controls.Add(top);
   AddButton(top,"Apri cartella",delegate{using(var dialog=new FolderBrowserDialog()){if(dialog.ShowDialog()==DialogResult.OK){settings.Root=dialog.SelectedPath;Scan();Save();}}});
-  AddButton(top,"Aggiorna",delegate{Scan();}); AddField(top,"Larghezza",width);AddField(top,"Altezza",height);AddField(top,"fps",fps);AddField(top,"Nome canale NDI",channelName);top.Controls.Add(start);start.Click+=delegate{Toggle();};top.Controls.Add(alwaysOnTop);
+  AddButton(top,"Aggiorna",delegate{Scan();}); AddField(top,"Larghezza",width);AddField(top,"Altezza",height);AddField(top,"fps",fps);top.Controls.Add(start);start.Click+=delegate{Toggle();};top.Controls.Add(alwaysOnTop);
   var ndiLink=new LinkLabel{Text="NDI® · ndi.video",AutoSize=true};ndiLink.LinkClicked+=delegate{System.Diagnostics.Process.Start("https://ndi.video/");};top.Controls.Add(ndiLink);
   AddButton(top,"Info",delegate{MessageBox.Show("NDI® is a registered trademark of Vizrt NDI AB.\r\nhttps://ndi.video/\r\nRuntime distribuito tramite il redistributable ufficiale, con licenza propria.","NDIPlayer — Informazioni");});
   var bottom=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=100};Controls.Add(bottom);AddField(bottom,"Scala %",scale);AddField(bottom,"Centro X px",x);AddField(bottom,"Centro Y px",y);bottom.Controls.Add(dissolve);AddField(bottom,"Durata ms",fade);
@@ -50,6 +50,7 @@ public partial class MainWindow:Form {
   preview.DragStarted+=delegate{pointerEditing=true;dragCenterX=x.Value;dragCenterY=y.Value;};
   preview.DragMoved+=delegate(object sender,PreviewDragEventArgs e){ApplyCenter(dragCenterX+(decimal)e.Delta.X,dragCenterY+(decimal)e.Delta.Y,scale.Value,false);};
   preview.DragCompleted+=delegate{pointerEditing=false;Save();};
+  preview.ImageDoubleClicked+=delegate{Cue(false);};
   preview.ZoomRequested+=delegate(object sender,PreviewZoomEventArgs e){ApplyCenter(x.Value,y.Value,PlacementCoordinates.ZoomPercent(scale.Value,e.Delta,e.Fine),true);};
   InitializeProjects(top,split.Panel1);
   InitializePreviewOutput(top);
