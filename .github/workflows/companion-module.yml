@@ -1,0 +1,39 @@
+name: Companion NDIPlayer module
+on:
+  push:
+    paths: ['companion-module-ndiplayer/**', 'src/**', '.github/workflows/companion-module.yml']
+  pull_request:
+    paths: ['companion-module-ndiplayer/**', 'src/**', '.github/workflows/companion-module.yml']
+  workflow_dispatch:
+jobs:
+  module:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          cache: npm
+          cache-dependency-path: companion-module-ndiplayer/package-lock.json
+      - name: Install module dependencies
+        working-directory: companion-module-ndiplayer
+        run: npm ci --no-audit --no-fund
+      - name: Build and validate tgz
+        working-directory: companion-module-ndiplayer
+        run: |
+          npm run package
+          npm run check
+      - name: Test module against NDIPlayer with simulated video sender
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force bin | Out-Null
+          $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+          & $compiler /nologo /target:winexe /platform:x64 /out:bin\WatchoutImageNDI.exe /reference:System.Drawing.dll /reference:System.Windows.Forms.dll /reference:System.Web.Extensions.dll src\*.cs
+          if ($LASTEXITCODE -ne 0) { throw 'NDIPlayer compile failed' }
+          ./companion-module-ndiplayer/test-integration.ps1 -NodePath node
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ndiplayer-companion-1.0.0
+          path: companion-module-ndiplayer/ndiplayer-1.0.0.tgz
+          if-no-files-found: error

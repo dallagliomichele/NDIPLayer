@@ -1,5 +1,9 @@
 # NDIPlayer 0.11.0 · Controllo da Bitfocus Companion
 
+## Modulo dedicato per Companion 5.1.2
+
+È disponibile il pacchetto **ndiplayer-1.0.0.tgz**: importalo in Modules → Import module package, aggiungi la connessione NDIPlayer e trascina i 23 preset sulle pagine. [Guida del modulo dedicato](companion-module-ndiplayer/README.md). [Pacchetto versionato](companion-module-ndiplayer/releases/ndiplayer-1.0.0.tgz). Non occorre aggiornare NDIPlayer 0.11.1. Il collegamento generico descritto sotto rimane una alternativa.
+
 ## Collegamento
 
 1. In NDIPlayer apri **Comandi Companion…**, abilita la ricezione e scegli la porta (predefinita **51235**). L'IP locale `0.0.0.0` ascolta su tutte le interfacce del PC; `127.0.0.1` consente il collegamento solo dallo stesso PC.

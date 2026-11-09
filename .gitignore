@@ -3,3 +3,7 @@ dist/
 *.user
 .vs/
 *.log
+
+companion-module-ndiplayer/node_modules/
+companion-module-ndiplayer/pkg/
+companion-module-ndiplayer/*.tgz

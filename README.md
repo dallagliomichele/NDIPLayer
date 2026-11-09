@@ -2,6 +2,10 @@
 
 App Windows x64 per inviare immagini su un flusso NDI con alpha. Interfaccia in italiano. Repository privato: https://github.com/dallagliomichele/NDIPLayer. Sorgenti e cronologia condivisi tramite GitHub.
 
+## Modulo Companion 1.0.0
+
+Modulo importabile dedicato a Companion **5.1.2**: 12 azioni, 23 preset, tastierino, feedback TCP e risposte di errore. [Guida](companion-module-ndiplayer/README.md) e [pacchetto .tgz](companion-module-ndiplayer/releases/ndiplayer-1.0.0.tgz). Il modulo controlla il ricevitore TCP già presente in NDIPlayer 0.11.1; non richiede un nuovo installer. Sorgenti e prove sono nella cartella companion-module-ndiplayer.
+
 ## Correzione 0.11.1
 
 Eliminata la cancellazione separata dello sfondo del countdown: testo e sfondo vengono disegnati insieme con doppio buffer, anche durante i cambi di colore. Il contenitore Program usa lo stesso sfondo scuro e non vengono richiesti ridisegni quando il valore non cambia. Conteggio, comandi Companion e flusso NDI mantengono il comportamento della 0.11.0.
