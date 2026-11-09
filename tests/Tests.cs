@@ -38,7 +38,9 @@ class Tests {
    Check(display.GetPixel(0,0).A==0,"guide non alterano bitmap trasmessa");
    if(args.Length>0&&args[0]=="--ui")shot.Save("preview-frame.png",ImageFormat.Png);
   }
-  using(var window=new MainWindow()){window.CreateControl();window.PerformLayout();Check(window.Controls.Count==3,"interfaccia costruzione");}
+  if(args.Length>0&&args[0]=="--ui")FeatureTests.BrowserProofPath="browser-proof.png";
+  FeatureTests.Run(Check);
+  using(var window=new MainWindow(Path.Combine(Path.GetTempPath(),"NDIPlayer-no-preferences-"+Guid.NewGuid()+".json"))){window.CreateControl();window.PerformLayout();Check(window.Controls.Count==3,"interfaccia costruzione");}
   Console.WriteLine(count+" test superati");
  }
  class Fake:IVideoSender{public volatile bool Seen,Disposed;public volatile int Alpha;public void Send(byte[] p,int w,int h,int fps){Alpha=p[3];if(Alpha==255)Seen=true;Thread.Sleep(10);}public void Dispose(){Disposed=true;}}

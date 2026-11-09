@@ -9,6 +9,11 @@ using System.IO;
 namespace ImageNdi {
 public class Placement { public double Scale {get;set;} public int X {get;set;} public int Y {get;set;} public Placement(){Scale=1;} }
 public static class Renderer {
+ public static Bitmap ToBitmap(byte[] pixels,int width,int height){
+  if(pixels.Length!=width*height*4)throw new ArgumentException("Frame size");
+  var bitmap=new Bitmap(width,height,PixelFormat.Format32bppArgb);
+  try {var data=bitmap.LockBits(new Rectangle(0,0,width,height),ImageLockMode.WriteOnly,PixelFormat.Format32bppArgb);try{for(int y=0;y<height;y++)Marshal.Copy(pixels,y*width*4,IntPtr.Add(data.Scan0,y*data.Stride),width*4);}finally{bitmap.UnlockBits(data);}return bitmap;}catch{bitmap.Dispose();throw;}
+ }
  public static RectangleF Fit(int iw,int ih,int w,int h,Placement p) {
   double s=Math.Min((double)w/iw,(double)h/ih)*p.Scale;
   return new RectangleF((float)((w-iw*s)/2+p.X),(float)((h-ih*s)/2+p.Y),(float)(iw*s),(float)(ih*s));

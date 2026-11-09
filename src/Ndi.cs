@@ -32,12 +32,15 @@ public sealed class NdiSender:IVideoSender {
 }
 public sealed class Playout:IDisposable {
  readonly object gate=new object(); readonly int w,h,fps; readonly IVideoSender sender; readonly Thread thread;
- byte[] current,from,target; double started,duration; volatile bool stop; public string Error; public long Frames;
+ readonly object monitorGate=new object(); byte[] lastSent; long sequence;
+ byte[] current,from,target; double started,duration; volatile bool stop; public volatile string Error; public long Frames;
  readonly Stopwatch clock=Stopwatch.StartNew();
  public Playout(IVideoSender output,int width,int height,int rate){sender=output;w=width;h=height;fps=rate;current=new byte[w*h*4];from=current;target=current;thread=new Thread(Run){IsBackground=true};thread.Start();}
  public void Cue(byte[] next,double seconds){if(next.Length!=w*h*4)throw new ArgumentException("Frame size");lock(gate){Evaluate();from=(byte[])current.Clone();target=(byte[])next.Clone();started=clock.Elapsed.TotalSeconds;duration=seconds;current=seconds<=0?target:new byte[target.Length];}}
  void Evaluate(){if(duration>0){double t=(clock.Elapsed.TotalSeconds-started)/duration;if(t>=1){current=target;duration=0;}else{if(object.ReferenceEquals(current,from)||object.ReferenceEquals(current,target))current=new byte[target.Length];Renderer.Blend(from,target,t,current);}}}
- void Run(){try {while(!stop){byte[] frame;lock(gate){Evaluate();frame=duration>0?(byte[])current.Clone():current;}sender.Send(frame,w,h,fps);Interlocked.Increment(ref Frames);}}catch(Exception e){Error=e.Message;}finally{sender.Dispose();}}
+ // Only publish a frame after the synchronous NDI call returns successfully.
+ public byte[] ReadSentFrame(ref long lastSequence){lock(monitorGate){if(lastSent==null||lastSequence==sequence)return null;lastSequence=sequence;return (byte[])lastSent.Clone();}}
+ void Run(){try {while(!stop){byte[] frame;lock(gate){Evaluate();frame=duration>0?(byte[])current.Clone():current;}sender.Send(frame,w,h,fps);lock(monitorGate){lastSent=frame;sequence++;}Interlocked.Increment(ref Frames);}}catch(Exception e){Error=e.Message;}finally{sender.Dispose();}}
  public void Dispose(){stop=true;thread.Join();}
 }
 }

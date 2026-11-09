@@ -8,6 +8,9 @@ namespace ImageNdi {
 public sealed class PreviewCanvas:Control {
  Bitmap image;
  int frameWidth=1920,frameHeight=1080;
+ public string Heading="SELEZIONE";
+ public string Footer="Scacchiera = trasparenza · Premi INVIA per andare in onda";
+ public Color BorderColor=Color.FromArgb(55,205,245);
  public PreviewCanvas(){DoubleBuffered=true;ResizeRedraw=true;BackColor=Color.FromArgb(30,32,36);}
  public static Rectangle FrameBounds(Size viewport,int width,int height){
   int availableWidth=Math.Max(0,viewport.Width-40), availableHeight=Math.Max(0,viewport.Height-72);
@@ -22,7 +25,7 @@ public sealed class PreviewCanvas:Control {
   graphics.Clear(BackColor);
   var frame=FrameBounds(viewport,frameWidth,frameHeight);
   if(frame.IsEmpty)return;
-  using(var caption=new SolidBrush(Color.Gainsboro)) graphics.DrawString("ANTEPRIMA · "+frameWidth+" × "+frameHeight+" · bordo azzurro = uscita NDI",Font,caption,12,10);
+  TextRenderer.DrawText(graphics,Heading+" · "+frameWidth+" × "+frameHeight,Font,new Rectangle(12,8,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
   var saved=graphics.Save();
   try {
    graphics.SetClip(frame);
@@ -33,8 +36,8 @@ public sealed class PreviewCanvas:Control {
    }
    if(image!=null){graphics.CompositingMode=CompositingMode.SourceOver;graphics.InterpolationMode=InterpolationMode.HighQualityBicubic;graphics.DrawImage(image,frame);}
   } finally {graphics.Restore(saved);}
-  using(var border=new Pen(Color.FromArgb(55,205,245),2)) graphics.DrawRectangle(border,frame.Left-1,frame.Top-1,frame.Width+1,frame.Height+1);
-  using(var text=new SolidBrush(Color.Gainsboro))graphics.DrawString("Scacchiera = trasparenza   ·   Area scura = fuori fotogramma   ·   Premi INVIA per andare in onda",Font,text,12,viewport.Height-24);
+  using(var border=new Pen(BorderColor,2)) graphics.DrawRectangle(border,frame.Left-1,frame.Top-1,frame.Width+1,frame.Height+1);
+  TextRenderer.DrawText(graphics,Footer,Font,new Rectangle(12,viewport.Height-24,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
  }
  protected override void Dispose(bool disposing){if(disposing&&image!=null){image.Dispose();image=null;}base.Dispose(disposing);}
 }
