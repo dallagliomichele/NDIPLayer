@@ -15,7 +15,7 @@ public partial class MainWindow {
  bool loadingProject,refreshingBlocks;string projectPath,savedFingerprint,blockDragId;Point blockDragOrigin;
  PlaylistBlock ActiveBlock {get{return settings.Blocks.Find(b=>b.Id==settings.ActiveBlockId);}}
  void CaptureProjectControls(){if(loadingProject)return;settings.OutputWidth=(int)width.Value;settings.OutputHeight=(int)height.Value;settings.OutputFps=(int)fps.Value;settings.ChannelName=channelName.Text;settings.PreviewChannelName=previewChannelName.Text;settings.Dissolve=dissolve.Checked;settings.FadeMs=(int)fade.Value;settings.EscClearMs=(int)escClearFade.Value;}
- void UpdateProjectTitle(){if(savedFingerprint==null)return;Text="NDIPlayer — 0.9.0 · "+(projectPath==null?"Progetto locale":Path.GetFileName(projectPath))+(ProjectStore.Fingerprint(settings)==savedFingerprint?"":" *");}
+ void UpdateProjectTitle(){if(savedFingerprint==null)return;Text="NDIPlayer — 0.9.1 · "+(projectPath==null?"Progetto locale":Path.GetFileName(projectPath))+(ProjectStore.Fingerprint(settings)==savedFingerprint?"":" *");}
  void InitializeProjects(FlowLayoutPanel top,Control sidebar){
   top.Height=112;
   AddButton(top,"Nuovo progetto",delegate{if(ConfirmProjectChange())ApplyProject(new Settings(),null);});

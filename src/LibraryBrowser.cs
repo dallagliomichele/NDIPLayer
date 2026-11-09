@@ -21,7 +21,7 @@ public sealed class LibraryBrowser:UserControl {
  readonly Queue<string> order=new Queue<string>();
  readonly ContextMenuStrip imageMenu=new ContextMenuStrip{Name="ImageContextMenu"};bool contextOutside;
  Dictionary<string,string> numbers=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
- List<string> paths=new List<string>(); ImageList images; int generation;
+ List<string> paths=new List<string>(); ImageList images; int generation; bool shuttingDown;
  CancellationTokenSource cancellation; BlockingCollection<string> queue;
  public event EventHandler SelectionChanged;
  public event EventHandler ImageDoubleClicked;
@@ -74,7 +74,7 @@ public sealed class LibraryBrowser:UserControl {
  void Retrieve(object sender,RetrieveVirtualItemEventArgs e){
   if(e.ItemIndex<0||e.ItemIndex>=paths.Count){e.Item=new ListViewItem("");return;}
   string path=paths[e.ItemIndex];var item=new ListViewItem(Path.GetFileName(path));item.SubItems.Add(NumberFor(path));item.SubItems.Add(IndicatorsFor(path));item.SubItems.Add(path);item.ToolTipText=DisplayLabel(path)+"\n"+path+(File.Exists(path)?"":" · FILE MANCANTE");
-  if(ThumbnailsEnabled){int index;item.ImageIndex=cache.TryGetValue(path,out index)?index:0;if(item.ImageIndex==0&&queue!=null&&requested.Add(path))queue.Add(path);}
+  if(ThumbnailsEnabled){int index;item.ImageIndex=cache.TryGetValue(path,out index)?index:0;if(item.ImageIndex==0&&!shuttingDown&&queue!=null&&requested.Add(path))queue.Add(path);}
   e.Item=item;
  }
  void DrawItem(object sender,DrawListViewItemEventArgs e){if(view.View==View.Details)return;string path=paths[e.ItemIndex];bool selected=view.SelectedIndices.Contains(e.ItemIndex),live=onAir.Contains(path);using(var background=new SolidBrush(selected?Color.FromArgb(221,241,255):Color.White))e.Graphics.FillRectangle(background,e.Bounds);
@@ -85,6 +85,7 @@ public sealed class LibraryBrowser:UserControl {
  }
  void DrawSubItem(object sender,DrawListViewSubItemEventArgs e){if(view.View!=View.Details)return;string path=paths[e.ItemIndex];bool selected=view.SelectedIndices.Contains(e.ItemIndex),live=onAir.Contains(path);using(var brush=new SolidBrush(selected?Color.FromArgb(221,241,255):live?Color.FromArgb(255,230,230):Color.White))e.Graphics.FillRectangle(brush,e.Bounds);string text=e.ColumnIndex==2?IndicatorsFor(path):e.ColumnIndex==1?NumberFor(path):e.SubItem.Text;TextRenderer.DrawText(e.Graphics,text,view.Font,new Rectangle(e.Bounds.X+5,e.Bounds.Y,e.Bounds.Width-5,e.Bounds.Height),e.ColumnIndex==2&&live?Color.Firebrick:Color.Black,TextFormatFlags.EndEllipsis|TextFormatFlags.VerticalCenter);if(e.ColumnIndex==0){if(live)e.Graphics.FillRectangle(Brushes.Firebrick,e.Bounds.Left,e.Bounds.Top,4,e.Bounds.Height);if(selected)e.Graphics.DrawRectangle(Pens.DeepSkyBlue,e.Bounds.Left+1,e.Bounds.Top,Math.Max(1,e.Bounds.Width-2),Math.Max(1,e.Bounds.Height-1));}}
  void RebuildCache(){
+  if(shuttingDown)return;
   generation++;CancelWorker();
   cache.Clear();requested.Clear();order.Clear();
   var old=images;images=new ImageList{ColorDepth=ColorDepth.Depth32Bit,ImageSize=new Size(size.Value,size.Value)};
@@ -100,7 +101,7 @@ public sealed class LibraryBrowser:UserControl {
     if(token.IsCancellationRequested){ready.Dispose();break;}
     var completed=new TaskCompletionSource<bool>();
     try{BeginInvoke((Action)delegate{
-     try{if(IsDisposed||version!=generation)return;requested.Remove(path);int index;
+     try{if(shuttingDown||IsDisposed||version!=generation)return;requested.Remove(path);int index;
       if(cache.Count>=CacheLimit){string evicted=order.Dequeue();index=cache[evicted];cache.Remove(evicted);images.Images[index]=ready;}else{images.Images.Add(ready);index=images.Images.Count-1;}
       cache[path]=index;order.Enqueue(path);view.Invalidate();
      }finally{ready.Dispose();completed.TrySetResult(true);}
@@ -109,8 +110,8 @@ public sealed class LibraryBrowser:UserControl {
   },CancellationToken.None,TaskCreationOptions.LongRunning,TaskScheduler.Default);
   view.Invalidate();
  }
- void CancelWorker(){if(cancellation!=null)try{cancellation.Cancel();}catch(ObjectDisposedException){}}
- protected override void Dispose(bool disposing){if(disposing){generation++;CancelWorker();imageMenu.Dispose();view.LargeImageList=null;if(images!=null){images.Dispose();images=null;}}base.Dispose(disposing);}
+ void CancelWorker(){var previous=cancellation;queue=null;cancellation=null;if(previous!=null)try{previous.Cancel();}catch(ObjectDisposedException){}}
+ protected override void Dispose(bool disposing){if(disposing){shuttingDown=true;generation++;CancelWorker();imageMenu.Dispose();view.LargeImageList=null;if(images!=null){images.Dispose();images=null;}}base.Dispose(disposing);}
 }
 public sealed class LibraryDropEventArgs:EventArgs {public readonly string[] Paths;public readonly string Before;public LibraryDropEventArgs(string[] paths,string before){Paths=paths;Before=before;}}
 public sealed class LibraryContextEventArgs:EventArgs {public readonly ContextMenuStrip Menu;public readonly string[] Paths;public readonly string FocusedPath;public LibraryContextEventArgs(ContextMenuStrip menu,string[] paths,string focused){Menu=menu;Paths=paths;FocusedPath=focused;}}
