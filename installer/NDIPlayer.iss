@@ -5,7 +5,7 @@
 [Setup]
 AppId={{4031E489-7E18-4ED7-A0AA-49283A04AA63}
 AppName=NDIPlayer
-AppVersion=0.4.0
+AppVersion=0.4.1
 AppPublisher=Michele Dallaglio
 AppPublisherURL=https://github.com/dallagliomichele/NDIPLayer
 DefaultDirName={localappdata}\Programs\NDIPlayer
@@ -15,7 +15,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 OutputDir=..\dist
-OutputBaseFilename=NDIPlayer-0.4.0-Setup-win-x64
+OutputBaseFilename=NDIPlayer-0.4.1-Setup-win-x64
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

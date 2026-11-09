@@ -63,6 +63,9 @@ static class ProjectTests {
      check((int)typeof(MainWindow).GetProperty("FrameWidth",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(window,null)==128,"preview usa dimensione attiva mentre formato nuovo è differito");
     }finally{Set(window,"output",null);output.Dispose();}
    }
+   string windowPrefs=Path.Combine(dir,"window-test.json");
+   using(var window=new MainWindow(windowPrefs)){var toggle=(CheckBox)window.Controls.Find("AlwaysOnTop",true)[0];toggle.Checked=true;check(window.TopMost,"checkbox mantiene finestra in primo piano");Call(window,"ApplyProject",new Settings(),null);check(window.TopMost&&toggle.Checked,"aprire o creare progetto mantiene preferenza finestra");}
+   using(var window=new MainWindow(windowPrefs)){check(window.TopMost,"preferenza primo piano ripristinata al riavvio");((CheckBox)window.Controls.Find("AlwaysOnTop",true)[0]).Checked=false;check(!window.TopMost,"checkbox disattivata libera finestra");}
   }finally{Directory.Delete(dir,true);}
  }
  sealed class Probe:IVideoSender {public void Send(byte[] frame,int w,int h,int fps){Thread.Sleep(10);}public void Dispose(){}}
