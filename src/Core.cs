@@ -8,6 +8,13 @@ using System.IO;
 
 namespace ImageNdi {
 public class Placement { public double Scale {get;set;} public int X {get;set;} public int Y {get;set;} public Placement(){Scale=1;} }
+public static class PlacementCoordinates {
+ // Keep stored offsets compatible with older versions; expose absolute centers in the UI.
+ public static PointF Center(Placement placement,int width,int height){return new PointF(width/2f+placement.X,height/2f+placement.Y);}
+ public static Placement FromCenter(decimal centerX,decimal centerY,int width,int height,double scale){return new Placement{Scale=scale,X=(int)Math.Round(centerX-width/2m,MidpointRounding.AwayFromZero),Y=(int)Math.Round(centerY-height/2m,MidpointRounding.AwayFromZero)};}
+ public static PointF DragDelta(Point start,Point end,Rectangle frame,int width,int height){if(frame.Width<=0||frame.Height<=0)return PointF.Empty;return new PointF((end.X-start.X)*(float)width/frame.Width,(end.Y-start.Y)*(float)height/frame.Height);}
+ public static decimal ZoomPercent(decimal current,int wheelDelta,bool fine){double next=(double)current*Math.Pow(fine?1.02:1.10,wheelDelta/120.0);return Math.Max(1m,Math.Min(400m,(decimal)Math.Round(next,1)));}
+}
 public static class Renderer {
  public static Bitmap ToBitmap(byte[] pixels,int width,int height){
   if(pixels.Length!=width*height*4)throw new ArgumentException("Frame size");
@@ -18,11 +25,17 @@ public static class Renderer {
   double s=Math.Min((double)w/iw,(double)h/ih)*p.Scale;
   return new RectangleF((float)((w-iw*s)/2+p.X),(float)((h-ih*s)/2+p.Y),(float)(iw*s),(float)(ih*s));
  }
- public static byte[] Render(string path,int w,int h,Placement p) {
+ public static Bitmap LoadBitmap(string path){
+  using(var src=Image.FromFile(path)){
+   try { if(Array.IndexOf(src.PropertyIdList,0x112)>=0) { int o=src.GetPropertyItem(0x112).Value[0]; RotateFlipType[] ops={RotateFlipType.RotateNoneFlipNone,RotateFlipType.RotateNoneFlipNone,RotateFlipType.RotateNoneFlipX,RotateFlipType.Rotate180FlipNone,RotateFlipType.Rotate180FlipX,RotateFlipType.Rotate90FlipX,RotateFlipType.Rotate90FlipNone,RotateFlipType.Rotate270FlipX,RotateFlipType.Rotate270FlipNone}; if(o<ops.Length) src.RotateFlip(ops[o]); }} catch(ArgumentException){}
+   return new Bitmap(src);
+  }
+ }
+ public static byte[] Render(string path,int w,int h,Placement p) {if(path==null)return RenderImage(null,w,h,p);using(var src=LoadBitmap(path))return RenderImage(src,w,h,p);}
+ public static byte[] RenderImage(Image src,int w,int h,Placement p) {
   using(var b=new Bitmap(w,h,PixelFormat.Format32bppArgb)) {
    using(var g=Graphics.FromImage(b)) { g.Clear(Color.Transparent); g.CompositingMode=CompositingMode.SourceCopy; g.InterpolationMode=InterpolationMode.HighQualityBicubic;
-    if(path!=null) using(var src=Image.FromFile(path)) {
-     try { if(Array.IndexOf(src.PropertyIdList,0x112)>=0) { int o=src.GetPropertyItem(0x112).Value[0]; RotateFlipType[] ops={RotateFlipType.RotateNoneFlipNone,RotateFlipType.RotateNoneFlipNone,RotateFlipType.RotateNoneFlipX,RotateFlipType.Rotate180FlipNone,RotateFlipType.Rotate180FlipX,RotateFlipType.Rotate90FlipX,RotateFlipType.Rotate90FlipNone,RotateFlipType.Rotate270FlipX,RotateFlipType.Rotate270FlipNone}; if(o<ops.Length) src.RotateFlip(ops[o]); }} catch(ArgumentException){}
+    if(src!=null) {
      var r=Fit(src.Width,src.Height,w,h,p); using(var a=new ImageAttributes()){ a.SetWrapMode(WrapMode.TileFlipXY); g.DrawImage(src,Rectangle.Round(r),0,0,src.Width,src.Height,GraphicsUnit.Pixel,a); }
     }
    }

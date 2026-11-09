@@ -7,7 +7,8 @@ using System.Threading;
 using ImageNdi;
 class Tests {
  static int count; static void Check(bool ok,string label){if(!ok)throw new Exception(label);count++;Console.WriteLine("PASS "+label);}
- [STAThread] static void Main(string[] args){
+ [STAThread] static void Main(string[] args){try{Run(args);}catch(Exception e){Console.Error.WriteLine(e.ToString());Environment.ExitCode=1;}}
+ static void Run(string[] args){
   var r=Renderer.Fit(100,100,1920,1080,new Placement());Check(r.Width==1080&&r.X==420&&r.Y==0,"fit quadrato senza distorsione");
   r=Renderer.Fit(200,100,100,100,new Placement{Scale=.5,X=10,Y=-5});Check(r.Width==50&&r.Height==25&&r.X==35&&r.Y==32.5,"scala e offset");
   var transparent=Renderer.Render(null,16,16,new Placement());Check(Array.TrueForAll(transparent,value=>value==0),"clear alpha zero");
@@ -40,6 +41,7 @@ class Tests {
   }
   if(args.Length>0&&args[0]=="--ui")FeatureTests.BrowserProofPath="browser-proof.png";
   FeatureTests.Run(Check);
+  TransformTests.Run(Check);
   using(var window=new MainWindow(Path.Combine(Path.GetTempPath(),"NDIPlayer-no-preferences-"+Guid.NewGuid()+".json"))){window.CreateControl();window.PerformLayout();Check(window.Controls.Count==3,"interfaccia costruzione");}
   Console.WriteLine(count+" test superati");
  }
