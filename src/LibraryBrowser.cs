@@ -10,11 +10,11 @@ using System.Linq;
 
 namespace ImageNdi {
 // Virtual items and a bounded thumbnail cache keep large folders responsive.
-public sealed class LibraryBrowser:UserControl {
+public sealed partial class LibraryBrowser:UserControl {
  const int CacheLimit=128;
- readonly ListView view=new ListView{Dock=DockStyle.Fill,VirtualMode=true,MultiSelect=true,HideSelection=false,ShowItemToolTips=true,AllowDrop=true,OwnerDraw=true};
+ readonly BrowserListView view=new BrowserListView{Dock=DockStyle.Fill,VirtualMode=true,MultiSelect=true,HideSelection=false,ShowItemToolTips=true,AllowDrop=true,OwnerDraw=true};
  readonly ComboBox mode=new ComboBox{DropDownStyle=ComboBoxStyle.DropDownList,Width=100};
- readonly TrackBar size=new TrackBar{Minimum=64,Maximum=256,Value=128,SmallChange=16,LargeChange=32,TickFrequency=64,Width=115,Height=30};
+ readonly TrackBar size=new TrackBar{AutoSize=false,Minimum=64,Maximum=256,Value=128,SmallChange=16,LargeChange=32,TickFrequency=64,Width=115,Height=30};
  readonly Label sizeLabel=new Label{AutoSize=true};
  readonly Dictionary<string,int> cache=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
  readonly HashSet<string> requested=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -38,7 +38,8 @@ public sealed class LibraryBrowser:UserControl {
   mode.Items.AddRange(new object[]{"Elenco","Miniature"});mode.SelectedIndex=0;
   var bar=new FlowLayoutPanel{Dock=DockStyle.Top,Height=70,AutoScroll=true};
   bar.Controls.Add(mode);bar.Controls.Add(new Label{Text="Dimensione",AutoSize=true,Margin=new Padding(3,8,0,0)});bar.Controls.Add(size);bar.Controls.Add(sizeLabel);
-  bar.Controls.Add(new Label{Text="Clic: seleziona · Doppio clic: manda in onda",AutoSize=true});
+
+  var manual=new Button{Text="Ordine manuale",AutoSize=true};manual.Click+=delegate{RestoreManualOrder();};bar.Controls.Add(manual);view.Navigation=NavigateKey;view.ColumnClick+=delegate(object sender,ColumnClickEventArgs e){SortByColumn(e.Column);};
   Controls.Add(view);Controls.Add(bar);
   view.Columns.Add("Immagine",180);view.Columns.Add("Numero",75);view.Columns.Add("Stato",170);view.Columns.Add("Percorso",400);view.View=View.Details;view.FullRowSelect=true;
   view.ContextMenuStrip=imageMenu;
@@ -70,7 +71,7 @@ public sealed class LibraryBrowser:UserControl {
  public string IndicatorsFor(string path){bool selected=SelectedPaths.Contains(path,StringComparer.OrdinalIgnoreCase);string text=(selected?"SELEZIONATA":"")+(onAir.Contains(path)?(selected?" · ":"")+(transitioning?"IN DISSOLVENZA":"IN ONDA"):"");if(!File.Exists(path))text+=(text.Length>0?" · ":"")+"FILE MANCANTE";return text;}
  public void SetOnAir(OnAirStatus status){var incoming=new HashSet<string>(status.Paths,StringComparer.OrdinalIgnoreCase);if(transitioning==status.Transitioning&&onAir.SetEquals(incoming))return;onAir.Clear();onAir.UnionWith(incoming);transitioning=status.Transitioning;view.Invalidate();}
  void NotifyPreferences(){if(PreferencesChanged!=null)PreferencesChanged(this,EventArgs.Empty);}
- public void SetFiles(List<string> files){string previous=SelectedPath;view.SelectedIndices.Clear();view.VirtualListSize=0;paths=new List<string>(files);RebuildCache();view.VirtualListSize=paths.Count;int index=previous==null?-1:paths.FindIndex(p=>String.Equals(p,previous,StringComparison.OrdinalIgnoreCase));if(index<0&&paths.Count>0)index=0;if(index>=0){view.SelectedIndices.Add(index);view.EnsureVisible(index);}view.Invalidate();}
+ public void SetFiles(List<string> files){if(sortColumn==2)sortStates=files.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(p=>p,p=>IndicatorsFor(p),StringComparer.OrdinalIgnoreCase);string previous=SelectedPath;view.SelectedIndices.Clear();view.VirtualListSize=0;sourceFiles=new List<string>(files);paths=OrderFiles(sourceFiles);RebuildCache();view.VirtualListSize=paths.Count;int index=previous==null?-1:paths.FindIndex(p=>String.Equals(p,previous,StringComparison.OrdinalIgnoreCase));if(index<0&&paths.Count>0)index=0;if(index>=0){view.SelectedIndices.Add(index);view.EnsureVisible(index);}view.Invalidate();}
  void Retrieve(object sender,RetrieveVirtualItemEventArgs e){
   if(e.ItemIndex<0||e.ItemIndex>=paths.Count){e.Item=new ListViewItem("");return;}
   string path=paths[e.ItemIndex];var item=new ListViewItem(Path.GetFileName(path));item.SubItems.Add(NumberFor(path));item.SubItems.Add(IndicatorsFor(path));item.SubItems.Add(path);item.ToolTipText=DisplayLabel(path)+"\n"+path+(File.Exists(path)?"":" · FILE MANCANTE");

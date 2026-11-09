@@ -16,16 +16,15 @@ public partial class MainWindow {
   files.SelectionChanged+=delegate{if(!recallingNumber)ResetNumberRecall();};ResetNumberRecall();return panel;
  }
  void ResetNumberRecall(){updatingRecall=true;try{recallNumber.Clear();}finally{updatingRecall=false;}recallStatus.ForeColor=Color.DimGray;recallStatus.Text=ActiveBlock==null?"Tutta la libreria":"Blocco: "+ActiveBlock.Name;}
- bool ResolveNumberRecall(){
-  string number=recallNumber.Text;if(number.Length==0){recallStatus.Text="Digita un numero";return false;}
+ bool ResolveNumberRecall(){string message;bool valid=SelectNumber(recallNumber.Text,out message);recallStatus.ForeColor=valid?Color.ForestGreen:Color.Firebrick;recallStatus.Text=valid?"Pronta · Invio per mandare in onda":message;return valid;}
+ bool SelectNumber(string number,out string message){
+  message="";if(number.Length==0){message="Digita un numero";return false;}
   System.Collections.Generic.List<string> matches;
-  try{matches=ImageNumbers.Find(settings,ActiveBlock==null?catalog.Concat(settings.Blocks.SelectMany(b=>b.Files)):ActiveBlock.Files,number);}catch(ArgumentException){recallStatus.Text="Solo cifre (massimo 9)";return false;}
-  recallStatus.ForeColor=Color.Firebrick;
-  if(matches.Count!=1){recallStatus.Text=matches.Count==0?"Numero assente nel blocco":"Numero duplicato: correggi le assegnazioni";return false;}
-  string path=matches[0];if(!System.IO.File.Exists(path)||!Library.Displayable(path)){recallStatus.Text="File non disponibile";return false;}
+  try{matches=ImageNumbers.Find(settings,ActiveBlock==null?catalog.Concat(settings.Blocks.SelectMany(b=>b.Files)):ActiveBlock.Files,number);}catch(ArgumentException){message="Solo cifre (massimo 9)";return false;}
+  if(matches.Count!=1){message=matches.Count==0?"Numero assente nel blocco":"Numero duplicato: correggi le assegnazioni";return false;}
+  string path=matches[0];if(!System.IO.File.Exists(path)||!Library.Displayable(path)){message="File non disponibile";return false;}
   recallingNumber=true;try{if(search.Text.Length>0)search.Clear();RefreshVisible();files.SelectPaths(new[]{path});}finally{recallingNumber=false;}
-  bool valid=String.Equals(selected,path,StringComparison.OrdinalIgnoreCase)&&pending!=null&&selectedSource!=null;
-  recallStatus.ForeColor=valid?Color.ForestGreen:Color.Firebrick;recallStatus.Text=valid?"Pronta · Invio per mandare in onda":"Immagine non leggibile";return valid;
+  bool valid=String.Equals(selected,path,StringComparison.OrdinalIgnoreCase)&&pending!=null&&selectedSource!=null;if(!valid)message="Immagine non leggibile";return valid;
  }
  static Control KeyboardFocus(Control parent){foreach(Control child in parent.Controls){if(child.Focused)return child;if(child.ContainsFocus)return KeyboardFocus(child);}return parent.Focused?parent:null;}
  bool TryProcessRecallKey(Keys keyData,Control focused,bool repeat){

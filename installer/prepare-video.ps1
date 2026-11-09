@@ -14,6 +14,7 @@ Expand-Archive -LiteralPath $Archive -DestinationPath $unpack -Force
 $package=Join-Path $unpack 'ffmpeg-n8.1-latest-win64-lgpl-shared-8.1'
 Copy-Item (Join-Path $package 'bin\*.dll') $target -Force
 Copy-Item (Join-Path $package 'bin\ffmpeg.exe') $target -Force
+Copy-Item (Join-Path $package 'bin\ffprobe.exe') $target -Force
 Copy-Item (Join-Path $package 'LICENSE.txt') (Join-Path $target 'COPYING.LGPLv3') -Force
 $source='a35157abb96167fd7308edc92b55408d5bb084b0'
 $builder='c9fe5114060e507409f7ee07edfd82efaf25d767'

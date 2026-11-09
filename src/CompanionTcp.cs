@@ -7,10 +7,11 @@ using System.Threading;
 
 namespace ImageNdi {
 public class CompanionSettings {
+ public bool ControlEnabled {get;set;} public string ControlAddress {get;set;} public int ControlPort {get;set;}
  public bool Enabled {get;set;} public string Address {get;set;} public int Port {get;set;} public string OnAirCommand {get;set;} public string EmptyCommand {get;set;}
- public CompanionSettings(){Address="127.0.0.1";Port=51234;OnAirCommand="";EmptyCommand="";}
- public CompanionSettings Copy(){return new CompanionSettings{Enabled=Enabled,Address=Address,Port=Port,OnAirCommand=OnAirCommand,EmptyCommand=EmptyCommand};}
- public void Validate(){IPAddress parsed;if(!IPAddress.TryParse(Address,out parsed))throw new ArgumentException("Inserisci un indirizzo IP valido per Companion.");if(Port<1||Port>65535)throw new ArgumentException("La porta TCP deve essere compresa tra 1 e 65535.");Line(OnAirCommand);Line(EmptyCommand);}
+ public CompanionSettings(){ControlAddress="0.0.0.0";ControlPort=51235;Address="127.0.0.1";Port=51234;OnAirCommand="";EmptyCommand="";}
+ public CompanionSettings Copy(){return new CompanionSettings{ControlEnabled=ControlEnabled,ControlAddress=ControlAddress,ControlPort=ControlPort,Enabled=Enabled,Address=Address,Port=Port,OnAirCommand=OnAirCommand,EmptyCommand=EmptyCommand};}
+ public void Validate(){IPAddress control;if(!IPAddress.TryParse(ControlAddress,out control)||ControlPort<1||ControlPort>65535)throw new ArgumentException("Indirizzo o porta di ascolto Companion non validi.");IPAddress parsed;if(!IPAddress.TryParse(Address,out parsed))throw new ArgumentException("Inserisci un indirizzo IP valido per Companion.");if(Port<1||Port>65535)throw new ArgumentException("La porta TCP deve essere compresa tra 1 e 65535.");Line(OnAirCommand);Line(EmptyCommand);}
  public static string Line(string command){string value=(command??"").TrimEnd('\r','\n');if(value.Length>4096||value.IndexOfAny(new[]{'\r','\n','\0'})>=0)throw new ArgumentException("Ogni stringa Companion deve contenere un solo comando, massimo 4096 caratteri. Il ritorno a capo viene aggiunto automaticamente.");return value;}
 }
 // Only queues on the video thread. Socket I/O happens on this separate bounded worker.

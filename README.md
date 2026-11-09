@@ -1,6 +1,16 @@
-# Watchout Image NDI · versione 0.10.0
+# Watchout Image NDI · versione 0.11.0
 
 App Windows x64 per inviare immagini su un flusso NDI con alpha. Interfaccia in italiano. Repository privato: https://github.com/dallagliomichele/NDIPLayer. Sorgenti e cronologia condivisi tramite GitHub.
+
+## Novità 0.11.0 · Countdown, Companion e navigazione
+
+**Countdown Program** sotto il monitor: tempo alla fine senza Loop, tempo al giro successivo con Loop, arancione negli ultimi cinque secondi. Mostra Avvio video prima dei primi frame e Video terminato alla fine senza Loop. Durata letta dal flusso video con ffprobe incluso; posizione associata ai frame consegnati al mittente NDI. Non cambia se scegli un altro file in Preview. Precisione visualizzata al decimo di secondo, con quantizzazione agli fps di uscita; non è un ritorno da WATCHOUT. Se la durata non è disponibile, viene indicato senza inventare un tempo. In una dissolvenza fra video, il contatore segue il video entrante; verso foto/clear segue l'uscente fino a fine transizione.
+
+**Comandi Companion…** abilita la ricezione TCP, predefinita sulla porta 51235, indipendente dalle notifiche esistenti. Comandi: NEXT, PREV, NEXT_BLOCK, PREV_BLOCK, SELECT n, DIGIT n, BACKSPACE, CANCEL, ENTER, GO, CLEAR_FADE e CLEAR_CUT. Tutti funzionano senza focus su NDIPlayer. La selezione prepara Preview; GO invia. Il tastierino Companion compone il numero, ENTER seleziona e GO manda in onda. La tastiera USB resta invariata. Configurazione, esempi e risposte: [guida Companion](COMPANION.md), inclusa nell'installazione.
+
+**Miniature**: destra/sinistra percorrono i file in sequenza passando fra le righe. NEXT/PREV TCP usano esattamente lo stesso ordine e si fermano agli estremi.
+
+**Ordinamento elenco**: clic su Immagine, Numero, Stato o Percorso; secondo clic per invertire, freccia ▲/▼ nella colonna attiva. I numeri sono numerici (1, 2, 10), con i file senza numero in fondo. **Ordine manuale** ripristina l'ordine originale del blocco. L'ordinamento è solo visuale, resta attivo passando alle miniature o a un altro blocco e dura fino al ripristino o al riavvio dell'app. Non riscrive la playlist e non cambia Program. Stato viene ordinato fotografando gli indicatori al clic/aggiornamento della lista: non si riordina continuamente mentre cambi selezione o vai in onda. Per trascinare o spostare manualmente le foto nella playlist occorre prima tornare a Ordine manuale.
 
 ## Video MOV, Loop e posizionamento (0.10.0)
 
@@ -128,7 +138,7 @@ Il Programma è un **monitor locale dei frame consegnati al SDK NDI**, non un ri
 
 Nella versione 0.10.0 l'anteprima mostra un **bordo azzurro che delimita esattamente il fotogramma di uscita** nel rapporto configurato (per esempio 16:9 a 1920×1080). La scacchiera compare solo dentro quel bordo e rappresenta l'alpha; l'area scura esterna non fa parte del flusso. Ridimensionando la finestra, immagine e fotogramma vengono scalati insieme senza cambiare proporzioni. Bordo e scritte sono guide locali e non vengono trasmessi. L'anteprima mostra la selezione: per applicarla in onda premi INVIA o fai doppio clic sul file.
 
-1. Windows 10/11 x64 con .NET Framework 4.8. Esegui `NDIPlayer-0.10.0-Setup-win-x64.exe`: include il redistributable ufficiale **NDI 6 Runtime 6.3.2.0**, senza NDI Tools. Se necessario apre il setup del runtime, con licenza propria da accettare e possibile richiesta amministratore. Poi installa l'app per l'utente corrente e crea il collegamento nel menu Start. Non serve il .NET SDK.
+1. Windows 10/11 x64 con .NET Framework 4.8. Esegui `NDIPlayer-0.11.0-Setup-win-x64.exe`: include il redistributable ufficiale **NDI 6 Runtime 6.3.2.0**, senza NDI Tools. Se necessario apre il setup del runtime, con licenza propria da accettare e possibile richiesta amministratore. Poi installa l'app per l'utente corrente e crea il collegamento nel menu Start. Non serve il .NET SDK.
 2. Avvia NDIPlayer dal menu Start. Se usi i soli sorgenti o il vecchio ZIP portabile, il runtime resta da installare separatamente. Informazioni NDI: https://ndi.video/ . NDI® is a registered trademark of Vizrt NDI AB.
 3. Apri una cartella: include sottocartelle, evita collegamenti circolari, segnala cartelle non accessibili. Aggiorna ripete la scansione.
 4. Seleziona un file: anteprima su scacchiera, che indica la trasparenza e non viene trasmessa. PNG, JPEG, BMP, GIF, TIFF e ICO; per formati multipagina/animati viene utilizzato il primo frame. HEIC, WebP, SVG e RAW non sono supportati in questa versione.
@@ -196,7 +206,7 @@ Da altre postazioni: clonare il repository, eseguire `build.ps1`, installare NDI
 
 Nessuna licenza open source applicata automaticamente. Verificare termini NDI prima di distribuire il prodotto o includere runtime/SDK proprietari.
 
-## Installer completo 0.10.0
+## Installer completo 0.11.0
 
 Il pacchetto contiene app, documentazione e redistributable NDI originale. Non scarica il runtime durante l'installazione. .NET Framework 4.8 è un prerequisito verificato dal setup; se assente, installarlo tramite Windows Update. Non si accetta la licenza NDI in silenzio: il setup ufficiale viene aperto quando il runtime manca o è più vecchio. Un runtime uguale o successivo già rilevato viene conservato. Annullando il setup NDI, non si prosegue con l'app.
 
@@ -206,4 +216,4 @@ Per ricostruire, scarica il [redistributable ufficiale](https://downloads.ndi.tv
 
 Runtime verificato: versione 6.3.2.0, firma Authenticode valida Vizrt AG, SHA-256 `7EE73EEDB56402BCA5100868353DBAB4E944B6C37D2D9881580698A3B61346CD`. Se NDI aggiorna il download, la build si ferma: verificare firma/versione e aggiornare il pin prima di ricostruire.
 
-Verifiche effettuate: compilazione installer con runtime incorporato e 221 test applicativi, incluso sender NDI reale sulla postazione di sviluppo. Non è stata eseguita un'installazione/disinstallazione su Windows pulito: prima della distribuzione operativa verificare il setup su una macchina di prova senza NDI Tools, inclusi annullamento licenza, avvio, clear e disinstallazione. Le prove WATCHOUT restano quelle indicate sopra.
+Verifiche effettuate: compilazione installer con runtime incorporato e 267 test applicativi, incluso sender NDI reale sulla postazione di sviluppo. Non è stata eseguita un'installazione/disinstallazione su Windows pulito: prima della distribuzione operativa verificare il setup su una macchina di prova senza NDI Tools, inclusi annullamento licenza, avvio, clear e disinstallazione. Le prove WATCHOUT restano quelle indicate sopra.

@@ -26,7 +26,7 @@ static class VideoTests {
    }
    var initial=Renderer.Render(path,16,16,new Placement());
    using(var video=new VideoSession(path,16,16,10,new Placement(),false,initial)){
-    check(SpinWait.SpinUntil(()=>video.Ended,5000)&&video.Error==null&&video.DecodedFrames>=3,"MOV senza loop raggiunge fine senza errori");var last=video.ReadFrame();check(last[3]==0&&last[(8*16+8)*4+3]>=120&&last[(8*16+8)*4+3]<=130,"video mantiene bande trasparenti e alpha in BGRA");long count=video.DecodedFrames;Thread.Sleep(150);check(video.DecodedFrames==count&&Object.ReferenceEquals(last,video.ReadFrame()),"fine video mantiene ultimo frame senza auto clear");
+    check(SpinWait.SpinUntil(()=>video.Ended,5000)&&video.Error==null&&video.DecodedFrames>=3,"MOV senza loop raggiunge fine senza errori");VideoPlaybackStatus clock;video.ReadPlaybackFrame(out clock);check(Math.Abs(clock.Duration-.4)<.001&&clock.Ended&&clock.Remaining==0,"ffprobe e decoder producono countdown reale di fine MOV");var last=video.ReadFrame();check(last[3]==0&&last[(8*16+8)*4+3]>=120&&last[(8*16+8)*4+3]<=130,"video mantiene bande trasparenti e alpha in BGRA");long count=video.DecodedFrames;Thread.Sleep(150);check(video.DecodedFrames==count&&Object.ReferenceEquals(last,video.ReadFrame()),"fine video mantiene ultimo frame senza auto clear");
    }
    using(var video=new VideoSession(path,16,16,10,new Placement{Scale=.5,X=3,Y=-2},true,initial)){
     check(SpinWait.SpinUntil(()=>video.DecodedFrames>=9,5000)&&!video.Ended&&video.Error==null,"Loop ripete MOV oltre durata originale");var frame=video.ReadFrame();check(frame[(6*16+11)*4+3]>=120&&frame[(10*16+3)*4+3]==0,"scala e offset applicati al video con trasparenza");
