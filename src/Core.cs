@@ -54,6 +54,7 @@ public static class Renderer {
 }
 public static class Library {
  static readonly HashSet<string> Formats=new HashSet<string>(StringComparer.OrdinalIgnoreCase){".png",".jpg",".jpeg",".bmp",".gif",".tif",".tiff",".ico"};
+ public static bool Displayable(string path){try{return Formats.Contains(Path.GetExtension(path))&&!Excluded(path,File.Exists(path)?File.GetAttributes(path):FileAttributes.Normal);}catch(IOException){return false;}catch(UnauthorizedAccessException){return false;}}
  static bool Excluded(string path,FileAttributes attributes){string name=Path.GetFileName(path);
   return (attributes&FileAttributes.Hidden)!=0 || name.StartsWith("._",StringComparison.Ordinal) || name.StartsWith(".-",StringComparison.Ordinal) ||
    ((attributes&FileAttributes.Directory)!=0&&(name.StartsWith(".",StringComparison.Ordinal)||String.Equals(name,"__MACOSX",StringComparison.OrdinalIgnoreCase)));

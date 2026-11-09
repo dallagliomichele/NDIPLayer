@@ -42,6 +42,8 @@ class Tests {
   if(args.Length>0&&args[0]=="--ui")FeatureTests.BrowserProofPath="browser-proof.png";
   FeatureTests.Run(Check);
   TransformTests.Run(Check);
+  if(args.Length>0&&args[0]=="--ui")ProjectTests.ProofPath="playlist-indicators-proof.png";
+  ProjectTests.Run(Check);
   using(var window=new MainWindow(Path.Combine(Path.GetTempPath(),"NDIPlayer-no-preferences-"+Guid.NewGuid()+".json"))){window.CreateControl();window.PerformLayout();Check(window.Controls.Count==3,"interfaccia costruzione");}
   Console.WriteLine(count+" test superati");
  }

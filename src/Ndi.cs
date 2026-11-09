@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Diagnostics;
 using System.Text;
+using System.Collections.Generic;
 
 namespace ImageNdi {
 public static class NdiChannel {
@@ -42,17 +43,22 @@ public sealed class NdiSender:IVideoSender {
  public void Send(byte[] pixels,int w,int h,int fps){var pin=GCHandle.Alloc(pixels,GCHandleType.Pinned);try {var f=new Frame{width=w,height=h,fourcc=0x41524742,n=fps,d=1,aspect=(float)w/h,format=1,timecode=long.MaxValue,data=pin.AddrOfPinnedObject(),stride=w*4};NDIlib_send_send_video_v2(handle,ref f);}finally{pin.Free();}}
  public void Dispose(){if(handle!=IntPtr.Zero){NDIlib_send_destroy(handle);handle=IntPtr.Zero;}if(initialized){NDIlib_destroy();initialized=false;}}
 }
+public sealed class OnAirStatus {public string[] Paths=new string[0];public bool Transitioning;public long Sequence;}
 public sealed class Playout:IDisposable {
  readonly object gate=new object(); readonly int w,h,fps; readonly IVideoSender sender; readonly Thread thread;
  readonly object monitorGate=new object(); byte[] lastSent; long sequence;
+ Dictionary<string,double> contributors=new Dictionary<string,double>(StringComparer.OrdinalIgnoreCase),fromContributors=new Dictionary<string,double>(StringComparer.OrdinalIgnoreCase);
+ string targetPath;OnAirStatus sentStatus=new OnAirStatus();
  byte[] current,from,target; double started,duration; volatile bool stop; public volatile string Error; public long Frames;
  readonly Stopwatch clock=Stopwatch.StartNew();
  public Playout(IVideoSender output,int width,int height,int rate){sender=output;w=width;h=height;fps=rate;current=new byte[w*h*4];from=current;target=current;thread=new Thread(Run){IsBackground=true};thread.Start();}
- public void Cue(byte[] next,double seconds){if(next.Length!=w*h*4)throw new ArgumentException("Frame size");lock(gate){Evaluate();from=(byte[])current.Clone();target=(byte[])next.Clone();started=clock.Elapsed.TotalSeconds;duration=seconds;current=seconds<=0?target:new byte[target.Length];}}
- void Evaluate(){if(duration>0){double t=(clock.Elapsed.TotalSeconds-started)/duration;if(t>=1){current=target;duration=0;}else{if(object.ReferenceEquals(current,from)||object.ReferenceEquals(current,target))current=new byte[target.Length];Renderer.Blend(from,target,t,current);}}}
+ public void Cue(byte[] next,double seconds,string imagePath=null){if(next.Length!=w*h*4)throw new ArgumentException("Frame size");lock(gate){Evaluate();from=(byte[])current.Clone();fromContributors=new Dictionary<string,double>(contributors,StringComparer.OrdinalIgnoreCase);targetPath=imagePath;target=(byte[])next.Clone();started=clock.Elapsed.TotalSeconds;duration=seconds;current=seconds<=0?target:new byte[target.Length];if(seconds<=0)SetContributors(1);}}
+ void SetContributors(double t){var next=new Dictionary<string,double>(StringComparer.OrdinalIgnoreCase);foreach(var entry in fromContributors)if(entry.Value*(1-t)>.000001)next[entry.Key]=entry.Value*(1-t);if(targetPath!=null&&t>0){double old;next.TryGetValue(targetPath,out old);next[targetPath]=old+t;}contributors=next;}
+ void Evaluate(){if(duration>0){double t=(clock.Elapsed.TotalSeconds-started)/duration;if(t>=1){current=target;duration=0;SetContributors(1);}else{if(object.ReferenceEquals(current,from)||object.ReferenceEquals(current,target))current=new byte[target.Length];Renderer.Blend(from,target,t,current);SetContributors(t);}}}
  // Only publish a frame after the synchronous NDI call returns successfully.
  public byte[] ReadSentFrame(ref long lastSequence){lock(monitorGate){if(lastSent==null||lastSequence==sequence)return null;lastSequence=sequence;return (byte[])lastSent.Clone();}}
- void Run(){try {while(!stop){byte[] frame;lock(gate){Evaluate();frame=duration>0?(byte[])current.Clone():current;}sender.Send(frame,w,h,fps);lock(monitorGate){lastSent=frame;sequence++;}Interlocked.Increment(ref Frames);}}catch(Exception e){Error=e.Message;}finally{sender.Dispose();}}
+ public OnAirStatus ReadOnAirStatus(){lock(monitorGate)return new OnAirStatus{Paths=(string[])sentStatus.Paths.Clone(),Transitioning=sentStatus.Transitioning,Sequence=sentStatus.Sequence};}
+ void Run(){try {while(!stop){byte[] frame;string[] paths;bool transitioning;lock(gate){Evaluate();frame=duration>0?(byte[])current.Clone():current;paths=new string[contributors.Count];contributors.Keys.CopyTo(paths,0);transitioning=duration>0;}sender.Send(frame,w,h,fps);lock(monitorGate){lastSent=frame;sequence++;sentStatus=new OnAirStatus{Paths=paths,Transitioning=transitioning,Sequence=sequence};}Interlocked.Increment(ref Frames);}}catch(Exception e){Error=e.Message;}finally{sender.Dispose();}}
  public void Dispose(){stop=true;thread.Join();}
 }
 }
