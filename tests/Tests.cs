@@ -47,10 +47,9 @@ class Tests {
   if(args.Length>0&&args[0]=="--ui")RoutingTests.ProofPath="output-sections-proof.png";
   RoutingTests.Run(Check,args.Length>0&&args[0]=="--ndi");
   CompanionTests.Run(Check);
-  StopAndNumberTests.Run(Check,args.Length>0&&args[0]=="--ndi");
+  RecallTests.Run(Check);StopAndNumberTests.Run(Check,args.Length>0&&args[0]=="--ndi");
   using(var window=new MainWindow(Path.Combine(Path.GetTempPath(),"NDIPlayer-no-preferences-"+Guid.NewGuid()+".json"))){window.CreateControl();window.PerformLayout();Check(window.Controls.Count==3,"interfaccia costruzione");}
   Console.WriteLine(count+" test superati");
  }
  class Fake:IVideoSender{public volatile bool Seen,Disposed;public volatile int Alpha;public void Send(byte[] p,int w,int h,int fps){Alpha=p[3];if(Alpha==255)Seen=true;Thread.Sleep(10);}public void Dispose(){Disposed=true;}}
 }
-
