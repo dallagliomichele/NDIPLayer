@@ -5,10 +5,17 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build and test
+      - name: Build installer and test
         shell: powershell
-        run: ./build.ps1
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $runtime = Join-Path $env:RUNNER_TEMP 'NDI6Runtime.exe'
+          Invoke-WebRequest 'https://downloads.ndi.tv/SDK/NDI_SDK/NDI%206%20Runtime.exe' -OutFile $runtime
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (!(Test-Path $iscc)) { throw 'Inno Setup compiler not found on runner' }
+          ./installer/build-installer.ps1 -RuntimeFile $runtime -IsccPath $iscc
       - uses: actions/upload-artifact@v4
         with:
-          name: WatchoutImageNDI-win-x64
-          path: bin/WatchoutImageNDI.exe
+          name: NDIPlayer-0.1.1-Setup-win-x64
+          path: dist/NDIPlayer-0.1.1-Setup-win-x64.exe
+          if-no-files-found: error

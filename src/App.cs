@@ -19,6 +19,8 @@ public class MainWindow:Form {
   var top=new FlowLayoutPanel{Dock=DockStyle.Top,Height=82,AutoScroll=true};Controls.Add(top);
   AddButton(top,"Apri cartella",delegate{using(var dialog=new FolderBrowserDialog()){if(dialog.ShowDialog()==DialogResult.OK){settings.Root=dialog.SelectedPath;Scan();Save();}}});
   AddButton(top,"Aggiorna",delegate{Scan();}); AddField(top,"Larghezza",width);AddField(top,"Altezza",height);AddField(top,"fps",fps);top.Controls.Add(start);start.Click+=delegate{Toggle();};
+  var ndiLink=new LinkLabel{Text="NDI® · ndi.video",AutoSize=true};ndiLink.LinkClicked+=delegate{System.Diagnostics.Process.Start("https://ndi.video/");};top.Controls.Add(ndiLink);
+  AddButton(top,"Info",delegate{MessageBox.Show("NDI® is a registered trademark of Vizrt NDI AB.\r\nhttps://ndi.video/\r\nRuntime distribuito tramite il redistributable ufficiale, con licenza propria.","NDIPlayer — Informazioni");});
   var bottom=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=100};Controls.Add(bottom);AddField(bottom,"Scala %",scale);AddField(bottom,"X px",x);AddField(bottom,"Y px",y);bottom.Controls.Add(dissolve);AddField(bottom,"Durata ms",fade);
   AddButton(bottom,"INVIA selezione",delegate{Cue(false);});AddButton(bottom,"CLEAR trasparente",delegate{Cue(true);});AddButton(bottom,"Reset posizione",delegate{scale.Value=100;x.Value=0;y.Value=0;});
   status.AutoSize=true;bottom.Controls.Add(status);

@@ -18,8 +18,9 @@ public sealed class NdiSender:IVideoSender {
  [DllImport(Dll,CallingConvention=CallingConvention.Cdecl)] static extern void NDIlib_destroy();
  IntPtr handle; bool initialized;
  public NdiSender(string name) {
-  string dir=Environment.GetEnvironmentVariable("NDI_RUNTIME_DIR_V6") ?? Environment.GetEnvironmentVariable("NDI_RUNTIME_DIR_V5");
-  string[] paths={Path.Combine(AppDomain.CurrentDomain.BaseDirectory,Dll), dir==null?"":Path.Combine(dir,Dll),Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),"NDI","NDI 6 Tools","Runtime",Dll)};
+  string dir=Environment.GetEnvironmentVariable("NDI_RUNTIME_DIR_V6") ?? Environment.GetEnvironmentVariable("NDI_RUNTIME_DIR_V6",EnvironmentVariableTarget.Machine) ?? Environment.GetEnvironmentVariable("NDI_RUNTIME_DIR_V5") ?? Environment.GetEnvironmentVariable("NDI_RUNTIME_DIR_V5",EnvironmentVariableTarget.Machine);
+  string pf=Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+  string[] paths={Path.Combine(AppDomain.CurrentDomain.BaseDirectory,Dll), dir==null?"":Path.Combine(dir,Dll),Path.Combine(pf,"NDI","NDI 6 Runtime","v6",Dll),Path.Combine(pf,"NDI","NDI 6 Runtime",Dll),Path.Combine(pf,"NDI","NDI 6 Tools","Runtime",Dll)};
   bool loaded=false; foreach(string p in paths) if(File.Exists(p) && LoadLibrary(p)!=IntPtr.Zero){loaded=true;break;}
   if(!loaded) throw new InvalidOperationException("Runtime NDI x64 assente. Installa NDI Runtime/Tools o imposta NDI_RUNTIME_DIR_V6.");
   if(!NDIlib_initialize()) throw new InvalidOperationException("Inizializzazione NDI fallita."); initialized=true;

@@ -1,11 +1,11 @@
-# Watchout Image NDI · prima versione 0.1
+# Watchout Image NDI · versione 0.1.1
 
 App Windows x64 per inviare immagini su un flusso NDI con alpha. Interfaccia in italiano. Repository privato: https://github.com/dallagliomichele/NDIPLayer. Sorgenti e cronologia condivisi tramite GitHub.
 
 ## Avvio
 
-1. Windows 10/11 x64 con .NET Framework 4.8 e NDI Runtime x64 (oppure NDI Tools ufficiali). Non serve il .NET SDK. Il runtime NDI non è incluso: installarlo dal sito ufficiale https://ndi.video/tools/ rispettando le sue condizioni di licenza.
-2. Avvia `bin/WatchoutImageNDI.exe` (nello ZIP distribuibile l'eseguibile è alla radice).
+1. Windows 10/11 x64 con .NET Framework 4.8. Esegui `NDIPlayer-0.1.1-Setup-win-x64.exe`: include il redistributable ufficiale **NDI 6 Runtime 6.3.2.0**, senza NDI Tools. Se necessario apre il setup del runtime, con licenza propria da accettare e possibile richiesta amministratore. Poi installa l'app per l'utente corrente e crea il collegamento nel menu Start. Non serve il .NET SDK.
+2. Avvia NDIPlayer dal menu Start. Se usi i soli sorgenti o il vecchio ZIP portabile, il runtime resta da installare separatamente. Informazioni NDI: https://ndi.video/ . NDI® is a registered trademark of Vizrt NDI AB.
 3. Apri una cartella: include sottocartelle, evita collegamenti circolari, segnala cartelle non accessibili. Aggiorna ripete la scansione.
 4. Seleziona un file: anteprima su scacchiera, che indica la trasparenza e non viene trasmessa. PNG, JPEG, BMP, GIF, TIFF e ICO; per formati multipagina/animati viene utilizzato il primo frame. HEIC, WebP, SVG e RAW non sono supportati in questa versione.
 5. Imposta dimensioni e fps prima di avviare NDI. Default 1920×1080 progressivo, 50 fps; larghezza pari, massimo 3840×2160 e 60 fps. Arresta NDI per cambiare formato.
@@ -57,3 +57,15 @@ Repository privato autorizzato: https://github.com/dallagliomichele/NDIPLayer, r
 Da altre postazioni: clonare il repository, eseguire `build.ps1`, installare NDI Runtime e selezionare la propria cartella. Prima di lavorare fare pull, poi commit e push delle modifiche. GitHub ospita codice e cronologia; playout e immagini restano sulla postazione Windows nella rete WATCHOUT.
 
 Nessuna licenza open source applicata automaticamente. Verificare termini NDI prima di distribuire il prodotto o includere runtime/SDK proprietari.
+
+## Installer completo 0.1.1
+
+Il pacchetto contiene app, documentazione e redistributable NDI originale. Non scarica il runtime durante l'installazione. .NET Framework 4.8 è un prerequisito verificato dal setup; se assente, installarlo tramite Windows Update. Non si accetta la licenza NDI in silenzio: il setup ufficiale viene aperto quando il runtime manca o è più vecchio. Un runtime uguale o successivo già rilevato viene conservato. Annullando il setup NDI, non si prosegue con l'app.
+
+Disinstalla NDIPlayer da Impostazioni > App. Le preferenze personali e il runtime condiviso rimangono; quest'ultimo si rimuove separatamente da Windows. L'installer dell'app non è firmato digitalmente; il redistributable incorporato conserva la firma originale Vizrt AG.
+
+Per ricostruire, scarica il [redistributable ufficiale](https://downloads.ndi.tv/SDK/NDI_SDK/NDI%206%20Runtime.exe), poi esegui `installer/build-installer.ps1 -RuntimeFile C:\percorso\NDI6Runtime.exe -IsccPath C:\percorso\ISCC.exe`. Serve Inno Setup 6.5+ o 7; verificare i termini del compilatore per l'uso previsto. Il file generato è in `dist/`. Lo script verifica hash e firma prima di incorporare il redistributable. Non caricare il compiler o i binari proprietari nei sorgenti Git.
+
+Runtime verificato: versione 6.3.2.0, firma Authenticode valida Vizrt AG, SHA-256 `7EE73EEDB56402BCA5100868353DBAB4E944B6C37D2D9881580698A3B61346CD`. Se NDI aggiorna il download, la build si ferma: verificare firma/versione e aggiornare il pin prima di ricostruire.
+
+Verifiche effettuate: compilazione installer con runtime incorporato e 15 test applicativi, incluso sender NDI reale sulla postazione di sviluppo. Non è stata eseguita un'installazione/disinstallazione su Windows pulito: prima della distribuzione operativa verificare il setup su una macchina di prova senza NDI Tools, inclusi annullamento licenza, avvio, clear e disinstallazione. Le prove WATCHOUT restano quelle indicate sopra.
