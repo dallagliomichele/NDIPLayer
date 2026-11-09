@@ -5,7 +5,7 @@
 [Setup]
 AppId={{4031E489-7E18-4ED7-A0AA-49283A04AA63}
 AppName=NDIPlayer
-AppVersion=0.9.1
+AppVersion=0.10.0
 AppPublisher=Michele Dallaglio
 AppPublisherURL=https://github.com/dallagliomichele/NDIPLayer
 DefaultDirName={localappdata}\Programs\NDIPlayer
@@ -15,7 +15,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 OutputDir=..\dist
-OutputBaseFilename=NDIPlayer-0.9.1-Setup-win-x64
+OutputBaseFilename=NDIPlayer-0.10.0-Setup-win-x64
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -30,6 +30,8 @@ Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 [Files]
 Source: "..\bin\WatchoutImageNDI.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\bin\video\*"; DestDir: "{app}\video"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\third-party\FFmpeg-NOTICE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "NOTICE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RuntimeFile}"; DestName: "NDI6Runtime.exe"; Flags: dontcopy
 

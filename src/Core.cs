@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 
 namespace ImageNdi {
-public class Placement { public double Scale {get;set;} public int X {get;set;} public int Y {get;set;} public Placement(){Scale=1;} }
+public class Placement { public bool Loop {get;set;} public double Scale {get;set;} public int X {get;set;} public int Y {get;set;} public Placement(){Scale=1;} }
 public static class PlacementCoordinates {
  // Keep stored offsets compatible with older versions; expose absolute centers in the UI.
  public static PointF Center(Placement placement,int width,int height){return new PointF(width/2f+placement.X,height/2f+placement.Y);}
@@ -26,6 +26,7 @@ public static class Renderer {
   return new RectangleF((float)((w-iw*s)/2+p.X),(float)((h-ih*s)/2+p.Y),(float)(iw*s),(float)(ih*s));
  }
  public static Bitmap LoadBitmap(string path){
+  if(VideoTools.IsVideo(path))return VideoTools.Poster(path);
   using(var src=Image.FromFile(path)){
    try { if(Array.IndexOf(src.PropertyIdList,0x112)>=0) { int o=src.GetPropertyItem(0x112).Value[0]; RotateFlipType[] ops={RotateFlipType.RotateNoneFlipNone,RotateFlipType.RotateNoneFlipNone,RotateFlipType.RotateNoneFlipX,RotateFlipType.Rotate180FlipNone,RotateFlipType.Rotate180FlipX,RotateFlipType.Rotate90FlipX,RotateFlipType.Rotate90FlipNone,RotateFlipType.Rotate270FlipX,RotateFlipType.Rotate270FlipNone}; if(o<ops.Length) src.RotateFlip(ops[o]); }} catch(ArgumentException){}
    return new Bitmap(src);
@@ -53,7 +54,7 @@ public static class Renderer {
  }
 }
 public static class Library {
- static readonly HashSet<string> Formats=new HashSet<string>(StringComparer.OrdinalIgnoreCase){".png",".jpg",".jpeg",".bmp",".gif",".tif",".tiff",".ico"};
+ static readonly HashSet<string> Formats=new HashSet<string>(StringComparer.OrdinalIgnoreCase){".png",".jpg",".jpeg",".bmp",".gif",".tif",".tiff",".ico",".mov"};
  public static bool Displayable(string path){try{return Formats.Contains(Path.GetExtension(path))&&!Excluded(path,File.Exists(path)?File.GetAttributes(path):FileAttributes.Normal);}catch(IOException){return false;}catch(UnauthorizedAccessException){return false;}}
  static bool Excluded(string path,FileAttributes attributes){string name=Path.GetFileName(path);
   return (attributes&FileAttributes.Hidden)!=0 || name.StartsWith("._",StringComparison.Ordinal) || name.StartsWith(".-",StringComparison.Ordinal) ||

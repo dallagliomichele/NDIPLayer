@@ -1,0 +1,28 @@
+FFmpeg video component for NDIPlayer 0.10.0
+
+FFmpeg https://ffmpeg.org/ - Copyright (c) 2000-2026 the FFmpeg developers.
+This software uses FFmpeg as an independent command-line process under LGPLv3
+or later. FFmpeg and its libraries remain replaceable in the video directory.
+No changes were made to FFmpeg or its libraries. No GPL-only or nonfree build
+was selected. No ownership of FFmpeg is claimed. LGPL rights, including reverse
+engineering to debug changes to these libraries, are not restricted.
+
+Version: n8.1.3-34-ga35157abb9-20261109, Windows x64 LGPL shared.
+Binary provider (linked by ffmpeg.org/download.html): FFmpeg-Builds/BtbN.
+Archive SHA256: 7F2CD74C2805437D7F07739FDD7BEA7C9D851EE2DBA9503FC8E7D60C24A57447
+Original archive:
+https://github.com/FFmpeg-Builds/FFmpeg-Builds/releases/download/autobuild-2026-11-09-12-42/ffmpeg-n8.1-latest-win64-lgpl-shared-8.1.zip
+
+Corresponding FFmpeg source, included as video/FFmpeg-source.zip:
+https://github.com/FFmpeg/FFmpeg/archive/a35157abb96167fd7308edc92b55408d5bb084b0.zip
+Build scripts, included as video/FFmpeg-build-scripts.zip:
+https://github.com/FFmpeg-Builds/FFmpeg-Builds/archive/c9fe5114060e507409f7ee07edfd82efaf25d767.zip
+Build command: ./makeimage.sh win64 lgpl-shared 8.1
+               ./build.sh win64 lgpl-shared 8.1
+Full configure line and compiler version: video/BUILD-CONFIGURATION.txt.
+Build scripts contain recipes and upstream source references for dependencies.
+License text: video/COPYING.LGPLv3 and video/COPYING.GPLv3.
+
+The provider retains daily archives for 14 days. Keep the verified original ZIP
+with your development files; pass it to installer/prepare-video.ps1 -Archive.
+The installer is self-contained and requires no Internet access to install.

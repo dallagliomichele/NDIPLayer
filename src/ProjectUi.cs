@@ -15,7 +15,7 @@ public partial class MainWindow {
  bool loadingProject,refreshingBlocks;string projectPath,savedFingerprint,blockDragId;Point blockDragOrigin;
  PlaylistBlock ActiveBlock {get{return settings.Blocks.Find(b=>b.Id==settings.ActiveBlockId);}}
  void CaptureProjectControls(){if(loadingProject)return;settings.OutputWidth=(int)width.Value;settings.OutputHeight=(int)height.Value;settings.OutputFps=(int)fps.Value;settings.ChannelName=channelName.Text;settings.PreviewChannelName=previewChannelName.Text;settings.Dissolve=dissolve.Checked;settings.FadeMs=(int)fade.Value;settings.EscClearMs=(int)escClearFade.Value;}
- void UpdateProjectTitle(){if(savedFingerprint==null)return;Text="NDIPlayer — 0.9.1 · "+(projectPath==null?"Progetto locale":Path.GetFileName(projectPath))+(ProjectStore.Fingerprint(settings)==savedFingerprint?"":" *");}
+ void UpdateProjectTitle(){if(savedFingerprint==null)return;Text="NDIPlayer — 0.10.0 · "+(projectPath==null?"Progetto locale":Path.GetFileName(projectPath))+(ProjectStore.Fingerprint(settings)==savedFingerprint?"":" *");}
  void InitializeProjects(FlowLayoutPanel top,Control sidebar){
   top.Height=112;
   AddButton(top,"Nuovo progetto",delegate{if(ConfirmProjectChange())ApplyProject(new Settings(),null);});
@@ -23,7 +23,7 @@ public partial class MainWindow {
   AddButton(top,"Salva progetto",delegate{WriteProject(false);});AddButton(top,"Salva con nome",delegate{WriteProject(true);});
   AddButton(top,"Ricollega cartella",delegate{using(var d=new FolderBrowserDialog())if(d.ShowDialog()==DialogResult.OK){ProjectStore.Relocate(settings,d.SelectedPath);RefreshBlocks();Scan();Save();}});
   top.Controls.Add(configNotice);top.Controls.Add(onAirLabel);
-  var side=new TableLayoutPanel{Dock=DockStyle.Fill,RowCount=3,ColumnCount=1};side.RowStyles.Add(new RowStyle(SizeType.Absolute,235));side.RowStyles.Add(new RowStyle(SizeType.Absolute,58));side.RowStyles.Add(new RowStyle(SizeType.Percent,100));sidebar.Controls.Remove(files);sidebar.Controls.Add(side);
+  var side=new TableLayoutPanel{Dock=DockStyle.Fill,RowCount=3,ColumnCount=1};side.RowStyles.Add(new RowStyle(SizeType.Absolute,235));side.RowStyles.Add(new RowStyle(SizeType.Absolute,58));side.RowStyles.Add(new RowStyle(SizeType.Percent,100));var scrolling=sidebar as ScrollableControl;if(scrolling!=null){scrolling.AutoScroll=true;scrolling.AutoScrollMinSize=new Size(0,480);}side.Dock=DockStyle.Top;side.Height=Math.Max(480,sidebar.ClientSize.Height);sidebar.SizeChanged+=delegate{side.Height=Math.Max(480,sidebar.ClientSize.Height);};sidebar.Controls.Remove(files);sidebar.Controls.Add(side);
   var blocks=new Panel{Dock=DockStyle.Fill};var tools=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=94,AutoScroll=true};
   AddButton(tools,"Nuovo blocco",delegate{string name=AskText("Nuovo blocco","Nome del blocco","");if(name==null)return;try{var b=ProjectStore.AddBlock(settings,name);settings.ActiveBlockId=b.Id;RefreshBlocks();RefreshVisible();Save();}catch(Exception e){MessageBox.Show(e.Message);}});
   AddButton(tools,"Rinomina",delegate{var b=ActiveBlock;if(b==null)return;string name=AskText("Rinomina blocco","Nome",b.Name);if(String.IsNullOrWhiteSpace(name))return;b.Name=name.Trim();RefreshBlocks();Save();});
