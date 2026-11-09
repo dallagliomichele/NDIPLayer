@@ -40,8 +40,15 @@ static class FeatureTests {
     var item=list.Items[0];
     var deadline=DateTime.UtcNow.AddSeconds(3);while(DateTime.UtcNow<deadline&&list.Items[0].ImageIndex==0){Application.DoEvents();Thread.Sleep(10);}
     check(list.Items[0].ImageIndex>0,"miniatura decodificata in sottofondo");
+    int activated=0;browser.ImageDoubleClicked+=delegate{activated++;};
+    var doubleClick=typeof(Control).GetMethod("OnMouseDoubleClick",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+    var rect=list.GetItemRect(0,ItemBoundsPortion.Label);
+    doubleClick.Invoke(list,new object[]{new MouseEventArgs(MouseButtons.Left,2,rect.Left+2,rect.Top+2,0)});
+    check(activated==1&&browser.SelectedPath==file,"doppio clic miniatura attiva immagine corretta");
+    doubleClick.Invoke(list,new object[]{new MouseEventArgs(MouseButtons.Left,2,480,410,0)});check(activated==1,"doppio clic su area vuota non invia");
     if(BrowserProofPath!=null)using(var shot=new Bitmap(browser.Width,browser.Height)){browser.DrawToBitmap(shot,new Rectangle(0,0,shot.Width,shot.Height));shot.Save(BrowserProofPath,System.Drawing.Imaging.ImageFormat.Png);}
     browser.SetPreferences(false,256);check(!browser.ThumbnailsEnabled&&browser.SelectedPath==file,"ritorno elenco conserva selezione");
+    rect=list.GetItemRect(0,ItemBoundsPortion.Label);doubleClick.Invoke(list,new object[]{new MouseEventArgs(MouseButtons.Left,2,rect.Left+2,rect.Top+2,0)});check(activated==2,"doppio clic elenco attiva immagine");
     browser.SetFiles(new List<string>());check(browser.SelectedPath==null&&browser.Count==0,"cartella vuota rimuove selezione precedente");
    }
   }finally{Directory.Delete(dir,true);}

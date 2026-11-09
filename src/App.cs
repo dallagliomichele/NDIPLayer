@@ -18,7 +18,7 @@ public class MainWindow:Form {
  bool pointerEditing;decimal dragCenterX,dragCenterY;
  Bitmap selectedSource;
  public MainWindow():this(null){}
- public MainWindow(string preferencesPath){state=preferencesPath??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WatchoutImageNDI","settings.json");Text="NDIPlayer — 0.3.0";Width=1600;Height=900;MinimumSize=new Size(1150,650);
+ public MainWindow(string preferencesPath){state=preferencesPath??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WatchoutImageNDI","settings.json");Text="NDIPlayer — 0.3.1";Width=1600;Height=900;MinimumSize=new Size(1150,650);
   x.Name="ImageCenterX";y.Name="ImageCenterY";scale.Name="ImageScale";preview.Name="SelectionPreview";program.Name="ProgramPreview";files.Name="ImageLibrary";width.Name="OutputWidth";height.Name="OutputHeight";x.DecimalPlaces=y.DecimalPlaces=scale.DecimalPlaces=1;
   try{if(File.Exists(state))settings=new JavaScriptSerializer().Deserialize<Settings>(File.ReadAllText(state));if(settings==null||settings.Images==null)settings=new Settings();}catch(Exception){status.Text="Preferenze non leggibili: ripristinate.";}
   channelName.Text=String.IsNullOrWhiteSpace(settings.ChannelName)?NdiChannel.DefaultName:settings.ChannelName;
@@ -36,6 +36,7 @@ public class MainWindow:Form {
   var split=new SplitContainer{Width=1500,Dock=DockStyle.Fill,SplitterDistance=350};Controls.Add(split);split.BringToFront();files.Dock=DockStyle.Fill;split.Panel1.Controls.Add(files);
   var monitors=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=1};monitors.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,50));monitors.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,50));monitors.RowStyles.Add(new RowStyle(SizeType.Percent,100));preview.Dock=DockStyle.Fill;program.Dock=DockStyle.Fill;monitors.Controls.Add(preview,0,0);monitors.Controls.Add(program,1,0);split.Panel2.Controls.Add(monitors);
   files.SelectionChanged+=delegate{preview.CancelInteraction();selected=files.SelectedPath;if(selectedSource!=null){selectedSource.Dispose();selectedSource=null;}Placement p;if(selected==null||!settings.Images.TryGetValue(selected,out p))p=new Placement();string error=null;if(selected!=null)try{selectedSource=Renderer.LoadBitmap(selected);}catch(Exception e){error=e.Message;}ApplyPlacement(p,false);if(error!=null)status.Text=error;};
+  files.ImageDoubleClicked+=delegate{Cue(false);};
   foreach(var n in new[]{scale,x,y})n.ValueChanged+=delegate{if(loading)return;ApplyPlacement(PlacementNow(),!pointerEditing);};
   foreach(var n in new[]{width,height})n.ValueChanged+=delegate{if(output==null){preview.CancelInteraction();Placement p;if(selected==null||!settings.Images.TryGetValue(selected,out p))p=new Placement();ApplyPlacement(p,false);}};
   preview.DragStarted+=delegate{pointerEditing=true;dragCenterX=x.Value;dragCenterY=y.Value;};

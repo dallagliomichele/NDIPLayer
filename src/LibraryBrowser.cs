@@ -21,6 +21,7 @@ public sealed class LibraryBrowser:UserControl {
  List<string> paths=new List<string>(); ImageList images; int generation;
  CancellationTokenSource cancellation; BlockingCollection<string> queue;
  public event EventHandler SelectionChanged;
+ public event EventHandler ImageDoubleClicked;
  public event EventHandler PreferencesChanged;
  public string SelectedPath {get{return view.SelectedIndices.Count==0?null:paths[view.SelectedIndices[0]];}}
  public bool ThumbnailsEnabled {get{return mode.SelectedIndex==1;}}
@@ -30,10 +31,17 @@ public sealed class LibraryBrowser:UserControl {
   mode.Items.AddRange(new object[]{"Elenco","Miniature"});mode.SelectedIndex=0;
   var bar=new FlowLayoutPanel{Dock=DockStyle.Top,Height=70,AutoScroll=true};
   bar.Controls.Add(mode);bar.Controls.Add(new Label{Text="Dimensione",AutoSize=true,Margin=new Padding(3,8,0,0)});bar.Controls.Add(size);bar.Controls.Add(sizeLabel);
+  bar.Controls.Add(new Label{Text="Clic: seleziona · Doppio clic: manda in onda",AutoSize=true});
   Controls.Add(view);Controls.Add(bar);
   view.Columns.Add("Immagine",180);view.Columns.Add("Percorso",400);view.View=View.Details;view.FullRowSelect=true;
   view.RetrieveVirtualItem+=Retrieve;
   view.SelectedIndexChanged+=delegate{if(SelectionChanged!=null)SelectionChanged(this,EventArgs.Empty);};
+  view.MouseDoubleClick+=delegate(object sender,MouseEventArgs e){
+   if(e.Button!=MouseButtons.Left)return;var hit=view.HitTest(e.Location);
+   if(hit.Item==null||hit.Item.Index<0||hit.Item.Index>=paths.Count)return;
+   int index=hit.Item.Index;if(view.SelectedIndices.Count!=1||view.SelectedIndices[0]!=index){view.SelectedIndices.Clear();view.SelectedIndices.Add(index);}
+   if(ImageDoubleClicked!=null)ImageDoubleClicked(this,EventArgs.Empty);
+  };
   mode.SelectedIndexChanged+=delegate{view.View=ThumbnailsEnabled?View.LargeIcon:View.Details;size.Enabled=ThumbnailsEnabled;NotifyPreferences();view.Invalidate();};
   size.ValueChanged+=delegate{sizeLabel.Text=size.Value+" px";};
   size.MouseUp+=delegate{RebuildCache();NotifyPreferences();};
