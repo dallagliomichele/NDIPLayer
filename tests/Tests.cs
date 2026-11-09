@@ -21,7 +21,7 @@ class Tests {
   }finally{Directory.Delete(dir,true);}
   Check(Marshal.SizeOf(typeof(NdiSender.Frame))==72,"ABI frame NDI x64 72 byte");
   var fake=new Fake();using(var p=new Playout(fake,16,16,50)){var frame=new byte[1024];frame[3]=255;p.Cue(frame,0);Thread.Sleep(100);Check(fake.Seen,"playout invia cut");p.Cue(new byte[1024],.02);Thread.Sleep(100);Check(fake.Alpha==0,"playout dissolve clear");}Check(fake.Disposed,"rilascio sender");
-  if(args.Length>0&&args[0]=="--ndi"){using(var sender=new NdiSender("Watchout Image NDI TEST")){for(int i=0;i<25;i++)sender.Send(transparent,16,16,50);}Check(true,"runtime NDI reale crea/invia/distrugge");}
+  if(args.Length>0&&args[0]=="--ndi"){using(var sender=new NdiSender("NDIPlayer TEST — regia è")){for(int i=0;i<25;i++)sender.Send(transparent,16,16,50);}Check(true,"runtime NDI reale crea/invia/distrugge con nome UTF-8");}
   var bounds=PreviewCanvas.FrameBounds(new Size(880,600),1920,1080);
   Check(Math.Abs((double)bounds.Width/bounds.Height-16.0/9)<.005&&bounds.Top>36,"preview 16:9 centrato in finestra più alta");
   var portrait=PreviewCanvas.FrameBounds(new Size(880,600),1080,1920);

@@ -41,10 +41,19 @@ public static class Renderer {
 }
 public static class Library {
  static readonly HashSet<string> Formats=new HashSet<string>(StringComparer.OrdinalIgnoreCase){".png",".jpg",".jpeg",".bmp",".gif",".tif",".tiff",".ico"};
+ static bool Excluded(string path,FileAttributes attributes){string name=Path.GetFileName(path);
+  return (attributes&FileAttributes.Hidden)!=0 || name.StartsWith("._",StringComparison.Ordinal) || name.StartsWith(".-",StringComparison.Ordinal) ||
+   ((attributes&FileAttributes.Directory)!=0&&(name.StartsWith(".",StringComparison.Ordinal)||String.Equals(name,"__MACOSX",StringComparison.OrdinalIgnoreCase)));
+ }
  public static List<string> Scan(string root,List<string> warnings) {
   var found=new List<string>(); var dirs=new Stack<string>(); dirs.Push(root);
-  while(dirs.Count>0) {string d=dirs.Pop(); try {foreach(var f in Directory.GetFiles(d)) if(Formats.Contains(Path.GetExtension(f))) found.Add(f);
-   foreach(var sub in Directory.GetDirectories(d)) if((File.GetAttributes(sub)&FileAttributes.ReparsePoint)==0) dirs.Push(sub);
+  while(dirs.Count>0) {string d=dirs.Pop(); try {foreach(var f in Directory.GetFiles(d)) {
+    if(!Formats.Contains(Path.GetExtension(f)))continue;
+    try{if(!Excluded(f,File.GetAttributes(f)))found.Add(f);}catch(UnauthorizedAccessException e){warnings.Add(e.Message);}catch(IOException e){warnings.Add(e.Message);}
+   }
+   foreach(var sub in Directory.GetDirectories(d)) {
+    try{var attributes=File.GetAttributes(sub);if((attributes&FileAttributes.ReparsePoint)==0&&!Excluded(sub,attributes))dirs.Push(sub);}catch(UnauthorizedAccessException e){warnings.Add(e.Message);}catch(IOException e){warnings.Add(e.Message);}
+   }
   } catch(UnauthorizedAccessException e){warnings.Add(e.Message);} catch(IOException e){warnings.Add(e.Message);} }
   found.Sort(StringComparer.OrdinalIgnoreCase); return found;
  }

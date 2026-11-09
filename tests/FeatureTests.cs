@@ -45,6 +45,29 @@ static class FeatureTests {
     browser.SetFiles(new List<string>());check(browser.SelectedPath==null&&browser.Count==0,"cartella vuota rimuove selezione precedente");
    }
   }finally{Directory.Delete(dir,true);}
+  string catalog=Path.Combine(Path.GetTempPath(),"NDIPlayer-filter-"+Guid.NewGuid());Directory.CreateDirectory(catalog);
+  try{
+   var keep=new List<string>{Path.Combine(catalog,"foto.JPG"),Path.Combine(catalog,"_grafica.png"),Path.Combine(catalog,"-grafica.png")};
+   foreach(string path in keep)File.WriteAllText(path,"test");
+   File.WriteAllText(Path.Combine(catalog,"._foto.JPG"),"AppleDouble");File.WriteAllText(Path.Combine(catalog,".-foto.png"),"metadata");
+   string hidden=Path.Combine(catalog,"nascosta.png");File.WriteAllText(hidden,"hidden");File.SetAttributes(hidden,File.GetAttributes(hidden)|FileAttributes.Hidden);
+   foreach(string folder in new[]{"__MACOSX",".AppleDouble","nascosta"}){string sub=Path.Combine(catalog,folder);Directory.CreateDirectory(sub);File.WriteAllText(Path.Combine(sub,"icona.png"),"metadata");if(folder=="nascosta")File.SetAttributes(sub,File.GetAttributes(sub)|FileAttributes.Hidden);}
+   string visible=Path.Combine(catalog,"visibile");Directory.CreateDirectory(visible);string nested=Path.Combine(visible,"contenuto.jpeg");File.WriteAllText(nested,"image");keep.Add(nested);
+   var warnings=new List<string>();var scanned=Library.Scan(catalog,warnings);
+   check(!scanned.Contains(hidden),"catalogo esclude attributo nascosto Windows");
+   check(!scanned.Exists(p=>Path.GetFileName(p).StartsWith("._")||Path.GetFileName(p).StartsWith(".-")),"catalogo esclude file AppleDouble e prefisso .-");
+   check(scanned.Count==keep.Count&&keep.TrueForAll(p=>scanned.Contains(p))&&warnings.Count==0,"catalogo salta cartelle nascoste e metadata Mac mantenendo immagini normali e sottocartelle");
+  }finally{Directory.Delete(catalog,true);}
+  check(NdiChannel.Validate("  Regia È 1  ")=="Regia È 1","nome canale personalizzato con accenti e spazi");
+  bool empty=false;try{NdiChannel.Validate("   ");}catch(ArgumentException){empty=true;}check(empty,"nome canale vuoto rifiutato");
+  bool invalid=true;foreach(char c in "\\/:*?\"<>|\n\0"){try{NdiChannel.Validate("Regia"+c+"1");invalid=false;}catch(ArgumentException){}}check(invalid,"caratteri NDI non validi rifiutati");
+  bool tooLong=false;try{NdiChannel.Validate(new string('x',129));}catch(ArgumentException){tooLong=true;}check(tooLong,"nome canale troppo lungo rifiutato");
+  var serializer=new System.Web.Script.Serialization.JavaScriptSerializer();
+  check(serializer.Deserialize<Settings>("{\"Images\":{}}").ChannelName==NdiChannel.DefaultName,"vecchie preferenze mantengono nome NDI predefinito");
+  var saved=serializer.Deserialize<Settings>(serializer.Serialize(new Settings{ChannelName="Regia È 1"}));check(saved.ChannelName=="Regia È 1","nome canale salvato nelle preferenze");
+  string preferences=Path.Combine(Path.GetTempPath(),"NDIPlayer-name-"+Guid.NewGuid()+".json");
+  try{File.WriteAllText(preferences,serializer.Serialize(saved));using(var window=new MainWindow(preferences)){var fields=window.Controls.Find("NdiChannelName",true);check(fields.Length==1&&fields[0].Text=="Regia È 1","campo nome canale caricato nell'interfaccia");}}
+  finally{File.Delete(preferences);}
  }
  sealed class ControlledSender:IVideoSender {
   public readonly AutoResetEvent Entered=new AutoResetEvent(false),Allow=new AutoResetEvent(false);volatile bool released;
