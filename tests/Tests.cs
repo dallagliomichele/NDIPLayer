@@ -22,7 +22,23 @@ class Tests {
   Check(Marshal.SizeOf(typeof(NdiSender.Frame))==72,"ABI frame NDI x64 72 byte");
   var fake=new Fake();using(var p=new Playout(fake,16,16,50)){var frame=new byte[1024];frame[3]=255;p.Cue(frame,0);Thread.Sleep(100);Check(fake.Seen,"playout invia cut");p.Cue(new byte[1024],.02);Thread.Sleep(100);Check(fake.Alpha==0,"playout dissolve clear");}Check(fake.Disposed,"rilascio sender");
   if(args.Length>0&&args[0]=="--ndi"){using(var sender=new NdiSender("Watchout Image NDI TEST")){for(int i=0;i<25;i++)sender.Send(transparent,16,16,50);}Check(true,"runtime NDI reale crea/invia/distrugge");}
-  using(var window=new MainWindow()){window.CreateControl();window.PerformLayout();using(var shot=new Bitmap(window.Width,window.Height)){window.DrawToBitmap(shot,new Rectangle(0,0,shot.Width,shot.Height));if(args.Length>0&&args[0]=="--ui")shot.Save("interface-preview.png",ImageFormat.Png);}Check(window.Controls.Count==3,"interfaccia costruzione e rendering");}
+  var bounds=PreviewCanvas.FrameBounds(new Size(880,600),1920,1080);
+  Check(Math.Abs((double)bounds.Width/bounds.Height-16.0/9)<.005&&bounds.Top>36,"preview 16:9 centrato in finestra più alta");
+  var portrait=PreviewCanvas.FrameBounds(new Size(880,600),1080,1920);
+  Check(Math.Abs((double)portrait.Width/portrait.Height-9.0/16)<.005&&portrait.Left>20,"preview verticale mantiene aspect ratio");
+  Check(PreviewCanvas.FrameBounds(new Size(10,10),1920,1080).IsEmpty,"preview minimizzato sicuro");
+  using(var canvas=new PreviewCanvas())using(var shot=new Bitmap(880,600))using(var g=Graphics.FromImage(shot)){
+   var display=new Bitmap(1920,1080,PixelFormat.Format32bppArgb);
+   using(var paint=Graphics.FromImage(display)){paint.Clear(Color.Transparent);paint.FillRectangle(Brushes.OrangeRed,690,270,540,540);}
+   canvas.SetFrame(display,1920,1080);canvas.DrawPreview(g,shot.Size);
+   Check(shot.GetPixel(4,300).R==30,"area esterna distinta dalla trasparenza");
+   Check(shot.GetPixel(bounds.Left+20,bounds.Top+20).R==120,"scacchiera confinata al frame");
+   Check(shot.GetPixel(bounds.Left-1,bounds.Top-1).B>200,"bordo di uscita visibile");
+   Check(shot.GetPixel(bounds.Left+bounds.Width/2,bounds.Top+bounds.Height/2).R==255,"immagine nel frame visualizzata in scala");
+   Check(display.GetPixel(0,0).A==0,"guide non alterano bitmap trasmessa");
+   if(args.Length>0&&args[0]=="--ui")shot.Save("preview-frame.png",ImageFormat.Png);
+  }
+  using(var window=new MainWindow()){window.CreateControl();window.PerformLayout();Check(window.Controls.Count==3,"interfaccia costruzione");}
   Console.WriteLine(count+" test superati");
  }
  class Fake:IVideoSender{public volatile bool Seen,Disposed;public volatile int Alpha;public void Send(byte[] p,int w,int h,int fps){Alpha=p[3];if(Alpha==255)Seen=true;Thread.Sleep(10);}public void Dispose(){Disposed=true;}}
