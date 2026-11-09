@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using ImageNdi;
 
 static class RoutingTests {
+ public static string ProofPath;
  static object Field(object target,string field){return typeof(MainWindow).GetField(field,BindingFlags.NonPublic|BindingFlags.Instance).GetValue(target);}
  static void Put(object target,string field,object value){typeof(MainWindow).GetField(field,BindingFlags.NonPublic|BindingFlags.Instance).SetValue(target,value);}
  static object Call(object target,string method,params object[] args){return typeof(MainWindow).GetMethod(method,BindingFlags.NonPublic|BindingFlags.Instance).Invoke(target,args);}
@@ -19,10 +20,13 @@ static class RoutingTests {
    string a=Path.Combine(dir,"A.png"),b=Path.Combine(dir,"B.png");foreach(var path in new[]{a,b})using(var bmp=new Bitmap(8,8)){using(var g=Graphics.FromImage(bmp))g.Clear(path==a?Color.Red:Color.Blue);bmp.Save(path,System.Drawing.Imaging.ImageFormat.Png);}
    var settings=new Settings{Root=dir,OutputWidth=128,OutputHeight=72};string prefs=Path.Combine(dir,"settings.json");File.WriteAllText(prefs,new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(settings));
    using(var window=new MainWindow(prefs)){
+    check(((Label)Field(window,"programLamp")).Text.Contains("SPENTO")&&((Label)Field(window,"previewLamp")).Text.Contains("SPENTO")&&window.Controls.Find("ProgramOutputSection",true).Length==1&&window.Controls.Find("PreviewOutputSection",true).Length==1,"sezioni Program e Preview distinte inizialmente spente");
     var pgm=new Playout(new Probe(),128,72,50);var pv=new Playout(new Probe(),128,72,50);
     Put(window,"output",pgm);Put(window,"outW",128);Put(window,"outH",72);Put(window,"activeProgramFps",50);Put(window,"previewOutput",pv);Put(window,"previewW",128);Put(window,"previewH",72);Put(window,"previewFps",50);Call(window,"SetOutputControlLock");
     var browser=(LibraryBrowser)Field(window,"files");var handle=browser.Handle;foreach(Control c in browser.Controls)if(c is ListView){var listHandle=c.Handle;}Call(window,"Scan");
     check(SpinWait.SpinUntil(()=>pv.ReadOnAirStatus().Paths.Contains(a),2000)&&pgm.ReadOnAirStatus().Paths.Length==0,"selezione inviata alla regia senza modificare Programma");
+    Call(window,"RefreshOutputIndicators");check(((Label)Field(window,"programLamp")).Text.Contains("ACCESO")&&((Label)Field(window,"previewLamp")).Text.Contains("ACCESO"),"entrambi i flussi mostrano indicatore acceso dopo invio");
+    pv.Error="Errore simulato";Call(window,"RefreshOutputIndicators");check(((Label)Field(window,"previewLamp")).Text.Contains("ERRORE")&&((Label)Field(window,"programLamp")).Text.Contains("ACCESO"),"errore Preview distinto dallo stato Program");pv.Error=null;
     Call(window,"Cue",false);check(SpinWait.SpinUntil(()=>pgm.ReadOnAirStatus().Paths.Contains(a),2000),"invio manuale aggiorna Programma");
     browser.SetFiles(new System.Collections.Generic.List<string>{b});check(SpinWait.SpinUntil(()=>pv.ReadOnAirStatus().Paths.Contains(b),2000)&&pgm.ReadOnAirStatus().Paths.SequenceEqual(new[]{a}),"cambio selezione aggiorna solo NDI Preview");
     ((CheckBox)Field(window,"dissolve")).Checked=true;((NumericUpDown)Field(window,"fade")).Value=10000;Call(window,"Cue",false);
@@ -31,6 +35,8 @@ static class RoutingTests {
     check(handled&&SpinWait.SpinUntil(()=>{var s=pgm.ReadOnAirStatus();return !s.Transitioning&&s.Paths.Length==0;},2000),"ESC interrompe dissolvenza e pulisce con cut");
     long seq=0;var pixels=pgm.ReadSentFrame(ref seq);check(pixels!=null&&pixels.All(value=>value==0)&&pv.ReadOnAirStatus().Paths.SequenceEqual(new[]{b})&&(string)Field(window,"selected")==b,"ESC invia alpha zero e conserva anteprima regia e selezione");
     long previewFrames=pv.Frames;Call(window,"Toggle");check(Field(window,"output")==null&&Object.ReferenceEquals(Field(window,"previewOutput"),pv)&&SpinWait.SpinUntil(()=>pv.Frames>previewFrames,2000),"arrestare Programma non arresta Preview NDI");
+    Call(window,"RefreshOutputIndicators");check(((Label)Field(window,"programLamp")).Text.Contains("SPENTO")&&((Label)Field(window,"previewLamp")).Text.Contains("ACCESO"),"arresto Program aggiorna solo il suo indicatore");
+    if(ProofPath!=null){var sections=window.Controls.Find("OutputSections",true)[0];var parent=sections.Parent;parent.Controls.Remove(sections);sections.Size=new Size(1100,88);sections.CreateControl();using(var image=new Bitmap(1100,88)){sections.DrawToBitmap(image,new Rectangle(0,0,1100,88));image.Save(ProofPath,System.Drawing.Imaging.ImageFormat.Png);}parent.Controls.Add(sections);}
     ((NumericUpDown)Field(window,"width")).Value=1920;((NumericUpDown)Field(window,"height")).Value=1080;
     check((int)typeof(MainWindow).GetProperty("FrameWidth",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(window,null)==128,"Preview mantiene formato attivo con nuove impostazioni differite");
     Call(window,"StopPreviewOutput");check(Field(window,"previewOutput")==null,"Preview può essere arrestato separatamente");
