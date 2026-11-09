@@ -16,6 +16,7 @@ public static class NdiChannel {
   foreach(char c in name)if(Char.IsControl(c)||"\\/:*?\"<>|".IndexOf(c)>=0)throw new ArgumentException("Il nome NDI non può contenere caratteri di controllo oppure \\ / : * ? \" < > |.");
   return name;
  }
+ public static string PreviewName(string value){string name=Validate(value);const string suffix=" - Preview";while(true){try{return Validate(name+suffix);}catch(ArgumentException){if(name.Length==0)throw;name=name.Substring(0,name.Length-1);if(name.Length>0&&Char.IsHighSurrogate(name[name.Length-1]))name=name.Substring(0,name.Length-1);}}}
 }
 public interface IVideoSender:IDisposable {void Send(byte[] pixels,int width,int height,int fps);}
 public sealed class NdiSender:IVideoSender {
@@ -29,19 +30,20 @@ public sealed class NdiSender:IVideoSender {
  [DllImport(Dll,CallingConvention=CallingConvention.Cdecl)] static extern void NDIlib_send_destroy(IntPtr sender);
  [DllImport(Dll,CallingConvention=CallingConvention.Cdecl)] static extern void NDIlib_destroy();
  IntPtr handle; bool initialized;
+ static readonly object RuntimeGate=new object();static int runtimeUsers;static IntPtr runtimeModule;
  public NdiSender(string name) {
   name=NdiChannel.Validate(name);
   string dir=Environment.GetEnvironmentVariable("NDI_RUNTIME_DIR_V6") ?? Environment.GetEnvironmentVariable("NDI_RUNTIME_DIR_V6",EnvironmentVariableTarget.Machine) ?? Environment.GetEnvironmentVariable("NDI_RUNTIME_DIR_V5") ?? Environment.GetEnvironmentVariable("NDI_RUNTIME_DIR_V5",EnvironmentVariableTarget.Machine);
   string pf=Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
   string[] paths={Path.Combine(AppDomain.CurrentDomain.BaseDirectory,Dll), dir==null?"":Path.Combine(dir,Dll),Path.Combine(pf,"NDI","NDI 6 Runtime","v6",Dll),Path.Combine(pf,"NDI","NDI 6 Runtime",Dll),Path.Combine(pf,"NDI","NDI 6 Tools","Runtime",Dll)};
-  bool loaded=false; foreach(string p in paths) if(File.Exists(p) && LoadLibrary(p)!=IntPtr.Zero){loaded=true;break;}
-  if(!loaded) throw new InvalidOperationException("Runtime NDI x64 assente. Installa NDI Runtime/Tools o imposta NDI_RUNTIME_DIR_V6.");
-  if(!NDIlib_initialize()) throw new InvalidOperationException("Inizializzazione NDI fallita."); initialized=true;
+  lock(RuntimeGate){if(runtimeUsers==0){if(runtimeModule==IntPtr.Zero)foreach(string p in paths)if(File.Exists(p)){runtimeModule=LoadLibrary(p);if(runtimeModule!=IntPtr.Zero)break;}
+   if(runtimeModule==IntPtr.Zero)throw new InvalidOperationException("Runtime NDI x64 assente. Installa NDI Runtime/Tools o imposta NDI_RUNTIME_DIR_V6.");
+   if(!NDIlib_initialize())throw new InvalidOperationException("Inizializzazione NDI fallita.");}runtimeUsers++;initialized=true;}
   byte[] utf8=Encoding.UTF8.GetBytes(name+"\0");IntPtr text=Marshal.AllocHGlobal(utf8.Length);
   try {Marshal.Copy(utf8,0,text,utf8.Length);var c=new Create{name=text,video=true,audio=false};handle=NDIlib_send_create(ref c);if(handle==IntPtr.Zero) throw new InvalidOperationException("Creazione sender NDI fallita.");} catch {Dispose();throw;} finally {Marshal.FreeHGlobal(text);}
  }
  public void Send(byte[] pixels,int w,int h,int fps){var pin=GCHandle.Alloc(pixels,GCHandleType.Pinned);try {var f=new Frame{width=w,height=h,fourcc=0x41524742,n=fps,d=1,aspect=(float)w/h,format=1,timecode=long.MaxValue,data=pin.AddrOfPinnedObject(),stride=w*4};NDIlib_send_send_video_v2(handle,ref f);}finally{pin.Free();}}
- public void Dispose(){if(handle!=IntPtr.Zero){NDIlib_send_destroy(handle);handle=IntPtr.Zero;}if(initialized){NDIlib_destroy();initialized=false;}}
+ public void Dispose(){if(handle!=IntPtr.Zero){NDIlib_send_destroy(handle);handle=IntPtr.Zero;}lock(RuntimeGate){if(initialized){initialized=false;runtimeUsers--;if(runtimeUsers==0)NDIlib_destroy();}}}
 }
 public sealed class OnAirStatus {public string[] Paths=new string[0];public bool Transitioning;public long Sequence;}
 public sealed class Playout:IDisposable {

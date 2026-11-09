@@ -1,12 +1,24 @@
-# Watchout Image NDI · versione 0.4.1
+# Watchout Image NDI · versione 0.5.0
 
 App Windows x64 per inviare immagini su un flusso NDI con alpha. Interfaccia in italiano. Repository privato: https://github.com/dallagliomichele/NDIPLayer. Sorgenti e cronologia condivisi tramite GitHub.
 
 ## Avvio
 
+## Due flussi NDI: Programma e Preview regia (0.5.0)
+
+Attiva **Invia Preview in regia**, nella barra superiore, per rendere disponibile una seconda sorgente NDI con il nome del canale principale seguito da **` - Preview`** (es. `Watchout Image NDI - Preview`). La scritta accanto alla casella mostra il nome effettivo; per nomi molto lunghi la base viene accorciata per rispettare i limiti NDI. Il ricevitore della regia può selezionare `NOME-PC (nome canale - Preview)`.
+
+La sorgente Preview trasmette l'immagine preparata nel riquadro SELEZIONE, con la stessa scala, posizione, aspect ratio e alpha. Si aggiorna automaticamente quando scegli una foto, la sposti, la ridimensioni o cambi blocco/filtro. È il fotogramma pulito: scacchiera, bordi, scritte e resto dell'interfaccia non vengono trasmessi. Senza una selezione valida è trasparente. Il Programma continua a cambiare solo con INVIA/doppio clic o CLEAR.
+
+I flussi si avviano e arrestano separatamente: Avvia/Arresta NDI controlla il Programma, la casella controlla Preview. Puoi preparare il segnale regia anche con Programma fermo. La casella non viene riattivata automaticamente al riavvio. Entrambi usano lo stesso formato e fps; formato e nome sono modificabili dopo aver arrestato entrambi i flussi. Se carichi un progetto durante la trasmissione, i flussi attivi conservano i propri nomi e formato fino all'arresto, mentre la Preview continua a seguire la selezione del progetto caricato. Due sorgenti comportano due invii NDI e il relativo uso di rete e CPU.
+
+**ESC = clear immediato del Programma.** Quando la finestra principale di NDIPlayer ha il focus, Esc interrompe un'eventuale dissolvenza e invia alpha zero con cut, indipendentemente dalla casella Dissolvenza. Mantiene la selezione e il segnale Preview della regia. Il normale pulsante CLEAR continua invece a rispettare cut/dissolvenza impostati. Nei dialoghi Esc annulla il dialogo; non è una scorciatoia globale di Windows.
+
+La dissolvenza del Programma e la frequenza del monitor locale sono invariate: il monitor locale resta a 10 aggiornamenti/secondo e non rappresenta la fluidità del segnale ricevuto da WATCHOUT.
+
 La casella **Sempre in primo piano**, nella barra superiore, mantiene NDIPlayer sopra le altre finestre. Disattivala per tornare al comportamento normale. La scelta viene salvata localmente in `settings.json.window.json`, accanto alle preferenze dell'app, e ripristinata al successivo avvio. È indipendente dal progetto: aprire un altro progetto non cambia questa preferenza e non modifica il flusso NDI.
 
-## Playlist a blocchi, ricerca e progetti (0.4.1)
+## Playlist a blocchi, ricerca e progetti (0.5.0)
 
 1. Apri la cartella delle immagini e scegli **Tutta la libreria**. Crea i blocchi con **Nuovo blocco** e assegna un nome (es. Apertura, Relatore 1, Intervallo).
 2. Seleziona le foto con Ctrl / Maiusc e usa **Aggiungi foto…** per scegliere il blocco di destinazione. Puoi anche trascinare la selezione sul nome del blocco. La stessa foto può appartenere a più blocchi senza duplicazioni; aggiungerla di nuovo allo stesso blocco non crea doppioni.
@@ -24,17 +36,17 @@ Non c'è avanzamento automatico né temporizzazione delle playlist in questa ver
 
 **Doppio clic per andare in onda:** con NDI già avviato, fai doppio clic sinistro sul file nell'elenco o sulla miniatura. Viene inviata l'immagine cliccata con scala/posizione correnti e con il cut o la dissolvenza impostati, esattamente come con INVIA. Il clic singolo prepara solo la selezione; il doppio clic nell'area vuota non invia nulla. Se NDI è fermo o l'immagine non è leggibile, viene mostrato lo stato e non viene avviato un nuovo flusso automaticamente.
 
-**Novità 0.4.1:** nell'anteprima **SELEZIONE** puoi spostare l'immagine trascinando con il tasto sinistro all'interno del bordo. La rotellina ingrandisce/riduce attorno al centro attuale dell'immagine (fattore 10% per scatto); **Maiusc + rotellina** usa il 2% per regolazioni fini. La scala resta tra 1% e 400%. I campi numerici si aggiornano insieme al mouse e restano modificabili a mano. Il monitor PROGRAMMA non è interattivo.
+**Novità 0.5.0:** nell'anteprima **SELEZIONE** puoi spostare l'immagine trascinando con il tasto sinistro all'interno del bordo. La rotellina ingrandisce/riduce attorno al centro attuale dell'immagine (fattore 10% per scatto); **Maiusc + rotellina** usa il 2% per regolazioni fini. La scala resta tra 1% e 400%. I campi numerici si aggiornano insieme al mouse e restano modificabili a mano. Il monitor PROGRAMMA non è interattivo.
 
 I campi **Centro X / Centro Y** rappresentano ora il centro dell'immagine nelle coordinate del flusso, con origine nell'angolo in alto a sinistra: a 1920×1080 il centro iniziale è **X=960, Y=540**; a 1280×720 è **X=640, Y=360**. Reset posizione ripristina questo centro e scala 100%. Un'altezza dispari può mostrare mezzo pixel. Cambiare risoluzione conserva lo spostamento rispetto al centro del nuovo formato. Le vecchie preferenze vengono visualizzate nella nuova convenzione mantenendo invariata l'inquadratura: internamente si mantengono gli offset salvati, senza migrazioni distruttive o conversioni ripetute.
 
 Il mouse modifica solo la selezione preparata: **premi INVIA (oppure fai doppio clic sul file) per applicare le modifiche al flusso**, con la transizione scelta. Le posizioni vengono salvate per immagine al rilascio del trascinamento; scala e campi numerici al completamento della modifica. La sorgente selezionata viene decodificata una volta e riutilizzata durante le trasformazioni, senza tenere bloccato il file originale; Aggiorna la rilegge dal disco.
 
-**Novità 0.4.1:** il catalogo ignora i file con attributo Windows Nascosto e i file di servizio che iniziano con `._` (AppleDouble del Mac) oppure `.-`. Durante la ricorsione vengono saltate anche le cartelle nascoste, quelle con nome che inizia con un punto e `__MACOSX`. I filtri valgono per elenco e miniature; nessun file viene cancellato. Premi Aggiorna per rileggere una cartella già aperta.
+**Novità 0.5.0:** il catalogo ignora i file con attributo Windows Nascosto e i file di servizio che iniziano con `._` (AppleDouble del Mac) oppure `.-`. Durante la ricorsione vengono saltate anche le cartelle nascoste, quelle con nome che inizia con un punto e `__MACOSX`. I filtri valgono per elenco e miniature; nessun file viene cancellato. Premi Aggiorna per rileggere una cartella già aperta.
 
 Il campo **Nome canale NDI**, in alto, permette di scegliere il nome della sorgente. Il valore viene salvato nelle preferenze; il default rimane `Watchout Image NDI`. Spazi iniziali/finali vengono rimossi e sono supportati accenti tramite UTF-8. Nomi vuoti, troppo lunghi o con caratteri `\ / : * ? " < > |` e caratteri di controllo vengono rifiutati. Per rinominare un canale già attivo: arresta NDI, modifica il nome, riavvia NDI e seleziona la nuova sorgente in WATCHOUT. Il nome non si modifica mentre il flusso è attivo.
 
-**Novità 0.4.1:** la libreria a sinistra permette di scegliere **Elenco** o **Miniature**. Il cursore **Dimensione** regola le miniature da 64 a 256 pixel; la scelta viene salvata insieme alle preferenze. Le miniature si caricano in sottofondo per gli elementi visualizzati, con una cache limitata a 128 immagini. Per cartelle diverse con nomi uguali, il percorso completo resta visibile nell'elenco e nel suggerimento del file.
+**Novità 0.5.0:** la libreria a sinistra permette di scegliere **Elenco** o **Miniature**. Il cursore **Dimensione** regola le miniature da 64 a 256 pixel; la scelta viene salvata insieme alle preferenze. Le miniature si caricano in sottofondo per gli elementi visualizzati, con una cache limitata a 128 immagini. Per cartelle diverse con nomi uguali, il percorso completo resta visibile nell'elenco e nel suggerimento del file.
 
 Al centro/destra ci sono due monitor affiancati, ridimensionabili allargando la finestra o spostando il separatore della libreria:
 
@@ -43,9 +55,9 @@ Al centro/destra ci sono due monitor affiancati, ridimensionabili allargando la 
 
 Il Programma è un **monitor locale dei frame consegnati al SDK NDI**, non un ricevitore NDI o un ritorno da WATCHOUT: non verifica perdita di rete, connessione del ricevitore, decodifica o compositing sul server. Per confermare l'uscita finale serve controllare WATCHOUT. I due monitor usano gli stessi confini del fotogramma e nessuna guida viene trasmessa.
 
-Nella versione 0.4.1 l'anteprima mostra un **bordo azzurro che delimita esattamente il fotogramma di uscita** nel rapporto configurato (per esempio 16:9 a 1920×1080). La scacchiera compare solo dentro quel bordo e rappresenta l'alpha; l'area scura esterna non fa parte del flusso. Ridimensionando la finestra, immagine e fotogramma vengono scalati insieme senza cambiare proporzioni. Bordo e scritte sono guide locali e non vengono trasmessi. L'anteprima mostra la selezione: per applicarla in onda premi INVIA o fai doppio clic sul file.
+Nella versione 0.5.0 l'anteprima mostra un **bordo azzurro che delimita esattamente il fotogramma di uscita** nel rapporto configurato (per esempio 16:9 a 1920×1080). La scacchiera compare solo dentro quel bordo e rappresenta l'alpha; l'area scura esterna non fa parte del flusso. Ridimensionando la finestra, immagine e fotogramma vengono scalati insieme senza cambiare proporzioni. Bordo e scritte sono guide locali e non vengono trasmessi. L'anteprima mostra la selezione: per applicarla in onda premi INVIA o fai doppio clic sul file.
 
-1. Windows 10/11 x64 con .NET Framework 4.8. Esegui `NDIPlayer-0.4.1-Setup-win-x64.exe`: include il redistributable ufficiale **NDI 6 Runtime 6.3.2.0**, senza NDI Tools. Se necessario apre il setup del runtime, con licenza propria da accettare e possibile richiesta amministratore. Poi installa l'app per l'utente corrente e crea il collegamento nel menu Start. Non serve il .NET SDK.
+1. Windows 10/11 x64 con .NET Framework 4.8. Esegui `NDIPlayer-0.5.0-Setup-win-x64.exe`: include il redistributable ufficiale **NDI 6 Runtime 6.3.2.0**, senza NDI Tools. Se necessario apre il setup del runtime, con licenza propria da accettare e possibile richiesta amministratore. Poi installa l'app per l'utente corrente e crea il collegamento nel menu Start. Non serve il .NET SDK.
 2. Avvia NDIPlayer dal menu Start. Se usi i soli sorgenti o il vecchio ZIP portabile, il runtime resta da installare separatamente. Informazioni NDI: https://ndi.video/ . NDI® is a registered trademark of Vizrt NDI AB.
 3. Apri una cartella: include sottocartelle, evita collegamenti circolari, segnala cartelle non accessibili. Aggiorna ripete la scansione.
 4. Seleziona un file: anteprima su scacchiera, che indica la trasparenza e non viene trasmessa. PNG, JPEG, BMP, GIF, TIFF e ICO; per formati multipagina/animati viene utilizzato il primo frame. HEIC, WebP, SVG e RAW non sono supportati in questa versione.
@@ -91,7 +103,9 @@ Tecnologia: C# / WinForms, .NET Framework 4.8 x64, GDI+ per decodifica/rendering
 - `tests/TransformTests.cs`: drag/rotellina, sincronizzazione campi e rendering, reset, compatibilità delle posizioni salvate, cambio risoluzione e cache della sorgente.
 - `src/Projects.cs`: modello dei blocchi, filtro/riordino, formato progetto versionato, percorsi portabili e ricollegamento cartella.
 - `src/ProjectUi.cs`: gestione progetti e blocchi, selezione multipla, drag and drop e ricerca.
+- `src/PreviewOutput.cs`: invio indipendente della selezione alla regia e clear immediato via Esc; gestione condivisa del runtime in `src/Ndi.cs` per mantenere attivo l'altro sender quando uno viene chiuso.
 - `tests/ProjectTests.cs`: cinque blocchi da sei immagini, portabilità, indicatori di programma e prove d'integrazione che escludono invii durante cambio blocco/ricerca/caricamento progetto.
+- `tests/RoutingTests.cs`: separazione Preview/Programma, clear durante dissolvenza, arresto indipendente e due sender sul runtime reale.
 - `tests/Tests.cs`: geometria, alpha reale PNG, transizioni, clear, scansione, layout ABI e playout con sender simulato; test opzionale sul runtime reale.
 
 Build dalla cartella progetto con PowerShell: `./build.ps1`. Test runtime opzionale: `./bin/Tests.exe --ndi`. Non installa o scarica dipendenze. `.github/workflows/windows.yml` costruisce, esegue test e genera un artifact su Windows dopo la pubblicazione autorizzata.
@@ -106,7 +120,7 @@ Da altre postazioni: clonare il repository, eseguire `build.ps1`, installare NDI
 
 Nessuna licenza open source applicata automaticamente. Verificare termini NDI prima di distribuire il prodotto o includere runtime/SDK proprietari.
 
-## Installer completo 0.4.1
+## Installer completo 0.5.0
 
 Il pacchetto contiene app, documentazione e redistributable NDI originale. Non scarica il runtime durante l'installazione. .NET Framework 4.8 è un prerequisito verificato dal setup; se assente, installarlo tramite Windows Update. Non si accetta la licenza NDI in silenzio: il setup ufficiale viene aperto quando il runtime manca o è più vecchio. Un runtime uguale o successivo già rilevato viene conservato. Annullando il setup NDI, non si prosegue con l'app.
 
@@ -116,4 +130,4 @@ Per ricostruire, scarica il [redistributable ufficiale](https://downloads.ndi.tv
 
 Runtime verificato: versione 6.3.2.0, firma Authenticode valida Vizrt AG, SHA-256 `7EE73EEDB56402BCA5100868353DBAB4E944B6C37D2D9881580698A3B61346CD`. Se NDI aggiorna il download, la build si ferma: verificare firma/versione e aggiornare il pin prima di ricostruire.
 
-Verifiche effettuate: compilazione installer con runtime incorporato e 105 test applicativi, incluso sender NDI reale sulla postazione di sviluppo. Non è stata eseguita un'installazione/disinstallazione su Windows pulito: prima della distribuzione operativa verificare il setup su una macchina di prova senza NDI Tools, inclusi annullamento licenza, avvio, clear e disinstallazione. Le prove WATCHOUT restano quelle indicate sopra.
+Verifiche effettuate: compilazione installer con runtime incorporato e 118 test applicativi, incluso sender NDI reale sulla postazione di sviluppo. Non è stata eseguita un'installazione/disinstallazione su Windows pulito: prima della distribuzione operativa verificare il setup su una macchina di prova senza NDI Tools, inclusi annullamento licenza, avvio, clear e disinstallazione. Le prove WATCHOUT restano quelle indicate sopra.
