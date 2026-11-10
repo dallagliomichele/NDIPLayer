@@ -15,7 +15,7 @@ public partial class MainWindow {
  bool loadingProject,refreshingBlocks;string projectPath,savedFingerprint,blockDragId;Point blockDragOrigin;
  PlaylistBlock ActiveBlock {get{return settings.Blocks.Find(b=>b.Id==settings.ActiveBlockId);}}
  void CaptureProjectControls(){if(loadingProject)return;settings.OutputWidth=(int)width.Value;settings.OutputHeight=(int)height.Value;settings.OutputFps=(int)fps.Value;settings.ChannelName=channelName.Text;settings.PreviewChannelName=previewChannelName.Text;settings.Dissolve=dissolve.Checked;settings.FadeMs=(int)fade.Value;settings.EscClearMs=(int)escClearFade.Value;}
- void UpdateProjectTitle(){if(savedFingerprint==null)return;Text="NDIPlayer — 0.11.1 · "+(projectPath==null?"Progetto locale":Path.GetFileName(projectPath))+(ProjectStore.Fingerprint(settings)==savedFingerprint?"":" *");}
+ void UpdateProjectTitle(){if(savedFingerprint==null)return;Text="NDIPlayer — 0.12.0 · "+(projectPath==null?"Progetto locale":Path.GetFileName(projectPath))+(ProjectStore.Fingerprint(settings)==savedFingerprint?"":" *");}
  void InitializeProjects(FlowLayoutPanel top,Control sidebar){
   top.Height=112;
   AddButton(top,"Nuovo progetto",delegate{if(ConfirmProjectChange())ApplyProject(new Settings(),null);});
@@ -55,7 +55,7 @@ public partial class MainWindow {
  void ApplyProject(Settings data,string path){
   ProjectStore.Normalize(data);preview.CancelInteraction();loadingProject=true;
   try{settings=data;projectPath=path;width.Value=data.OutputWidth;height.Value=data.OutputHeight;fps.Value=data.OutputFps;fade.Value=Math.Max(0,Math.Min(10000,data.FadeMs));dissolve.Checked=data.Dissolve;escClearFade.Value=Math.Max(1,Math.Min(60000,data.EscClearMs));channelName.Text=data.ChannelName;previewChannelName.Text=data.PreviewChannelName;files.SetPreferences(data.Thumbnails,data.ThumbnailSize);search.Clear();RefreshBlocks();Scan();}finally{loadingProject=false;}
-  ApplyCompanionSettings();CaptureProjectControls();savedFingerprint=ProjectStore.Fingerprint(settings);Save();UpdateProjectTitle();
+  ApplyCompanionSettings();AudioProjectChanged();CaptureProjectControls();savedFingerprint=ProjectStore.Fingerprint(settings);Save();UpdateProjectTitle();
   configNotice.Text=output==null?"":"Formato / nome progetto al prossimo avvio NDI";
   status.Text=output==null?"Progetto caricato":"Progetto caricato. La messa in onda corrente continua invariata.";
  }

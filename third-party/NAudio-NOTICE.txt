@@ -1,0 +1,15 @@
+NAudio 1.10.0 - Mark Heath and Contributors
+https://github.com/naudio/NAudio/tree/v1.10.0
+
+NDIPlayer uses the unmodified .NET Framework build (lib/net35/NAudio.dll)
+from the official NAudio 1.10.0 NuGet package. License: Microsoft Public
+License (Ms-PL), included in NAudio-LICENSE.txt. Copyright (c) Mark Heath
+and contributors 2001-2019. ASIO implementation contributors include
+Mark Heath and Alexandre Mutel; original notices remain in the library.
+
+Package:
+https://api.nuget.org/v3-flatcontainer/naudio/1.10.0/naudio.1.10.0.nupkg
+SHA256: E4A80EED41DAD794695F9C114432DE4667D20BDFA80825AA94D159708CF29217
+
+No ASIO driver is included. The output device's Windows x64 ASIO driver
+must be installed separately. WDM endpoints are accessed through WASAPI.
