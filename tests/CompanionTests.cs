@@ -25,6 +25,10 @@ static class CompanionTests {
    check(SpinWait.SpinUntil(()=>server.Messages.Count>=2,3000)&&server.Messages.ToArray().SequenceEqual(new[]{"FIRST è","EMPTY"}),"TCP loopback consegna stringhe UTF-8 terminate da newline in ordine ("+tcp.Status+"; "+String.Join(" / ",server.Messages.ToArray())+")");
    config.Enabled=false;tcp.Configure(config);tcp.Presence(true);Thread.Sleep(50);check(server.Messages.Count==2,"Companion disabilitato non trasmette");
    tcp.Test(config);check(SpinWait.SpinUntil(()=>tcp.Status.Contains("porta raggiungibile"),3000)&&server.Messages.Count==2,"test connessione TCP senza eseguire comandi");
+   var draft=config.Copy();draft.OnAirCommand="TEST FIRST è";draft.EmptyCommand="TEST EMPTY";tcp.TestCommand(draft,true);tcp.TestCommand(draft,false);
+   check(tcp.Flush(3000)&&SpinWait.SpinUntil(()=>server.Messages.Count==4,3000)&&server.Messages.ToArray().Skip(2).SequenceEqual(new[]{"TEST FIRST è","TEST EMPTY"}),"test manuali inviano entrambe le stringhe non salvate anche con notifiche disabilitate");
+   tcp.Presence(true);Thread.Sleep(50);check(server.Messages.Count==4&&config.OnAirCommand=="FIRST è","test manuale non abilita notifiche né modifica la configurazione applicata");
+   draft.EmptyCommand="";bool blank=false;try{tcp.TestCommand(draft,false);}catch(ArgumentException){blank=true;}check(blank&&server.Messages.Count==4,"test stringa vuota rifiutato senza inviare comandi");
    config.Enabled=true;tcp.Configure(config);int baseline=server.Messages.Count;
    using(var playout=new Playout(new Probe(),16,16,50)){
     playout.PresenceChanged+=delegate(object sender,ProgramPresenceEventArgs e){tcp.Presence(e.HasImage);};var frame=new byte[1024];frame[3]=255;

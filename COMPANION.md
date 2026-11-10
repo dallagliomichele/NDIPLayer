@@ -54,3 +54,7 @@ Per preparare il numero 12: premi **1**, **2**, **ENTER**. Verifica la Preview, 
 - Sono accettati pacchetti TCP frammentati o più righe nello stesso pacchetto e connessioni persistenti. Massimo quattro connessioni simultanee e una coda UI limitata; una linea oltre 128 caratteri viene rifiutata.
 - Un comando in attesa su un'interfaccia occupata viene annullato dopo 15 secondi. Se era già in esecuzione, la risposta segnala di verificarne l'esito nell'app: non viene ripetuto automaticamente.
 - Il cambio configurazione o l'arresto della ricezione chiude i collegamenti e invalida i vecchi comandi non ancora eseguiti. Nessun comando avvia automaticamente un canale NDI.
+
+## Prova delle stringhe di notifica
+
+Nel pannello **Companion TCP…**, i pulsanti **Invia test prima foto** e **Invia test clear** inviano la rispettiva stringa all'IP e alla porta attualmente inseriti, senza premere Applica e senza modificare Program o Preview. Funzionano anche con le notifiche automatiche disabilitate. Eseguono realmente il comando in Companion: controlla la destinazione prima di premerli. Una stringa vuota viene segnalata senza invio. **Test connessione** continua a verificare soltanto la porta, senza eseguire comandi.
