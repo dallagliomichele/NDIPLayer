@@ -15,6 +15,6 @@ sealed class ProgramMonitorPanel:Panel {
 public partial class MainWindow {
  readonly CountdownLabel programCountdown=new CountdownLabel{Name="ProgramCountdown",Dock=DockStyle.Bottom,Height=56,Font=new Font(SystemFonts.DefaultFont.FontFamily,17,FontStyle.Bold),TextAlign=ContentAlignment.MiddleCenter,BackColor=Color.FromArgb(30,32,35),ForeColor=Color.White,Text="Program · nessun video"};
  void InitializeCountdown(){var panel=(Panel)program.Parent;panel.Controls.Remove(program);var host=new ProgramMonitorPanel{Name="ProgramMonitorSurface",Dock=DockStyle.Fill};host.Controls.Add(program);host.Controls.Add(programCountdown);panel.Controls.Add(host);}
- void UpdateProgramCountdown(){var clock=output==null?null:output.ReadSentPlayback();string text=clock==null?"Program · nessun video":clock.Display();Color color=clock!=null&&clock.Ready&&clock.Duration>0?settings.Countdown.ColorFor(clock.Remaining):Color.White;programCountdown.ShowCountdown(text,color);}
+ void UpdateProgramCountdown(){var clock=output==null?null:output.ReadSentPlayback();string text=clock==null?"Program · nessun video":clock.Display();Color color=clock!=null&&clock.Ready&&(clock.Loop||clock.Duration>0)?settings.Countdown.ColorFor(clock.Remaining,clock.Loop):Color.White;programCountdown.ShowCountdown(text,color);}
 }
 }

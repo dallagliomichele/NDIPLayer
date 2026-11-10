@@ -17,8 +17,8 @@ jobs:
           ./installer/build-installer.ps1 -RuntimeFile $runtime -IsccPath $iscc
       - uses: actions/upload-artifact@v4
         with:
-          name: NDIPlayer-0.13.2-Setup-win-x64
-          path: dist/NDIPlayer-0.13.2-Setup-win-x64.exe
+          name: NDIPlayer-0.13.3-Setup-win-x64
+          path: dist/NDIPlayer-0.13.3-Setup-win-x64.exe
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
