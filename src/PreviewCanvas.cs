@@ -11,7 +11,7 @@ public class PreviewCanvas:Control {
  public string Heading="SELEZIONE";
  public string Footer="Scacchiera = trasparenza · Premi INVIA per andare in onda";
  public Color BorderColor=Color.FromArgb(55,205,245);
- public bool InteractionEnabled;
+ public bool InteractionEnabled;public bool ShowFooter=true;
  public event EventHandler DragStarted;
  public event EventHandler<PreviewDragEventArgs> DragMoved;
  public event EventHandler DragCompleted;
@@ -28,8 +28,9 @@ public class PreviewCanvas:Control {
  protected override void OnResize(EventArgs e){CancelInteraction();base.OnResize(e);}
  protected override void OnMouseEnter(EventArgs e){base.OnMouseEnter(e);if(InteractionEnabled&&image!=null)Focus();}
  protected override void OnMouseWheel(MouseEventArgs e){base.OnMouseWheel(e);if(!InteractionEnabled||image==null||dragging||!FrameBounds(ClientSize,frameWidth,frameHeight).Contains(e.Location))return;if(ZoomRequested!=null)ZoomRequested(this,new PreviewZoomEventArgs(e.Delta,(ModifierKeys&Keys.Shift)!=0));}
- public static Rectangle FrameBounds(Size viewport,int width,int height){
-  int availableWidth=Math.Max(0,viewport.Width-40), availableHeight=Math.Max(0,viewport.Height-72);
+ public static Rectangle FrameBounds(Size viewport,int width,int height){return FrameBounds(viewport,width,height,true);}
+ public static Rectangle FrameBounds(Size viewport,int width,int height,bool showFooter){
+  int availableWidth=Math.Max(0,viewport.Width-40), availableHeight=Math.Max(0,viewport.Height-(showFooter?72:48));
   if(availableWidth==0||availableHeight==0||width<=0||height<=0)return Rectangle.Empty;
   double factor=Math.Min((double)availableWidth/width,(double)availableHeight/height);
   int w=Math.Max(1,(int)Math.Floor(width*factor)),h=Math.Max(1,(int)Math.Floor(height*factor));
@@ -39,7 +40,7 @@ public class PreviewCanvas:Control {
  protected override void OnPaint(PaintEventArgs e){base.OnPaint(e);DrawPreview(e.Graphics,ClientSize);}
  public void DrawPreview(Graphics graphics,Size viewport){
   graphics.Clear(BackColor);
-  var frame=FrameBounds(viewport,frameWidth,frameHeight);
+  var frame=FrameBounds(viewport,frameWidth,frameHeight,ShowFooter);
   if(frame.IsEmpty)return;
   TextRenderer.DrawText(graphics,Heading+" · "+frameWidth+" × "+frameHeight,Font,new Rectangle(12,8,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
   var saved=graphics.Save();
@@ -53,7 +54,7 @@ public class PreviewCanvas:Control {
    if(image!=null){graphics.CompositingMode=CompositingMode.SourceOver;graphics.InterpolationMode=InterpolationMode.HighQualityBicubic;graphics.DrawImage(image,frame);}
   } finally {graphics.Restore(saved);}
   using(var border=new Pen(BorderColor,2)) graphics.DrawRectangle(border,frame.Left-1,frame.Top-1,frame.Width+1,frame.Height+1);
-  TextRenderer.DrawText(graphics,Footer,Font,new Rectangle(12,viewport.Height-24,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
+  if(ShowFooter)TextRenderer.DrawText(graphics,Footer,Font,new Rectangle(12,viewport.Height-24,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
  }
  protected override void Dispose(bool disposing){if(disposing&&image!=null){image.Dispose();image=null;}base.Dispose(disposing);}
 }
