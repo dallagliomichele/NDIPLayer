@@ -1,10 +1,14 @@
-# Watchout Image NDI · versione 0.13.1
+# Watchout Image NDI · versione 0.13.2
 
 App Windows x64 per inviare immagini su un flusso NDI con alpha. Interfaccia in italiano. Repository privato: https://github.com/dallagliomichele/NDIPLayer. Sorgenti e cronologia condivisi tramite GitHub.
 
 ## Modulo Companion 1.0.0
 
 Modulo importabile dedicato a Companion **5.1.2**: 12 azioni, 23 preset, tastierino, feedback TCP e risposte di errore. [Guida](companion-module-ndiplayer/README.md) e [pacchetto .tgz](companion-module-ndiplayer/releases/ndiplayer-1.0.0.tgz). Il modulo controlla il ricevitore TCP già presente in NDIPlayer 0.11.1; non richiede un nuovo installer. Sorgenti e prove sono nella cartella companion-module-ndiplayer.
+
+## Novità 0.13.2 · Colori countdown configurabili
+
+In Impostazioni > Countdown scegli soglia gialla, soglia rossa e i tre colori, poi premi Applica countdown. Valori iniziali: verde sopra 30 secondi, giallo da 30 a oltre 10 secondi, rosso da 10 a zero, incluso il video terminato. Vale anche per il tempo al prossimo loop. Impostazioni salvate nelle preferenze e nel progetto. Il pulsante dei valori predefiniti prepara i valori iniziali, da confermare con Applica. Nessun duplicato del timer né modifiche al suo disegno con doppio buffer.
 
 ## Correzione 0.13.1 · Countdown unico
 
@@ -179,7 +183,7 @@ Il Programma è un **monitor locale dei frame consegnati al SDK NDI**, non un ri
 
 Nella versione 0.10.0 l'anteprima mostra un **bordo azzurro che delimita esattamente il fotogramma di uscita** nel rapporto configurato (per esempio 16:9 a 1920×1080). La scacchiera compare solo dentro quel bordo e rappresenta l'alpha; l'area scura esterna non fa parte del flusso. Ridimensionando la finestra, immagine e fotogramma vengono scalati insieme senza cambiare proporzioni. Bordo e scritte sono guide locali e non vengono trasmessi. L'anteprima mostra la selezione: per applicarla in onda premi INVIA o fai doppio clic sul file.
 
-1. Windows 10/11 x64 con .NET Framework 4.8. Esegui `NDIPlayer-0.13.1-Setup-win-x64.exe`: include il redistributable ufficiale **NDI 6 Runtime 6.3.2.0**, senza NDI Tools. Se necessario apre il setup del runtime, con licenza propria da accettare e possibile richiesta amministratore. Poi installa l'app per l'utente corrente e crea il collegamento nel menu Start. Non serve il .NET SDK.
+1. Windows 10/11 x64 con .NET Framework 4.8. Esegui `NDIPlayer-0.13.2-Setup-win-x64.exe`: include il redistributable ufficiale **NDI 6 Runtime 6.3.2.0**, senza NDI Tools. Se necessario apre il setup del runtime, con licenza propria da accettare e possibile richiesta amministratore. Poi installa l'app per l'utente corrente e crea il collegamento nel menu Start. Non serve il .NET SDK.
 2. Avvia NDIPlayer dal menu Start. Se usi i soli sorgenti o il vecchio ZIP portabile, il runtime resta da installare separatamente. Informazioni NDI: https://ndi.video/ . NDI® is a registered trademark of Vizrt NDI AB.
 3. Apri una cartella: include sottocartelle, evita collegamenti circolari, segnala cartelle non accessibili. Aggiorna ripete la scansione.
 4. Seleziona un file: anteprima su scacchiera, che indica la trasparenza e non viene trasmessa. PNG, JPEG, BMP, GIF, TIFF e ICO; per formati multipagina/animati viene utilizzato il primo frame. HEIC, WebP, SVG e RAW non sono supportati in questa versione.
@@ -247,7 +251,7 @@ Da altre postazioni: clonare il repository, eseguire `build.ps1`, installare NDI
 
 Nessuna licenza open source applicata automaticamente. Verificare termini NDI prima di distribuire il prodotto o includere runtime/SDK proprietari.
 
-## Installer completo 0.13.1
+## Installer completo 0.13.2
 
 Il pacchetto contiene app, documentazione e redistributable NDI originale. Non scarica il runtime durante l'installazione. .NET Framework 4.8 è un prerequisito verificato dal setup; se assente, installarlo tramite Windows Update. Non si accetta la licenza NDI in silenzio: il setup ufficiale viene aperto quando il runtime manca o è più vecchio. Un runtime uguale o successivo già rilevato viene conservato. Annullando il setup NDI, non si prosegue con l'app.
 
@@ -257,4 +261,4 @@ Per ricostruire, scarica il [redistributable ufficiale](https://downloads.ndi.tv
 
 Runtime verificato: versione 6.3.2.0, firma Authenticode valida Vizrt AG, SHA-256 `7EE73EEDB56402BCA5100868353DBAB4E944B6C37D2D9881580698A3B61346CD`. Se NDI aggiorna il download, la build si ferma: verificare firma/versione e aggiornare il pin prima di ricostruire.
 
-Verifiche effettuate: compilazione installer con runtime incorporato e 324 test applicativi, incluso sender NDI reale sulla postazione di sviluppo. Non è stata eseguita un'installazione/disinstallazione su Windows pulito: prima della distribuzione operativa verificare il setup su una macchina di prova senza NDI Tools, inclusi annullamento licenza, avvio, clear e disinstallazione. Le prove WATCHOUT restano quelle indicate sopra.
+Verifiche effettuate: compilazione installer con runtime incorporato e 328 test applicativi, incluso sender NDI reale sulla postazione di sviluppo. Non è stata eseguita un'installazione/disinstallazione su Windows pulito: prima della distribuzione operativa verificare il setup su una macchina di prova senza NDI Tools, inclusi annullamento licenza, avvio, clear e disinstallazione. Le prove WATCHOUT restano quelle indicate sopra.

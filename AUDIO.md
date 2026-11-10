@@ -1,4 +1,4 @@
-# Audio NDIPlayer 0.13.1
+# Audio NDIPlayer 0.13.2
 
 L'audio dei video esce solo dalle schede audio del PC. I flussi NDI Program e Preview restano video con alpha, senza audio.
 

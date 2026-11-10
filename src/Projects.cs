@@ -12,7 +12,7 @@ public class PlaylistBlock {
 }
 public class ProjectDocument {public int Version {get;set;} public Settings Data {get;set;} public ProjectDocument(){Version=2;}}
 public static class ProjectStore {
- public static void Normalize(Settings data){
+ public static void Normalize(Settings data){if(data.Countdown==null)data.Countdown=new CountdownSettings();data.Countdown.Validate();
   if(data.Audio==null)data.Audio=new AudioConfiguration();data.Audio.Normalize();if(data.AudioGains==null)data.AudioGains=new Dictionary<string,double>();data.AudioGains=new Dictionary<string,double>(data.AudioGains,StringComparer.OrdinalIgnoreCase);foreach(double gain in data.AudioGains.Values)if(Double.IsNaN(gain)||Double.IsInfinity(gain)||gain < -60||gain>12)throw new InvalidDataException("Gain audio non valido.");
   if(data.PreviewChannelName==null)data.PreviewChannelName=NdiChannel.PreviewName(data.ChannelName ?? NdiChannel.DefaultName);
   if(data.Companion==null)data.Companion=new CompanionSettings();
