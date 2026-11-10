@@ -21,7 +21,7 @@ public partial class MainWindow:Form {
  Bitmap selectedSource;
  int activeProgramFps;
  public MainWindow():this(null){}
- public MainWindow(string preferencesPath){state=preferencesPath??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WatchoutImageNDI","settings.json");Text="NDIPlayer — 0.13.0";Width=1600;Height=900;MinimumSize=new Size(1150,650);
+ public MainWindow(string preferencesPath){state=preferencesPath??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WatchoutImageNDI","settings.json");Text="NDIPlayer — 0.13.1";Width=1600;Height=900;MinimumSize=new Size(1150,650);
   x.Name="ImageCenterX";y.Name="ImageCenterY";scale.Name="ImageScale";preview.Name="SelectionPreview";program.Name="ProgramPreview";files.Name="ImageLibrary";width.Name="OutputWidth";height.Name="OutputHeight";x.DecimalPlaces=y.DecimalPlaces=scale.DecimalPlaces=1;
   try{if(File.Exists(state))settings=new JavaScriptSerializer{MaxJsonLength=16*1024*1024}.Deserialize<Settings>(File.ReadAllText(state));if(settings==null||settings.Images==null)settings=new Settings();}catch(Exception){status.Text="Preferenze non leggibili: ripristinate.";}
   try{ProjectStore.Normalize(settings);}catch{settings=new Settings();}
@@ -37,7 +37,7 @@ public partial class MainWindow:Form {
   AddButton(top,"Apri cartella",delegate{using(var dialog=new FolderBrowserDialog()){if(dialog.ShowDialog()==DialogResult.OK){settings.Root=dialog.SelectedPath;Scan();Save();}}});
   AddButton(top,"Aggiorna",delegate{Scan();}); AddField(top,"Larghezza",width);AddField(top,"Altezza",height);AddField(top,"fps",fps);top.Controls.Add(start);start.Click+=delegate{Toggle();};top.Controls.Add(alwaysOnTop);
   var ndiLink=new LinkLabel{Text="NDI® · ndi.video",AutoSize=true};ndiLink.LinkClicked+=delegate{System.Diagnostics.Process.Start("https://ndi.video/");};top.Controls.Add(ndiLink);
-  AddButton(top,"Info",delegate{MessageBox.Show("NDIPlayer 0.13.0\r\nNDI® is a registered trademark of Vizrt NDI AB.\r\nhttps://ndi.video/\r\nRuntime distribuito tramite il redistributable ufficiale, con licenza propria.\r\nAudio: NAudio 1.10.0 Ms-PL, licenza nella cartella audio.\r\nVideo: FFmpeg LGPLv3+, sorgenti e licenze nella cartella video.\r\nhttps://ffmpeg.org/","NDIPlayer — Informazioni");});
+  AddButton(top,"Info",delegate{MessageBox.Show("NDIPlayer 0.13.1\r\nNDI® is a registered trademark of Vizrt NDI AB.\r\nhttps://ndi.video/\r\nRuntime distribuito tramite il redistributable ufficiale, con licenza propria.\r\nAudio: NAudio 1.10.0 Ms-PL, licenza nella cartella audio.\r\nVideo: FFmpeg LGPLv3+, sorgenti e licenze nella cartella video.\r\nhttps://ffmpeg.org/","NDIPlayer — Informazioni");});
   var bottom=new FlowLayoutPanel{Dock=DockStyle.Bottom,Height=100};Controls.Add(bottom);AddField(bottom,"Scala %",scale);AddField(bottom,"Centro X px",x);AddField(bottom,"Centro Y px",y);bottom.Controls.Add(dissolve);AddField(bottom,"Cambio foto ms",fade);AddField(bottom,"Clear Esc ms",escClearFade);
   AddButton(bottom,"INVIA selezione",delegate{Cue(false);});AddButton(bottom,"CLEAR trasparente",delegate{Cue(true);});AddButton(bottom,"Reset posizione",delegate{ApplyPlacement(new Placement{Loop=videoLoop.Checked},true);});
   status.AutoSize=true;bottom.Controls.Add(status);
