@@ -44,7 +44,7 @@ static class TransformTests {
     check(x.Value==960+dx&&y.Value==540+dy,"drag aggiorna campi centro X/Y");
     Mouse(preview,"OnMouseWheel",MouseButtons.None,at.X,at.Y,120);check(scale.Value==55&&x.Value==960+dx&&y.Value==540+dy,"rotellina aggiorna scala lasciando fermo il centro");
     saved=json.Deserialize<Settings>(File.ReadAllText(state));check(saved.Images[file].X==dx&&saved.Images[file].Y==dy&&Math.Abs(saved.Images[file].Scale-.55)<.0001,"trasformazioni mouse salvate per singola immagine");
-    Button reset=null;foreach(Control group in window.Controls)foreach(Control child in group.Controls)if(child is Button&&child.Text=="Reset posizione")reset=(Button)child;
+    Button reset=Find<Button>(window,"ResetPlacement");
     typeof(Button).GetMethod("OnClick",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(reset,new object[]{EventArgs.Empty});
     check(x.Value==960&&y.Value==540&&scale.Value==100,"reset ripristina centro del flusso e fit 100 percento");
     using(var cached=Renderer.LoadBitmap(file)){File.Delete(file);var pixels=Renderer.RenderImage(cached,32,32,new Placement());check(pixels[(16*32+16)*4+3]==255,"sorgente decodificata riutilizzabile senza bloccare il file");}

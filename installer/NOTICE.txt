@@ -1,4 +1,4 @@
-NDIPlayer 0.12.4 - Windows x64
+NDIPlayer 0.13.0 - Windows x64
 
 Il pacchetto include il redistributable ufficiale NDI 6 Runtime 6.3.2.0.
 Non installa NDI Tools. Funziona senza connessione Internet durante l'installazione.
