@@ -8,7 +8,7 @@ using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
 namespace ImageNdi {
-public class WindowPreferences {public bool AlwaysOnTop {get;set;}}
+public class WindowPreferences {public bool AlwaysOnTop {get;set;} public string MonitorLayout {get;set;} public Rectangle Bounds {get;set;} public bool Maximized {get;set;}}
 public class Settings {public AudioConfiguration Audio {get;set;} public Dictionary<string,double> AudioGains {get;set;} public string Root {get;set;} public Dictionary<string,Placement> Images {get;set;} public Dictionary<string,string> ImageNumbers {get;set;} public int? NumberingVersion {get;set;} public bool Thumbnails {get;set;} public int ThumbnailSize {get;set;} public string ChannelName {get;set;} public string PreviewChannelName {get;set;} public List<PlaylistBlock> Blocks {get;set;} public string ActiveBlockId {get;set;} public int OutputWidth {get;set;} public int OutputHeight {get;set;} public int OutputFps {get;set;} public bool Dissolve {get;set;} public int FadeMs {get;set;} public int EscClearMs {get;set;} public CompanionSettings Companion {get;set;} public Settings(){Audio=new AudioConfiguration();AudioGains=new Dictionary<string,double>(StringComparer.OrdinalIgnoreCase);Images=new Dictionary<string,Placement>(StringComparer.OrdinalIgnoreCase);ImageNumbers=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);ThumbnailSize=128;ChannelName=NdiChannel.DefaultName;Blocks=new List<PlaylistBlock>();OutputWidth=1920;OutputHeight=1080;OutputFps=50;FadeMs=500;EscClearMs=500;Companion=new CompanionSettings();}}
 public partial class MainWindow:Form {
  LibraryBrowser files=new LibraryBrowser(); PreviewCanvas preview=new PreviewCanvas{InteractionEnabled=true,Footer="Trascina: posizione · Rotellina: scala · INVIA per applicare"}; PreviewCanvas program=new PreviewCanvas{Heading="PROGRAMMA · NDI arrestato",Footer="Nessuna trasmissione",BorderColor=Color.FromArgb(245,100,80)}; Label status=new Label();
@@ -21,13 +21,13 @@ public partial class MainWindow:Form {
  Bitmap selectedSource;
  int activeProgramFps;
  public MainWindow():this(null){}
- public MainWindow(string preferencesPath){state=preferencesPath??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WatchoutImageNDI","settings.json");Text="NDIPlayer — 0.12.1";Width=1600;Height=900;MinimumSize=new Size(1150,650);
+ public MainWindow(string preferencesPath){state=preferencesPath??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WatchoutImageNDI","settings.json");Text="NDIPlayer — 0.12.2";Width=1600;Height=900;MinimumSize=new Size(1150,650);
   x.Name="ImageCenterX";y.Name="ImageCenterY";scale.Name="ImageScale";preview.Name="SelectionPreview";program.Name="ProgramPreview";files.Name="ImageLibrary";width.Name="OutputWidth";height.Name="OutputHeight";x.DecimalPlaces=y.DecimalPlaces=scale.DecimalPlaces=1;
   try{if(File.Exists(state))settings=new JavaScriptSerializer{MaxJsonLength=16*1024*1024}.Deserialize<Settings>(File.ReadAllText(state));if(settings==null||settings.Images==null)settings=new Settings();}catch(Exception){status.Text="Preferenze non leggibili: ripristinate.";}
   try{ProjectStore.Normalize(settings);}catch{settings=new Settings();}
-  try{if(File.Exists(state+".window.json"))alwaysOnTop.Checked=new JavaScriptSerializer().Deserialize<WindowPreferences>(File.ReadAllText(state+".window.json")).AlwaysOnTop;}catch{alwaysOnTop.Checked=false;}
+  try{if(File.Exists(state+".window.json"))windowPreferences=new JavaScriptSerializer().Deserialize<WindowPreferences>(File.ReadAllText(state+".window.json"));alwaysOnTop.Checked=windowPreferences!=null&&windowPreferences.AlwaysOnTop;}catch{alwaysOnTop.Checked=false;}
   TopMost=alwaysOnTop.Checked;
-  alwaysOnTop.CheckedChanged+=delegate{TopMost=alwaysOnTop.Checked;try{Directory.CreateDirectory(Path.GetDirectoryName(state));string path=state+".window.json",temp=path+".tmp";File.WriteAllText(temp,new JavaScriptSerializer().Serialize(new WindowPreferences{AlwaysOnTop=TopMost}));if(File.Exists(path))File.Replace(temp,path,null);else File.Move(temp,path);}catch(Exception e){status.Text="Preferenza finestra non salvata: "+e.Message;}};
+  alwaysOnTop.CheckedChanged+=delegate{TopMost=alwaysOnTop.Checked;SaveWindowPreferences();};
   width.Value=Math.Max(16,Math.Min(3840,settings.OutputWidth));height.Value=Math.Max(16,Math.Min(2160,settings.OutputHeight));fps.Value=Math.Max(1,Math.Min(60,settings.OutputFps));fade.Value=Math.Max(0,Math.Min(10000,settings.FadeMs));dissolve.Checked=settings.Dissolve;x.Value=width.Value/2;y.Value=height.Value/2;
   channelName.Text=String.IsNullOrWhiteSpace(settings.ChannelName)?NdiChannel.DefaultName:settings.ChannelName;
   channelName.TextChanged+=delegate{settings.ChannelName=channelName.Text;};channelName.Leave+=delegate{Save();};
@@ -56,8 +56,8 @@ public partial class MainWindow:Form {
   InitializePreviewOutput(top);InitializeCompanion(top);InitializeAudio(top,bottom);
   foreach(var n in new[]{width,height,fps,fade})n.ValueChanged+=delegate{if(!loadingProject)Save();};dissolve.CheckedChanged+=delegate{if(!loadingProject)Save();};
   var timer=new Timer{Interval=100};timer.Tick+=delegate{UpdateSelectionVideo();UpdateProgram();UpdateProgramCountdown();UpdateAudio();CheckPreviewOutput();RefreshCompanionStatus();};timer.Start();
-  FormClosing+=delegate(object sender,FormClosingEventArgs e){if(!ConfirmProjectChange()){e.Cancel=true;return;}controlClosing=true;StopCompanionControl();timer.Stop();if(output!=null){output.StopTransparent();BindCompanion(null);output=null;}StopPreviewOutput();Save();};Disposed+=delegate{timer.Dispose();if(output!=null){output.StopTransparent();BindCompanion(null);output=null;}StopPreviewOutput();BindCompanion(null);companionTcp.Flush(2500);companionTcp.Dispose();if(selectedSource!=null){selectedSource.Dispose();selectedSource=null;}if(audio!=null){audio.Dispose();audio=null;}};
-  Shown+=delegate{Scan();};
+  FormClosing+=delegate(object sender,FormClosingEventArgs e){if(!ConfirmProjectChange()){e.Cancel=true;return;}SaveWindowPreferences();controlClosing=true;StopCompanionControl();timer.Stop();if(output!=null){output.StopTransparent();BindCompanion(null);output=null;}StopPreviewOutput();Save();};Disposed+=delegate{timer.Dispose();if(output!=null){output.StopTransparent();BindCompanion(null);output=null;}StopPreviewOutput();BindCompanion(null);companionTcp.Flush(2500);companionTcp.Dispose();if(selectedSource!=null){selectedSource.Dispose();selectedSource=null;}if(audio!=null){audio.Dispose();audio=null;}};
+  Resize+=delegate{if(WindowState!=FormWindowState.Minimized)lastWindowState=WindowState;};Shown+=delegate{RestoreWindowPreferences();Scan();};
  }
  static NumericUpDown Number(int min,int max,int value){return new NumericUpDown{Minimum=min,Maximum=max,Value=value,Width=72};}
  static void AddField(Control parent,string label,Control field){parent.Controls.Add(new Label{Text=label,AutoSize=true,Margin=new Padding(6,8,0,0)});parent.Controls.Add(field);}

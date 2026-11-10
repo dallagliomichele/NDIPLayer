@@ -1,4 +1,4 @@
-FFmpeg video component for NDIPlayer 0.12.1
+FFmpeg video component for NDIPlayer 0.12.2
 
 FFmpeg https://ffmpeg.org/ - Copyright (c) 2000-2026 the FFmpeg developers.
 This software uses FFmpeg as an independent command-line process under LGPLv3
