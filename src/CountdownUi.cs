@@ -13,7 +13,7 @@ sealed class ProgramMonitorPanel:Panel {
 }
 public partial class MainWindow {
  readonly CountdownLabel programCountdown=new CountdownLabel{Name="ProgramCountdown",Dock=DockStyle.Bottom,Height=56,Font=new Font(SystemFonts.DefaultFont.FontFamily,17,FontStyle.Bold),TextAlign=ContentAlignment.MiddleCenter,BackColor=Color.FromArgb(30,32,35),ForeColor=Color.White,Text="Program · nessun video"};
- void InitializeCountdown(){var layout=(TableLayoutPanel)program.Parent;layout.Controls.Remove(program);var host=new ProgramMonitorPanel{Dock=DockStyle.Fill};host.Controls.Add(program);host.Controls.Add(programCountdown);layout.Controls.Add(host,0,1);}
+ void InitializeCountdown(){var host=(Panel)program.Parent;host.BackColor=Color.FromArgb(30,32,35);host.Controls.Add(programCountdown);}
  void UpdateProgramCountdown(){var clock=output==null?null:output.ReadSentPlayback();string text=clock==null?"Program · nessun video":clock.Display();Color color=clock!=null&&clock.Ready&&!clock.Ended&&clock.Duration>0&&clock.Remaining<=5?Color.DarkOrange:Color.White;programCountdown.ShowCountdown(text,color);}
 }
 }
