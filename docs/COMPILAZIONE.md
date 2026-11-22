@@ -67,11 +67,11 @@ Per ricompilare applicazione e test, creare il pacchetto del modulo Companion e 
 Per scegliere l'incremento della versione `X.Y.Z`, specificare una sola opzione:
 
 ```powershell
-.\build-release.ps1 --patch  # 0.13.7 -> 0.13.8 (predefinito)
-.\build-release.ps1 --minor  # 0.13.7 -> 0.14.0
-.\build-release.ps1 --major  # 0.13.7 -> 1.0.0
+.\build-release.ps1 --patch  # 0.13.8 -> 0.13.9 (predefinito)
+.\build-release.ps1 --minor  # 0.13.8 -> 0.14.0
+.\build-release.ps1 --major  # 0.13.8 -> 1.0.0
 ```
 
 Il numero in `VERSION` viene aggiornato dopo la compilazione e i test dell'applicazione; un eventuale errore successivo del modulo o dell'installer non annulla l'incremento. Per condividere la versione aggiornata occorre committare `VERSION`.
 
-Il test d'integrazione richiede l'app già compilata; usa un host C# con sender simulato. Il pacchetto generato è `companion-module-ndiplayer/ndiplayer-1.0.0.tgz`. Le pipeline `.github/workflows/windows.yml` e `companion-module.yml` replicano rispettivamente build/installer e packaging/test del modulo.
+Il test d'integrazione richiede l'app già compilata; usa un host C# con sender simulato. Il pacchetto generato è `companion-module-ndiplayer/ndiplayer-1.1.0.tgz`. Le pipeline `.github/workflows/windows.yml` e `companion-module.yml` replicano rispettivamente build/installer e packaging/test del modulo.

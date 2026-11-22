@@ -14,6 +14,6 @@ public sealed class AudioDecoder:IDisposable {
  void Write(float[] values){int offset=0;while(offset<values.Length&&!stopping){lock(gate){while(count==ring.Length&&!stopping)Monitor.Wait(gate);if(stopping)return;int tail=(head+count)%ring.Length,n=Math.Min(values.Length-offset,Math.Min(ring.Length-count,ring.Length-tail));Array.Copy(values,offset,ring,tail,n);offset+=n;count+=n;if(count>=Rate/5)ready.Set();}}}
  public int ReadStereo(float[] destination,int samples){Array.Clear(destination,0,samples);lock(gate){int read=Math.Min(count,samples);int first=Math.Min(read,ring.Length-head);Array.Copy(ring,head,destination,0,first);if(read>first)Array.Copy(ring,0,destination,first,read-first);head=(head+read)%ring.Length;count-=read;if(read<samples&&HasAudio&&!ended)Interlocked.Increment(ref Underruns);Monitor.PulseAll(gate);return read;}}
  public bool Finished {get{lock(gate)return ended&&count==0;}}
- public void Dispose(){if(Interlocked.Exchange(ref disposed,1)!=0)return;stopping=true;lock(gate)Monitor.PulseAll(gate);if(process!=null){try{if(!process.HasExited)process.Kill();}catch(InvalidOperationException){}if(worker!=null)worker.Join();process.Dispose();}ready.Dispose();}
+ public void Dispose(){if(Interlocked.Exchange(ref disposed,1)!=0)return;stopping=true;lock(gate)Monitor.PulseAll(gate);if(process!=null){try{if(!process.HasExited)process.Kill();}catch(InvalidOperationException){}if(worker!=null)worker.Join();try{process.WaitForExit(2000);}catch(InvalidOperationException){}process.Dispose();}ready.Dispose();}
 }
 }

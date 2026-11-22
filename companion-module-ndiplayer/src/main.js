@@ -19,7 +19,7 @@ export default class NDIPlayerInstance extends InstanceBase {
  }
  getConfigFields() {
   return [
-   { id: 'help', type: 'static-text', label: 'NDIPlayer', value: 'In NDIPlayer abilita Comandi Companion… (porta predefinita 51235). GO richiede Program avviato. ENTER prepara solo Preview.', width: 12 },
+   { id: 'help', type: 'static-text', label: 'NDIPlayer', value: 'In NDIPlayer abilita Comandi Companion… (porta predefinita 51235). GO richiede Program avviato; PLAY e PAUSE agiscono sul video in Program. ENTER prepara solo Preview.', width: 12 },
    { id: 'host', type: 'textinput', label: 'IP o nome del PC con NDIPlayer', default: '127.0.0.1', width: 8 },
    { id: 'port', type: 'number', label: 'Porta TCP', default: 51235, min: 1, max: 65535, width: 4 },
    { id: 'timeout', type: 'number', label: 'Attesa risposta (secondi)', default: 20, min: 16, max: 60, width: 6 },

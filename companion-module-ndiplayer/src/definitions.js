@@ -9,6 +9,8 @@ export const simpleCommands = [
  ['go', 'GO', 'GO · manda la selezione in Program'],
  ['clear_fade', 'CLEAR_FADE', 'Clear Program · dissolvenza'],
  ['clear_cut', 'CLEAR_CUT', 'Clear Program · cut'],
+ ['play', 'PLAY', 'Play video · Program'],
+ ['pause', 'PAUSE', 'Pausa video · Program'],
 ]
 export function buildActions(send) {
  const actions = Object.fromEntries(simpleCommands.map(([id, command, name]) => [id, {
@@ -47,6 +49,8 @@ export function buildPresets(label) {
  button('prev_block', 'Blocco precedente', 'BLOCCO\nPREV', 0x50357b, 'prev_block', {}, 'nav')
  button('next_block', 'Blocco successivo', 'BLOCCO\nNEXT', 0x50357b, 'next_block', {}, 'nav')
  button('go', 'Manda in onda la selezione', 'GO', 0x126b36, 'go')
+ button('play', 'Riprende il video in Program', 'PLAY', 0x126b36, 'play')
+ button('pause', 'Mette in pausa il video in Program', 'PAUSE', 0x7a5a00, 'pause')
  button('clear_fade', 'Clear in dissolvenza', 'CLEAR\nFADE', 0x9c5400, 'clear_fade')
  button('clear_cut', 'Clear immediato in cut', 'CLEAR\nCUT', 0x9b1d20, 'clear_cut')
  button('select', "Richiamo dedicato: modifica Numero nell'azione", 'SELECT\nNUMERO', 0x17436b, 'select', { number: '1' }, 'nav')

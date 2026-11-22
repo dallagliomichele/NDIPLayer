@@ -35,6 +35,7 @@ for (const variant of ['source', 'package']) {
   await action('cancel'); await action('next_block'); await action('select', { number: '12' }); assert.equal((await app.state()).selected, 'A.png')
   await action('go'); await app.until(s => s.program.includes('A.png'))
   await action('digit', { digit: '9' }); await action('digit', { digit: '8' }); await action('backspace'); assert.equal(data.variables.number, '9'); await action('cancel'); assert.equal(data.variables.number, '')
+  await action('pause'); assert.match(data.variables.last_response, /^ERR Nessun video in onda/); await action('play'); assert.match(data.variables.last_response, /^ERR Nessun video in onda/)
   await action('clear_fade'); assert.equal((await app.state()).clearing, true)
   await action('clear_cut'); const clear = await app.until(s => s.program.length === 0); assert.equal(clear.enabled, true); assert.equal(clear.selected, 'A.png')
   assert.equal(data.variables.last_response, 'OK CLEAR_CUT')

@@ -3,7 +3,7 @@ import { EventEmitter } from 'node:events'
 import { StringDecoder } from 'node:string_decoder'
 
 export function validCommand(command) {
- return /^(NEXT|PREV|NEXT_BLOCK|PREV_BLOCK|GO|CLEAR_FADE|CLEAR_CUT|BACKSPACE|CANCEL|ENTER|SELECT [0-9]{1,9}|DIGIT [0-9])$/.test(command)
+ return /^(NEXT|PREV|NEXT_BLOCK|PREV_BLOCK|GO|CLEAR_FADE|CLEAR_CUT|PLAY|PAUSE|BACKSPACE|CANCEL|ENTER|SELECT [0-9]{1,9}|DIGIT [0-9])$/.test(command)
 }
 
 // One acknowledged command at a time. Reconnection never replays commands.

@@ -7,8 +7,8 @@ import { buildActions, buildPresets } from '../src/definitions.js'
 import { fixture, waitFor, makeClient, context } from './helpers.js'
 
 test('tutti i comandi validi; nessun ritorno a capo o numero errato', () => {
- for (const command of ['NEXT', 'PREV', 'NEXT_BLOCK', 'PREV_BLOCK', 'GO', 'CLEAR_FADE', 'CLEAR_CUT', 'ENTER', 'BACKSPACE', 'CANCEL', 'SELECT 0012', 'DIGIT 9']) assert.ok(validCommand(command))
- for (const command of ['SELECT -1', 'SELECT 1234567890', 'DIGIT 12', 'GO\nCLEAR_CUT', 'INVALID']) assert.equal(validCommand(command), false)
+ for (const command of ['NEXT', 'PREV', 'NEXT_BLOCK', 'PREV_BLOCK', 'GO', 'CLEAR_FADE', 'CLEAR_CUT', 'PLAY', 'PAUSE', 'ENTER', 'BACKSPACE', 'CANCEL', 'SELECT 0012', 'DIGIT 9']) assert.ok(validCommand(command))
+ for (const command of ['SELECT -1', 'SELECT 1234567890', 'DIGIT 12', 'GO\nCLEAR_CUT', 'PLAY 1', 'INVALID']) assert.equal(validCommand(command), false)
 })
 test('invio disconnesso rifiutato senza coda offline', async () => {
  const client = new NDIPlayerClient({ host: '127.0.0.1', port: 1 })
@@ -52,11 +52,14 @@ test('risposta inattesa rifiutata', async t => {
  const f = await fixture(t, (_, socket) => socket.write('PONG\n'))
  const client = makeClient(t, f.port); await waitFor(() => client.connected); await assert.rejects(client.send('NEXT'), /inattesa/)
 })
-test('23 preset, 12 azioni, SELECT non esegue GO', async () => {
+test('25 preset, 14 azioni, SELECT non esegue GO, PLAY e PAUSE inviano il comando Program', async () => {
  const sent = []; const actions = buildActions(async command => { sent.push(command) }); const { presets, structure } = buildPresets('Regia')
- assert.equal(Object.keys(actions).length, 12); assert.equal(Object.keys(presets).length, 23); assert.equal(structure.flatMap(s => s.definitions).length, 23)
+ assert.equal(Object.keys(actions).length, 14); assert.equal(Object.keys(presets).length, 25); assert.equal(structure.flatMap(s => s.definitions).length, 25)
  for (const preset of Object.values(presets)) for (const step of preset.steps) for (const action of step.down) assert.ok(actions[action.actionId])
  await actions.select.callback({ options: { number: '0012' } }); assert.deepEqual(sent, ['SELECT 0012'])
+ await actions.play.callback({ options: {} }); await actions.pause.callback({ options: {} }); assert.deepEqual(sent.slice(1), ['PLAY', 'PAUSE'])
+ assert.deepEqual(presets.play.steps[0].down, [{ actionId: 'play', options: {} }]); assert.deepEqual(presets.pause.steps[0].down, [{ actionId: 'pause', options: {} }])
+ assert.ok(structure.find(s => s.id === 'program').definitions.includes('play') && structure.find(s => s.id === 'program').definitions.includes('pause'))
  assert.ok(presets.number_display.style.text.includes('$(Regia:number)')); assert.deepEqual(presets.go.steps[0].down, [{ actionId: 'go', options: {} }])
 })
 test('API Companion reale: definizioni, feedback e variabili da ACK', async t => {
@@ -66,7 +69,7 @@ test('API Companion reale: definizioni, feedback e variabili da ACK', async t =>
  await data.actions.digit.callback({ options: { digit: '1' } }); assert.equal(data.variables.number, '1')
  await data.actions.select.callback({ options: { number: '999' } }); assert.equal(data.feedbacks.last_error.callback(), true); assert.equal(data.variables.number, '999')
  await data.actions.select.callback({ options: { number: '12' } }); assert.equal(data.variables.number, ''); assert.equal(data.variables.last_selected_number, '12'); assert.equal(data.variables.last_error, '')
- await data.actions.next_block.callback({ options: {} }); assert.equal(data.variables.last_block, 'Apertura'); assert.equal(data.variables.last_selected_number, '?'); assert.equal(Object.keys(data.presets).length, 23)
+ await data.actions.next_block.callback({ options: {} }); assert.equal(data.variables.last_block, 'Apertura'); assert.equal(data.variables.last_selected_number, '?'); assert.equal(Object.keys(data.presets).length, 25)
 })
 test('configurazione nuova invalida chiude la vecchia connessione', async t => {
  const f = await fixture(t, (_, socket) => socket.write('OK NUMBER 1\n')); const { ctx, data } = context(); const instance = new NDIPlayerInstance(ctx)

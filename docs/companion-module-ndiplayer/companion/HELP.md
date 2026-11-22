@@ -1,14 +1,14 @@
-# NDIPlayer · modulo Companion 1.0.0
+# NDIPlayer · modulo Companion 1.1.0
 
-Per **Companion 5.1.2**, runtime Node 26. Richiede NDIPlayer 0.11.0 o successivo; consigliata la 0.11.1.
+Per **Companion 5.1.2**, runtime Node 26. Richiede NDIPlayer 0.11.0 o successivo; consigliata la 0.11.1. I comandi PLAY e PAUSE richiedono la versione di NDIPlayer con i controlli video: con versioni precedenti rispondono ERR.
 
 ## Installazione
 
-1. In Companion apri **Modules → Import module package** e scegli `ndiplayer-1.0.0.tgz` senza scompattarlo.
-2. In **Connections** aggiungi **NDIPlayer**, versione **1.0.0**.
+1. In Companion apri **Modules → Import module package** e scegli `ndiplayer-1.1.0.tgz` senza scompattarlo.
+2. In **Connections** aggiungi **NDIPlayer**, versione **1.1.0**.
 3. Imposta l'IP del PC con NDIPlayer e la porta TCP **51235**, oppure la porta scelta nell'app. Sullo stesso PC usa `127.0.0.1`.
-4. In NDIPlayer abilita **Comandi Companion…**. Per GO e clear, avvia prima Program nell'app.
-5. In **Presets** scegli la connessione e trascina i 23 pulsanti sulle pagine: Navigazione, Program, Tastierino e Informazioni TCP.
+4. In NDIPlayer abilita **Comandi Companion…**. Per GO, clear, PLAY e PAUSE, avvia prima Program nell'app.
+5. In **Presets** scegli la connessione e trascina i 25 pulsanti sulle pagine: Navigazione, Program, Tastierino e Informazioni TCP.
 
 È un modulo privato importabile, non una pubblicazione nello store Bitfocus. Il pacchetto include le dipendenze: non serve installare Node o npm per importarlo.
 
@@ -21,6 +21,7 @@ Riferimento: [documentazione ufficiale di importazione](https://github.com/bitfo
 - 0–9, BACKSPACE, CANCEL, ENTER PREVIEW: componi il numero, poi ENTER seleziona il file in Preview.
 - GO: manda la selezione in Program. SELECT ed ENTER non eseguono GO automaticamente.
 - CLEAR FADE: usa Clear Esc ms dell'app. CLEAR CUT: clear immediato. Lasciano NDI acceso e Preview invariata.
+- PLAY / PAUSE: riprendono o fermano il video in onda nel Program (video e audio); la Preview si controlla dall'app. Senza un video in Program rispondono ERR. PLAY su un video terminato senza Loop lo riavvia dall'inizio; PAUSE su un video terminato risponde OK senza effetti.
 - NUMERO: numero composto restituito dall'ultima conferma TCP.
 - TCP: collegamento verde; ultimo errore rosso. Gli altri pulsanti diventano grigi quando scollegati.
 
@@ -36,6 +37,6 @@ I comandi sono serializzati aspettando la risposta. Il modulo si ricollega autom
 
 ## Sviluppo
 
-Node 26 e npm: `npm ci`, `npm test`, `npm run package`. Lo strumento ufficiale Bitfocus genera `ndiplayer-1.0.0.tgz` e valida il manifest. Codice MIT; il pacchetto include gli avvisi delle dipendenze.
+Node 26 e npm: `npm ci`, `npm test`, `npm run package`. Lo strumento ufficiale Bitfocus genera `ndiplayer-1.1.0.tgz` e valida il manifest. Codice MIT; il pacchetto include gli avvisi delle dipendenze.
 
 Prove di integrazione su Windows: dopo la compilazione di NDIPlayer e del pacchetto, esegui `test-integration.ps1`. Verifica sia il sorgente sia il codice contenuto nel .tgz contro il ricevitore TCP di NDIPlayer, con un mittente video simulato. Sono passati 15 test, senza invii a WATCHOUT.

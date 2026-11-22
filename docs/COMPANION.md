@@ -2,7 +2,7 @@
 
 ## Modulo dedicato per Companion 5.1.2
 
-È disponibile il pacchetto **ndiplayer-1.0.0.tgz**: importalo in Modules → Import module package, aggiungi la connessione NDIPlayer e trascina i 23 preset sulle pagine. [Guida del modulo dedicato](companion-module-ndiplayer/README.md). [Pacchetto versionato](companion-module-ndiplayer/releases/ndiplayer-1.0.0.tgz). Non occorre aggiornare NDIPlayer 0.11.1. Il collegamento generico descritto sotto rimane una alternativa.
+È disponibile il pacchetto **ndiplayer-1.1.0.tgz**: importalo in Modules → Import module package, aggiungi la connessione NDIPlayer e trascina i 25 preset sulle pagine. [Guida del modulo dedicato](../companion-module-ndiplayer/README.md). [Pacchetto versionato](../companion-module-ndiplayer/releases/ndiplayer-1.1.0.tgz). Richiede NDIPlayer 0.11.0 o successivo (PLAY e PAUSE richiedono la versione con i controlli video). Il collegamento generico descritto sotto rimane una alternativa.
 
 ## Collegamento
 
@@ -31,6 +31,8 @@ Il collegamento funziona indipendentemente dal focus della finestra. Program dev
 | `GO` | Invia la selezione in Program con il cut/dissolvenza scelto |
 | `CLEAR_FADE` | Pulisce Program in dissolvenza usando **Clear Esc ms** |
 | `CLEAR_CUT` | Pulisce immediatamente Program in cut |
+| `PLAY` | Riprende il video in onda nel Program (video e audio); su un video terminato senza Loop lo riavvia dall'inizio |
+| `PAUSE` | Mette in pausa il video in onda nel Program (video e audio) |
 
 NEXT/PREV rispettano l'ordine visualizzato, anche quando ordinato per colonna o filtrato con Cerca. Si fermano agli estremi. Il cambio blocco azzera Cerca; mantiene l'ordinamento visuale scelto e non cambia Program. I comandi blocco attraversano solo i blocchi reali: dalla vista Tutta la libreria NEXT_BLOCK entra nel primo; PREV_BLOCK non entra in Tutta la libreria e si ferma al primo blocco.
 
@@ -39,6 +41,8 @@ SELECT/ENTER cercano in tutto il blocco e azzerano il filtro Cerca quando trovan
 La composizione remota è separata dalla tastiera USB: i tasti DIGIT non cambiano Preview fino a ENTER. La tastiera USB mantiene numero → Preview e Invio → Program. Il buffer remoto si azzera dopo un richiamo riuscito, un cambio file/blocco o una nuova selezione manuale. Gli invii vengono eseguiti nell'ordine di ogni connessione; non c'è ripetizione automatica in caso di errore.
 
 I clear lasciano NDI acceso e Preview invariata. Un CLEAR_FADE già in corso non viene riavviato; CLEAR_CUT lo interrompe in cut. A clear completato viene generata la normale notifica di Program vuoto, se abilitata.
+
+PLAY e PAUSE agiscono solo sul video attualmente in Program; la Preview si controlla dall'app. Sono idempotenti: PAUSE su un video già fermo e PLAY su un video già in riproduzione rispondono `OK PLAY` / `OK PAUSE` senza effetti. Con Program spento o senza un video in onda rispondono ERR (`ERR Program non attivo`, `ERR Nessun video in onda`). La velocità di riproduzione non è controllabile da Companion.
 
 ## Esempio di tastierino
 

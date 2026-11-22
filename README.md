@@ -1,10 +1,12 @@
 # Watchout Image NDI
 
+Documentazione: [utilizzo](docs/UTILIZZO.md), [compilazione](docs/COMPILAZIONE.md), [architettura](docs/ARCHITETTURA.md), [audio](docs/AUDIO.md), [Companion](docs/COMPANION.md), [problemi e verifiche](docs/PROBLEMI.md) e [attività aperte](docs/TODO.md).
+
 App Windows x64 per inviare immagini su un flusso NDI con alpha. Interfaccia in italiano. Repository privato: https://github.com/dallagliomichele/NDIPLayer. Sorgenti e cronologia condivisi tramite GitHub.
 
 ## Modulo Companion 1.0.0
 
-Modulo importabile dedicato a Companion **5.1.2**: 12 azioni, 23 preset, tastierino, feedback TCP e risposte di errore. [Guida](companion-module-ndiplayer/README.md) e [pacchetto .tgz](companion-module-ndiplayer/releases/ndiplayer-1.0.0.tgz). Il modulo controlla il ricevitore TCP già presente in NDIPlayer 0.11.1; non richiede un nuovo installer. Sorgenti e prove sono nella cartella companion-module-ndiplayer.
+Modulo importabile dedicato a Companion **5.1.2**: 14 azioni (incluse PLAY e PAUSE per il video in Program), 25 preset, tastierino, feedback TCP e risposte di errore. [Guida](companion-module-ndiplayer/README.md) e [pacchetto .tgz](companion-module-ndiplayer/releases/ndiplayer-1.1.0.tgz). Il modulo controlla il ricevitore TCP già presente in NDIPlayer 0.11.1 (PLAY e PAUSE richiedono la versione con i controlli video). Sorgenti e prove sono nella cartella companion-module-ndiplayer.
 
 ## Novità 0.13.5 · Rimozione numeri e stato Program
 
@@ -58,7 +60,7 @@ Due pulsanti nel pannello Companion inviano separatamente le stringhe prima foto
 
 Audio video abilitabile separatamente per Program e ascolto Preview, con scelta WDM/WASAPI o ASIO e coppia stereo. Un solo motore apre il driver condiviso; Program e Preview richiedono coppie diverse se usano la stessa scheda. Gain per file da −60 a +12 dB, mute indipendenti e vumeter stereo RMS/peak/clip dopo gain e dissolvenza. Loop, fine video e clear seguono il video. Le impostazioni sono salvate nel progetto.
 
-[Guida audio e collaudo](AUDIO.md). Per cambiare schede o abilitazioni occorre prima pulire Program; gain e mute sono regolabili durante la riproduzione. Il pacchetto include NAudio 1.10.0 (Ms-PL), non i driver delle schede. Le prove audio automatiche usano uscite simulate: WDM, Dante/ASIO e sincronismo sull'impianto richiedono collaudo hardware.
+[Guida audio e collaudo](docs/AUDIO.md). Per cambiare schede o abilitazioni occorre prima pulire Program; gain e mute sono regolabili durante la riproduzione. Il pacchetto include NAudio 1.10.0 (Ms-PL), non i driver delle schede. Le prove audio automatiche usano uscite simulate: WDM, Dante/ASIO e sincronismo sull'impianto richiedono collaudo hardware.
 
 Il codice audio è separato in `AudioModel`, `AudioDecoder`, `AudioEngine`, `AudioDevices` e `AudioUi`; `tests/AudioTests.cs` verifica routing, mixer, clock, livelli, gain, loop, fine file, errori e progetti senza emettere suoni sulle schede reali.
 ## Correzione 0.11.1
@@ -69,7 +71,7 @@ Eliminata la cancellazione separata dello sfondo del countdown: testo e sfondo v
 
 **Countdown Program** sotto il monitor: tempo alla fine senza Loop, tempo al giro successivo con Loop. La versione 0.11.0 usava l'arancione negli ultimi cinque secondi; per colori e soglie attuali vedi le novità 0.13.2 e 0.13.3. Mostra Avvio video prima dei primi frame e Video terminato alla fine senza Loop. Durata letta dal flusso video con ffprobe incluso; posizione associata ai frame consegnati al mittente NDI. Non cambia se scegli un altro file in Preview. Precisione visualizzata al decimo di secondo, con quantizzazione agli fps di uscita; non è un ritorno da WATCHOUT. Se la durata non è disponibile, viene indicato senza inventare un tempo. In una dissolvenza fra video, il contatore segue il video entrante; verso foto/clear segue l'uscente fino a fine transizione.
 
-**Comandi Companion…** abilita la ricezione TCP, predefinita sulla porta 51235, indipendente dalle notifiche esistenti. Comandi: NEXT, PREV, NEXT_BLOCK, PREV_BLOCK, SELECT n, DIGIT n, BACKSPACE, CANCEL, ENTER, GO, CLEAR_FADE e CLEAR_CUT. Tutti funzionano senza focus su NDIPlayer. La selezione prepara Preview; GO invia. Il tastierino Companion compone il numero, ENTER seleziona e GO manda in onda. La tastiera USB resta invariata. Configurazione, esempi e risposte: [guida Companion](COMPANION.md), inclusa nell'installazione.
+**Comandi Companion…** abilita la ricezione TCP, predefinita sulla porta 51235, indipendente dalle notifiche esistenti. Comandi: NEXT, PREV, NEXT_BLOCK, PREV_BLOCK, SELECT n, DIGIT n, BACKSPACE, CANCEL, ENTER, GO, CLEAR_FADE, CLEAR_CUT, PLAY e PAUSE (video in Program). Tutti funzionano senza focus su NDIPlayer. La selezione prepara Preview; GO invia. Il tastierino Companion compone il numero, ENTER seleziona e GO manda in onda. La tastiera USB resta invariata. Configurazione, esempi e risposte: [guida Companion](docs/COMPANION.md), inclusa nell'installazione.
 
 **Miniature**: destra/sinistra percorrono i file in sequenza passando fra le righe. NEXT/PREV TCP usano esattamente lo stesso ordine e si fermano agli estremi.
 
@@ -77,12 +79,12 @@ Eliminata la cancellazione separata dello sfondo del countdown: testo e sfondo v
 
 ## Video MOV, Loop e posizionamento (0.10.0)
 
-Il catalogo include `.mov`, anche nelle sottocartelle e nei blocchi. Miniature, numeri per blocco, richiamo da tastiera e doppio clic funzionano anche sui video. Dalla versione 0.12.0 è disponibile l'audio locale opzionale: vedi [AUDIO.md](AUDIO.md). Il contenitore MOV può usare codec diversi: provati file H.264, QuickTime Animation (QTRLE) con alpha e ProRes 4444 con alpha. Non tutti i codec/profili MOV sono garantiti; un errore di decodifica viene mostrato nell'app.
+Il catalogo include `.mov`, anche nelle sottocartelle e nei blocchi. Miniature, numeri per blocco, richiamo da tastiera e doppio clic funzionano anche sui video. Dalla versione 0.12.0 è disponibile l'audio locale opzionale: vedi [AUDIO.md](docs/AUDIO.md). Il contenitore MOV può usare codec diversi: provati file H.264, QuickTime Animation (QTRLE) con alpha e ProRes 4444 con alpha. Non tutti i codec/profili MOV sono garantiti; un errore di decodifica viene mostrato nell'app.
 
 - Seleziona il video: l'anteprima parte automaticamente. Se Preview NDI è acceso, invia questa riproduzione alla regia.
 - **Loop video**: ripete il clip senza scadenza; la scelta è salvata per file insieme a scala e posizione. Disattivato: alla fine resta l'ultimo fotogramma. Il cambio Loop in anteprima viene applicato a Program al prossimo invio.
-- Nei monitor Preview e Program, i comandi in basso a destra agiscono indipendentemente sul rispettivo video: **play/pausa** congela o riprende video e audio; **riavvia** torna al primo fotogramma, mantenendo la pausa se attiva.
-- Il selettore **velocità** va da 0,5× a 5×, con passi di 0,1×; il valore è salvato nel progetto per ciascun video. Cambiarlo riavvia quel monitor dall'inizio, mantenendo l'eventuale pausa, e attiva il relativo **Mute** nella barra inferiore. Il mute può essere disattivato manualmente. Il valore salvato viene applicato alle successive riproduzioni del file; l'altro monitor già in riproduzione non cambia.
+- Nei monitor Preview e Program, in basso a destra e in linea con il vumetro (che si restringe per fare posto), i comandi agiscono indipendentemente sul rispettivo video: **play/pausa** congela o riprende video e audio; **riavvia** torna al primo fotogramma, mantenendo la pausa se attiva. I comandi sono sempre visibili e si attivano quando il monitor riproduce un MOV.
+- Il selettore **Velocità video ×** nella barra comandi in basso (accanto a Gain video dB) va da 0,5× a 5×, con passi di 0,1×; il valore è salvato nel progetto per ciascun video. Agisce sul video in Preview: cambiarlo lo riavvia dall'inizio, mantenendo l'eventuale pausa, e attiva **Mute Preview** (disattivabile a mano). Program non cambia mentre è in onda: usa la velocità salvata al prossimo invio.
 - **INVIA / Invio / doppio clic**: avvia una riproduzione Program indipendente, sempre dall'inizio, con la transizione impostata. Passare a un altro blocco/file lascia il video in onda invariato.
 - Scala, centro X/Y, trascinamento e rotellina funzionano come per le foto. Le modifiche preparano l'anteprima; per applicarle a Program occorre inviare nuovamente. Dopo una regolazione l'anteprima video riparte dall'inizio, con un breve ritardo per evitare di riavviare il decoder a ogni movimento del mouse.
 - Clear, Esc/doppio Esc e arresto trasparente valgono anche per i video. Durante una dissolvenza normale il clip uscente continua a scorrere; interrompendo ripetutamente una transizione può essere usato come partenza il fotogramma composto corrente.
@@ -264,7 +266,7 @@ Build dalla cartella progetto con PowerShell: `./build.ps1`. Test runtime opzion
 
 La versione dell'ultima build applicativa riuscita è in `VERSION`: ogni esecuzione riuscita di `build.ps1`, inclusa quella richiamata dall'installer, incrementa automaticamente la patch dopo i test. Con `build-release.ps1` è possibile scegliere `--minor` o `--major`, che azzerano rispettivamente patch o minor e patch; `--patch` è il valore predefinito. L'app e l'installer riportano la stessa versione. Se i test o la compilazione falliscono, `VERSION` non cambia; se invece fallisce solo la successiva creazione dell'installer, la build applicativa riuscita ha già incrementato la versione. Per condividere il numero occorre committare `VERSION`: la CI non crea commit e checkout separati possono produrre lo stesso numero. `-SkipBuild` crea l'installer senza incrementare e richiede un eseguibile corrispondente a `VERSION`.
 
-Limiti: nessun file watcher; scansione cartelle e decodifica dell'immagine selezionata sulla UI, miniature in sottofondo; rendering/fade CPU in spazio dei valori sRGB, nessuna gestione colore ICC professionale, nessuna garanzia realtime. I file molto grandi possono rallentare la UI e il monitor locale. Il sender invia continuamente anche immagini statiche; errori NDI visibili nello stato, nessuna riconnessione automatica. Audio locale opzionale WDM/WASAPI e ASIO; nessun audio incorporato nei flussi NDI. Un'istanza per processo.
+Limiti: nessun file watcher; scansione cartelle e decodifica dell'immagine selezionata sulla UI, miniature in sottofondo; composizione e dissolvenze delle immagini statiche con Direct3D 11 (fallback GDI+) in spazio dei valori sRGB, nessuna gestione colore ICC professionale, nessuna garanzia realtime. I file molto grandi possono rallentare la UI e il monitor locale. Il sender invia continuamente anche immagini statiche; errori NDI visibili nello stato, nessuna riconnessione automatica. Audio locale opzionale WDM/WASAPI e ASIO; nessun audio incorporato nei flussi NDI. Un'istanza per processo.
 
 ## GitHub e più postazioni
 

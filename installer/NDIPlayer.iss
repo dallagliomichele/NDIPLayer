@@ -37,8 +37,8 @@ Source: "..\third-party\SharpDX-LICENSE.txt"; DestDir: "{app}\gpu"; Flags: ignor
 Source: "..\third-party\NAudio-LICENSE.txt"; DestDir: "{app}\audio"; Flags: ignoreversion
 Source: "..\third-party\NAudio-NOTICE.txt"; DestDir: "{app}\audio"; Flags: ignoreversion
 Source: "..\bin\WatchoutImageNDI.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\AUDIO.md"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\COMPANION.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\docs\AUDIO.md"; DestDir: "{app}\docs"; Flags: ignoreversion
+Source: "..\docs\COMPANION.md"; DestDir: "{app}\docs"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\bin\video\*"; DestDir: "{app}\video"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\third-party\FFmpeg-NOTICE.txt"; DestDir: "{app}"; Flags: ignoreversion

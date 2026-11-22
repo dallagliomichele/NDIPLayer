@@ -1,6 +1,6 @@
 # Architettura di NDIPlayer
 
-Analisi del repository alla versione applicativa 0.13.5 e del modulo Companion 1.0.0. L'applicazione è un processo Windows x64 con interfaccia WinForms; il modulo Bitfocus Companion è un progetto Node.js separato.
+Analisi del repository alla versione applicativa 0.13.8 e del modulo Companion 1.0.0. L'applicazione è un processo Windows x64 con interfaccia WinForms; il modulo Bitfocus Companion è un progetto Node.js separato.
 
 ## Flusso dei dati
 

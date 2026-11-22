@@ -43,7 +43,7 @@ public sealed class VideoSession:IFrameSource,IPlaybackSource,IAudioVideoSource 
  public double FadeAudio(double seconds){return voice==null?0:voice.FadeOut(seconds);}
  public byte[] ReadPlaybackFrame(out VideoPlaybackStatus status){lock(gate){status=VideoPlaybackStatus.FromFrames(path,duration,frameNumber,rate,loop,Ended&&error==null,speed);return latest;}}
  public byte[] ReadFrame(){lock(gate)return latest;}
- public void Dispose(){if(stopping)return;stopping=true;if(voice!=null)voice.Release();try{if(!process.HasExited)process.Kill();}catch(InvalidOperationException){}reader.Join();process.Dispose();}
+ public void Dispose(){if(stopping)return;stopping=true;if(voice!=null)voice.Release();try{if(!process.HasExited)process.Kill();}catch(InvalidOperationException){}reader.Join();try{process.WaitForExit(2000);}catch(InvalidOperationException){}process.Dispose();}
 }
 public sealed class BorrowedFrames:IFrameSource,IPlaybackSource {readonly IFrameSource source;public BorrowedFrames(IFrameSource value){source=value;}public byte[] ReadFrame(){return source.ReadFrame();}public byte[] ReadPlaybackFrame(out VideoPlaybackStatus status){var clock=source as IPlaybackSource;if(clock!=null)return clock.ReadPlaybackFrame(out status);status=null;return source.ReadFrame();}public string Error{get{return source.Error;}}public void Dispose(){}}
 }

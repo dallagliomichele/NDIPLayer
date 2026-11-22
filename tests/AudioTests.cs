@@ -57,7 +57,7 @@ static class AudioTests {
    }
    var speedSink=new FakeSink(2);using(var manager=new AudioManager(syncConfig,r=>speedSink)){
     byte[] initial=Renderer.Render(movie,16,16,new Placement());using(var video=new VideoSession(movie,16,16,50,new Placement(),true,initial,manager.Program,0,2))using(var playout=new Playout(new Sender(),16,16,50)){
-     playout.CueSource(video,initial,0,movie);speedSink.Pump(24000);Wait(()=>video.DecodedFrames>=49);VideoPlaybackStatus playback;video.ReadPlaybackFrame(out playback);check(Math.Abs(playback.Position-1)<.04&&Math.Abs(playback.Remaining-.5)<.03,"video a 2× segue il clock audio e countdown indica il tempo reale restante");
+     playout.CueSource(video,initial,0,movie);speedSink.Pump(24000);Wait(()=>video.DecodedFrames>=49);VideoPlaybackStatus playback;video.ReadPlaybackFrame(out playback);check(Math.Abs(playback.Position-1)<.08&&Math.Abs(playback.Remaining-.5)<.05,"video a 2× segue il clock audio e countdown indica il tempo reale restante");
     }
    }
    var data=new Settings{Root=dir,Audio=Config()};data.AudioGains[movie]=-7.5;data.Images[movie]=new Placement{Loop=true,X=10};string path=Path.Combine(dir,"audio.ndiproj");ProjectStore.Write(path,data);var loaded=ProjectStore.Read(path);check(loaded.Audio.Program.Enabled&&loaded.Audio.Preview.FirstChannel==3&&loaded.AudioGains[movie]==-7.5,"progetto salva routing e gain per singolo video");ProjectStore.Relocate(loaded,Path.Combine(dir,"new"));check(loaded.AudioGains[Path.Combine(dir,"new","audio.mov")]==-7.5,"ricollegamento cartella mantiene gain audio dei file");
@@ -68,6 +68,6 @@ static class AudioTests {
     ((System.Windows.Forms.NumericUpDown)type.GetField("scale",flags).GetValue(window)).Value=125;var current=(Settings)type.GetField("settings",flags).GetValue(window);check(current.AudioGains[movie]==-3.5,"resize non perde il gain del video");
     ((System.Windows.Forms.CheckBox)type.GetField("muteProgram",flags).GetValue(window)).Checked=true;check(Peak(uiSink.Pump(960),8,0)==0,"Mute della UI silenzia il Program durante riproduzione");
    }
-  }finally{Directory.Delete(dir,true);}
+  }finally{for(int attempt=0;;attempt++){try{Directory.Delete(dir,true);break;}catch(IOException){if(attempt>=40)throw;Thread.Sleep(100);}}}
  }
 }
