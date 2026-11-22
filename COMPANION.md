@@ -13,7 +13,7 @@
 
 Riferimento del modulo: [guida ufficiale Bitfocus](https://github.com/bitfocus/companion-bundled-modules/blob/main/generic-tcp-udp/companion/HELP.md).
 
-Il collegamento funziona indipendentemente dal focus della finestra. Program deve essere già avviato per GO e clear. La ricezione è separata dalle notifiche **Companion TCP…**, normalmente dirette alla porta 51234 di Companion. Configurazione di ricezione e notifiche sono salvate nel progetto e nelle preferenze. Se il collegamento arriva da un altro PC, Windows deve consentire l'ingresso TCP sulla porta configurata per NDIPlayer. Il protocollo è TCP in chiaro senza autenticazione, destinato alla rete di regia.
+Il collegamento funziona indipendentemente dal focus della finestra. Program deve essere già avviato per GO e clear. La ricezione è separata dalle notifiche **Companion TCP…**, normalmente dirette alla porta 51234 di Companion. Configurazione di ricezione e notifiche sono salvate nel progetto e nelle preferenze. Se il collegamento arriva da un altro PC, Windows deve consentire l'ingresso TCP sulla porta configurata per NDIPlayer. Il protocollo è TCP in chiaro senza autenticazione, destinato a reti di regia locali protette dal firewall: all'attivazione l'app mostra un avviso nella configurazione e nello stato di ascolto, anche quando la configurazione viene ripristinata.
 
 ## Comandi
 

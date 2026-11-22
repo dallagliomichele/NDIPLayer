@@ -16,6 +16,11 @@ public static class PlacementCoordinates {
  public static decimal ZoomPercent(decimal current,int wheelDelta,bool fine){double next=(double)current*Math.Pow(fine?1.02:1.10,wheelDelta/120.0);return Math.Max(1m,Math.Min(400m,(decimal)Math.Round(next,1)));}
 }
 public static class Renderer {
+ static readonly object GpuGate=new object();
+ static GpuRenderer gpu;
+ static Renderer(){try{gpu=new GpuRenderer();}catch{}}
+ public static void Initialize(){} // Force device selection during application startup.
+ public static string BackendName {get{lock(GpuGate)return gpu==null?"GDI+ (GPU non disponibile)":"Direct3D 11 · "+gpu.AdapterName;}}
  public static Bitmap ToBitmap(byte[] pixels,int width,int height){
   if(pixels.Length!=width*height*4)throw new ArgumentException("Frame size");
   var bitmap=new Bitmap(width,height,PixelFormat.Format32bppArgb);
@@ -34,6 +39,7 @@ public static class Renderer {
  }
  public static byte[] Render(string path,int w,int h,Placement p) {if(path==null)return RenderImage(null,w,h,p);using(var src=LoadBitmap(path))return RenderImage(src,w,h,p);}
  public static byte[] RenderImage(Image src,int w,int h,Placement p) {
+  lock(GpuGate){if(gpu!=null)try{return gpu.Render(src,w,h,p);}catch{gpu.Dispose();gpu=null;}}
   using(var b=new Bitmap(w,h,PixelFormat.Format32bppArgb)) {
    using(var g=Graphics.FromImage(b)) { g.Clear(Color.Transparent); g.CompositingMode=CompositingMode.SourceCopy; g.InterpolationMode=InterpolationMode.HighQualityBicubic;
     if(src!=null) {
@@ -44,9 +50,12 @@ public static class Renderer {
    try { var bytes=new byte[w*h*4]; for(int y=0;y<h;y++) Marshal.Copy(IntPtr.Add(data.Scan0,y*data.Stride),bytes,y*w*4,w*4); return bytes; } finally {b.UnlockBits(data);}
   }
  }
- public static void Blend(byte[] a,byte[] b,double t,byte[] result) {
+ public static void Blend(byte[] a,byte[] b,double t,byte[] result){Blend(a,b,t,result,a.Length/4,1);}
+ public static void Blend(byte[] a,byte[] b,double t,byte[] result,int width,int height) {
   if(a.Length!=b.Length || result.Length!=a.Length) throw new ArgumentException("Frame sizes differ");
+  if(width<1||height<1||(long)width*height*4!=a.Length)throw new ArgumentException("Frame dimensions differ");
   t=Math.Max(0,Math.Min(1,t));
+  lock(GpuGate){if(gpu!=null)try{gpu.Blend(a,b,t,result,width,height);return;}catch{gpu.Dispose();gpu=null;}}
   for(int i=0;i<a.Length;i+=4) { double aa=a[i+3]*(1-t),ba=b[i+3]*t,alpha=aa+ba;
    for(int c=0;c<3;c++) result[i+c]=alpha==0?(byte)0:(byte)Math.Round((a[i+c]*aa+b[i+c]*ba)/alpha);
    result[i+3]=(byte)Math.Round(alpha);

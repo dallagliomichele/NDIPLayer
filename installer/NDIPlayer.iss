@@ -29,6 +29,8 @@ Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 
 [Files]
 Source: "..\bin\NAudio.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\bin\SharpDX*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\third-party\SharpDX-LICENSE.txt"; DestDir: "{app}\gpu"; Flags: ignoreversion
 Source: "..\third-party\NAudio-LICENSE.txt"; DestDir: "{app}\audio"; Flags: ignoreversion
 Source: "..\third-party\NAudio-NOTICE.txt"; DestDir: "{app}\audio"; Flags: ignoreversion
 Source: "..\bin\WatchoutImageNDI.exe"; DestDir: "{app}"; Flags: ignoreversion

@@ -21,7 +21,7 @@ public partial class MainWindow:Form {
  Bitmap selectedSource;
  int activeProgramFps;
  public MainWindow():this(null){}
- public MainWindow(string preferencesPath){state=preferencesPath??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WatchoutImageNDI","settings.json");Text="NDIPlayer — 0.13.5";Width=1600;Height=900;MinimumSize=new Size(1150,650);
+ public MainWindow(string preferencesPath){Renderer.Initialize();state=preferencesPath??Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WatchoutImageNDI","settings.json");Text="NDIPlayer — 0.13.5";Width=1600;Height=900;MinimumSize=new Size(1150,650);
   x.Name="ImageCenterX";y.Name="ImageCenterY";scale.Name="ImageScale";preview.Name="SelectionPreview";program.Name="ProgramPreview";files.Name="ImageLibrary";width.Name="OutputWidth";height.Name="OutputHeight";x.DecimalPlaces=y.DecimalPlaces=scale.DecimalPlaces=1;
   try{if(File.Exists(state))settings=new JavaScriptSerializer{MaxJsonLength=16*1024*1024}.Deserialize<Settings>(File.ReadAllText(state));if(settings==null||settings.Images==null)settings=new Settings();}catch(Exception){status.Text="Preferenze non leggibili: ripristinate.";}
   try{ProjectStore.Normalize(settings);}catch{settings=new Settings();}

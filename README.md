@@ -67,7 +67,7 @@ Eliminata la cancellazione separata dello sfondo del countdown: testo e sfondo v
 
 ## Novità 0.11.0 · Countdown, Companion e navigazione
 
-**Countdown Program** sotto il monitor: tempo alla fine senza Loop, tempo al giro successivo con Loop, arancione negli ultimi cinque secondi. Mostra Avvio video prima dei primi frame e Video terminato alla fine senza Loop. Durata letta dal flusso video con ffprobe incluso; posizione associata ai frame consegnati al mittente NDI. Non cambia se scegli un altro file in Preview. Precisione visualizzata al decimo di secondo, con quantizzazione agli fps di uscita; non è un ritorno da WATCHOUT. Se la durata non è disponibile, viene indicato senza inventare un tempo. In una dissolvenza fra video, il contatore segue il video entrante; verso foto/clear segue l'uscente fino a fine transizione.
+**Countdown Program** sotto il monitor: tempo alla fine senza Loop, tempo al giro successivo con Loop. La versione 0.11.0 usava l'arancione negli ultimi cinque secondi; per colori e soglie attuali vedi le novità 0.13.2 e 0.13.3. Mostra Avvio video prima dei primi frame e Video terminato alla fine senza Loop. Durata letta dal flusso video con ffprobe incluso; posizione associata ai frame consegnati al mittente NDI. Non cambia se scegli un altro file in Preview. Precisione visualizzata al decimo di secondo, con quantizzazione agli fps di uscita; non è un ritorno da WATCHOUT. Se la durata non è disponibile, viene indicato senza inventare un tempo. In una dissolvenza fra video, il contatore segue il video entrante; verso foto/clear segue l'uscente fino a fine transizione.
 
 **Comandi Companion…** abilita la ricezione TCP, predefinita sulla porta 51235, indipendente dalle notifiche esistenti. Comandi: NEXT, PREV, NEXT_BLOCK, PREV_BLOCK, SELECT n, DIGIT n, BACKSPACE, CANCEL, ENTER, GO, CLEAR_FADE e CLEAR_CUT. Tutti funzionano senza focus su NDIPlayer. La selezione prepara Preview; GO invia. Il tastierino Companion compone il numero, ENTER seleziona e GO manda in onda. La tastiera USB resta invariata. Configurazione, esempi e risposte: [guida Companion](COMPANION.md), inclusa nell'installazione.
 
@@ -77,7 +77,7 @@ Eliminata la cancellazione separata dello sfondo del countdown: testo e sfondo v
 
 ## Video MOV, Loop e posizionamento (0.10.0)
 
-Il catalogo ora include `.mov`, anche nelle sottocartelle e nei blocchi. Miniature, numeri per blocco, richiamo da tastiera e doppio clic funzionano anche sui video. Il MOV viene riprodotto **senza audio**, come concordato. Il contenitore MOV può usare codec diversi: provati file H.264, QuickTime Animation (QTRLE) con alpha e ProRes 4444 con alpha. Non tutti i codec/profili MOV sono garantiti; un errore di decodifica viene mostrato nell'app.
+Il catalogo include `.mov`, anche nelle sottocartelle e nei blocchi. Miniature, numeri per blocco, richiamo da tastiera e doppio clic funzionano anche sui video. Dalla versione 0.12.0 è disponibile l'audio locale opzionale: vedi [AUDIO.md](AUDIO.md). Il contenitore MOV può usare codec diversi: provati file H.264, QuickTime Animation (QTRLE) con alpha e ProRes 4444 con alpha. Non tutti i codec/profili MOV sono garantiti; un errore di decodifica viene mostrato nell'app.
 
 - Seleziona il video: l'anteprima parte automaticamente. Se Preview NDI è acceso, invia questa riproduzione alla regia.
 - **Loop video**: ripete il clip senza scadenza; la scelta è salvata per file insieme a scala e posizione. Disattivato: alla fine resta l'ultimo fotogramma. Il cambio Loop in anteprima viene applicato a Program al prossimo invio.
@@ -86,9 +86,9 @@ Il catalogo ora include `.mov`, anche nelle sottocartelle e nei blocchi. Miniatu
 - Scala, centro X/Y, trascinamento e rotellina funzionano come per le foto. Le modifiche preparano l'anteprima; per applicarle a Program occorre inviare nuovamente. Dopo una regolazione l'anteprima video riparte dall'inizio, con un breve ritardo per evitare di riavviare il decoder a ogni movimento del mouse.
 - Clear, Esc/doppio Esc e arresto trasparente valgono anche per i video. Durante una dissolvenza normale il clip uscente continua a scorrere; interrompendo ripetutamente una transizione può essere usato come partenza il fotogramma composto corrente.
 
-Fit mantiene le proporzioni di visualizzazione (anche pixel non quadrati), con aree esterne trasparenti. L'alpha incorporato è mantenuto per i codec che lo forniscono e che il decoder legge. L'uscita resta BGRA a 8 bit: questa versione non gestisce HDR, audio, seek o pause. Program e Preview sono decoder separati: due video o un video su entrambi i flussi usano più CPU/memoria. I monitor locali restano a 10 aggiornamenti/s; il flusso NDI usa gli fps impostati. Il breve test NDI reale a 1920x1080p50 non sostituisce la prova dei tuoi MOV e del carico della postazione in WATCHOUT.
+Fit mantiene le proporzioni di visualizzazione (anche pixel non quadrati), con aree esterne trasparenti. L'alpha incorporato è mantenuto per i codec che lo forniscono e che il decoder legge. L'uscita resta BGRA a 8 bit: questa versione non gestisce HDR, seek o pause; l'audio locale è opzionale e non viene incorporato in NDI. Program e Preview sono decoder separati: due video o un video su entrambi i flussi usano più CPU/memoria. I monitor locali restano a 10 aggiornamenti/s; il flusso NDI usa gli fps impostati. Il breve test NDI reale a 1920x1080p50 non sostituisce la prova dei tuoi MOV e del carico della postazione in WATCHOUT.
 
-L'installer include **FFmpeg LGPLv3+** e le sue librerie, licenze, sorgenti FFmpeg e ricette di build nella sottocartella `video`. Non servono codec di sistema o installazioni di NDI Tools. Provenienza e SHA256: `third-party/FFmpeg-NOTICE.txt`. Per preparare i sorgenti su una nuova postazione, prima di `build.ps1` esegui `installer/prepare-video.ps1`; puoi passare `-Archive` con lo ZIP originale verificato. La build del fornitore del 9 novembre è conservata online solo temporaneamente: archivia lo ZIP per gli sviluppi successivi. L'installer completo resta utilizzabile offline.
+L'installer include **FFmpeg LGPLv3+** e le sue librerie, licenze, sorgenti FFmpeg e ricette di build nella sottocartella `video`. Non servono codec di sistema o installazioni di NDI Tools. Provenienza e SHA256: `third-party/FFmpeg-NOTICE.txt`. `build.ps1` prepara automaticamente FFmpeg se manca; per usare lo ZIP originale verificato in locale esegui prima `installer/prepare-video.ps1 -Archive C:\percorso\archivio.zip`. La build mensile del 31 ottobre è conservata dal fornitore per due anni, non permanentemente: conserva lo ZIP e i sorgenti corrispondenti per gli sviluppi successivi. L'installer completo resta utilizzabile offline.
 
 ## Correzione miniature
 
@@ -105,6 +105,8 @@ Con il focus sull'elenco o sull'anteprima, digita il numero (anche dal tastierin
 I progetti precedenti vengono letti e i numeri globali già assegnati sono copiati una sola volta nei blocchi che contengono le rispettive foto. Da quel momento le numerazioni sono indipendenti. I nuovi salvataggi usano il formato progetto 2, leggibile dalla versione 0.10.0; conserva il vecchio file se devi aprirlo con versioni precedenti.
 
 ## Avvio
+
+Per installazione e primi passi vedi [Utilizzo delle immagini](#utilizzo-delle-immagini).
 
 ## Arresto trasparente, menu foto e numeri di riferimento (0.10.0)
 
@@ -236,9 +238,9 @@ Su rete cablata, consenti NDI nel firewall privato. In WATCHOUT crea un ingresso
 
 ## Architettura e sviluppo
 
-Tecnologia: C# / WinForms, .NET Framework 4.8 x64, GDI+ per decodifica/rendering; SDK NDI nativo tramite ABI C. Scelta per produrre subito un eseguibile Windows con NAudio per le uscite audio e FFmpeg per i video, usando il compilatore già presente. Un futuro renderer GPU può sostituire quello CPU senza cambiare sender e libreria.
+Tecnologia: C# / WinForms, .NET Framework 4.8 x64, Direct3D 11 per rendering delle immagini e dissolvenze, GDI+ per decodifica delle immagini e monitor UI; SDK NDI nativo tramite ABI C. Il renderer sceglie prima una GPU con memoria video dedicata e poi una integrata; se Direct3D non è disponibile usa GDI+. I MOV restano decodificati e composti da FFmpeg. L'adattatore attivo è indicato nelle impostazioni video.
 
-- `src/Core.cs`: catalogo ricorsivo, geometria, render BGRA e interpolazione alpha corretta.
+- `src/Core.cs` e `src/GpuRenderer.cs`: catalogo ricorsivo, geometria, render BGRA e interpolazione alpha corretta sulla GPU.
 - `src/Ndi.cs`: `IVideoSender`, binding NDI, playout indipendente dalla UI, clock SDK e rilascio risorse sul thread di invio.
 - `src/App.cs`: UI, monitor di selezione/programma e persistenza locale.
 - `src/LibraryBrowser.cs`: libreria virtuale elenco/miniature, decodifica in sottofondo, cache limitata e annullamento dei caricamenti quando cambia cartella/dimensione.
@@ -257,7 +259,7 @@ Tecnologia: C# / WinForms, .NET Framework 4.8 x64, GDI+ per decodifica/rendering
 - `tests/StopAndNumberTests.cs`: ultimi frame trasparenti prima della distruzione, arresto indipendente dei due mittenti, chiusura dell'app, menu contestuale, numeri e portabilità del progetto.
 - `tests/Tests.cs`: geometria, alpha reale PNG, transizioni, clear, scansione, layout ABI e playout con sender simulato; test opzionale sul runtime reale.
 
-Build dalla cartella progetto con PowerShell: `./build.ps1`. Test runtime opzionale: `./bin/Tests.exe --ndi`. Alla prima build scarica NAudio 1.10.0 dal pacchetto NuGet ufficiale, verificato con SHA-256; FFmpeg si prepara con `installer/prepare-video.ps1`. `.github/workflows/windows.yml` costruisce, esegue test e genera un artifact su Windows dopo la pubblicazione autorizzata.
+Build dalla cartella progetto con PowerShell: `./build.ps1`. Test runtime opzionale: `./bin/Tests.exe --ndi`. Alla prima build vengono preparati NAudio 1.10.0 e FFmpeg LGPL dagli archivi verificati tramite SHA-256; per usare un archivio FFmpeg locale eseguire prima `installer/prepare-video.ps1 -Archive C:\percorso\archivio.zip`. `.github/workflows/windows.yml` costruisce, esegue test e genera un artifact su Windows dopo la pubblicazione autorizzata.
 
 Limiti: nessun file watcher; scansione cartelle e decodifica dell'immagine selezionata sulla UI, miniature in sottofondo; rendering/fade CPU in spazio dei valori sRGB, nessuna gestione colore ICC professionale, nessuna garanzia realtime. I file molto grandi possono rallentare la UI e il monitor locale. Il sender invia continuamente anche immagini statiche; errori NDI visibili nello stato, nessuna riconnessione automatica. Audio locale opzionale WDM/WASAPI e ASIO; nessun audio incorporato nei flussi NDI. Un'istanza per processo.
 
