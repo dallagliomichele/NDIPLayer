@@ -48,7 +48,7 @@ class Tests {
   RoutingTests.Run(Check,args.Length>0&&args[0]=="--ndi");
   CompanionTests.Run(Check);ControlAndCountdownTests.Run(Check);CountdownPaintTests.Run(Check);AudioTests.Run(Check);
   VideoTests.Run(Check,args.Length>0&&args[0]=="--ndi");ThumbnailLifetimeTests.Run(Check);RecallTests.Run(Check);StopAndNumberTests.Run(Check,args.Length>0&&args[0]=="--ndi");
-  using(var window=new MainWindow(Path.Combine(Path.GetTempPath(),"NDIPlayer-no-preferences-"+Guid.NewGuid()+".json"))){window.CreateControl();window.PerformLayout();Check(window.Controls.Find("MainHeader",true).Length==1&&window.Controls.Find("OperationControls",true).Length==1&&window.Controls.Find("ProgramStateBar",true).Length==1,"interfaccia costruzione");}
+  using(var window=new MainWindow(Path.Combine(Path.GetTempPath(),"NDIPlayer-no-preferences-"+Guid.NewGuid()+".json"))){window.CreateControl();window.PerformLayout();Check(window.Controls.Find("MainHeader",true).Length==1&&window.Controls.Find("OperationControls",true).Length==1&&window.Controls.Find("ProgramStateBar",true).Length==1,"interfaccia costruzione");Check(window.Text.Contains("NDIPlayer — "+AppVersion.Value),"titolo applicazione usa la versione compilata");}
   Console.WriteLine(count+" test superati");
  }
  class Fake:IVideoSender{public volatile bool Seen,Disposed;public volatile int Alpha;public void Send(byte[] p,int w,int h,int fps){Alpha=p[3];if(Alpha==255)Seen=true;Thread.Sleep(10);}public void Dispose(){Disposed=true;}}

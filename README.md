@@ -1,4 +1,4 @@
-# Watchout Image NDI · versione 0.13.5
+# Watchout Image NDI
 
 App Windows x64 per inviare immagini su un flusso NDI con alpha. Interfaccia in italiano. Repository privato: https://github.com/dallagliomichele/NDIPLayer. Sorgenti e cronologia condivisi tramite GitHub.
 
@@ -36,7 +36,7 @@ Rimosso il countdown duplicato dalla barra superiore; resta quello sotto Program
 
 Barre distinte Progetto e Libreria, stato Program sempre visibile e finestra separata Impostazioni con sezioni Video/NDI, Audio, Companion e Informazioni. Audio e Companion aprono da qui i rispettivi pannelli di configurazione e test. Ogni monitor conserva il proprio comando di avvio/arresto. Gli errori dei servizi rimangono in una riga separata, con dettagli nelle Impostazioni, senza spostare i pulsanti.
 
-Loop video è sempre presente nella riga di invio (abilitato per i MOV), insieme a Riavvia anteprima video; il countdown rimane sotto il Program con tempo al prossimo loop o tempo rimanente (il duplicato nella barra superiore introdotto in 0.13.0 è stato rimosso in 0.13.1). Gain, mute, posizionamento e dissolvenze rimangono nei comandi principali. I divisori e il ripristino dell'ultimo progetto restano disponibili.
+Loop video è sempre presente nella riga di invio (abilitato per i MOV); i controlli di riproduzione sono nei monitor. Il countdown rimane sotto il Program con tempo al prossimo loop o tempo rimanente (il duplicato nella barra superiore introdotto in 0.13.0 è stato rimosso in 0.13.1). Gain, mute, posizionamento e dissolvenze rimangono nei comandi principali. I divisori e il ripristino dell'ultimo progetto restano disponibili.
 
 ## Novità 0.12.4 · Divisorio monitor e ultimo progetto
 
@@ -81,12 +81,13 @@ Il catalogo include `.mov`, anche nelle sottocartelle e nei blocchi. Miniature, 
 
 - Seleziona il video: l'anteprima parte automaticamente. Se Preview NDI è acceso, invia questa riproduzione alla regia.
 - **Loop video**: ripete il clip senza scadenza; la scelta è salvata per file insieme a scala e posizione. Disattivato: alla fine resta l'ultimo fotogramma. Il cambio Loop in anteprima viene applicato a Program al prossimo invio.
-- **Riavvia anteprima video**: riparte dall'inizio senza cambiare Program.
+- Nei monitor Preview e Program, i comandi in basso a destra agiscono indipendentemente sul rispettivo video: **play/pausa** congela o riprende video e audio; **riavvia** torna al primo fotogramma, mantenendo la pausa se attiva.
+- Il selettore **velocità** va da 0,5× a 5×, con passi di 0,1×; il valore è salvato nel progetto per ciascun video. Cambiarlo riavvia quel monitor dall'inizio, mantenendo l'eventuale pausa, e attiva il relativo **Mute** nella barra inferiore. Il mute può essere disattivato manualmente. Il valore salvato viene applicato alle successive riproduzioni del file; l'altro monitor già in riproduzione non cambia.
 - **INVIA / Invio / doppio clic**: avvia una riproduzione Program indipendente, sempre dall'inizio, con la transizione impostata. Passare a un altro blocco/file lascia il video in onda invariato.
 - Scala, centro X/Y, trascinamento e rotellina funzionano come per le foto. Le modifiche preparano l'anteprima; per applicarle a Program occorre inviare nuovamente. Dopo una regolazione l'anteprima video riparte dall'inizio, con un breve ritardo per evitare di riavviare il decoder a ogni movimento del mouse.
 - Clear, Esc/doppio Esc e arresto trasparente valgono anche per i video. Durante una dissolvenza normale il clip uscente continua a scorrere; interrompendo ripetutamente una transizione può essere usato come partenza il fotogramma composto corrente.
 
-Fit mantiene le proporzioni di visualizzazione (anche pixel non quadrati), con aree esterne trasparenti. L'alpha incorporato è mantenuto per i codec che lo forniscono e che il decoder legge. L'uscita resta BGRA a 8 bit: questa versione non gestisce HDR, seek o pause; l'audio locale è opzionale e non viene incorporato in NDI. Program e Preview sono decoder separati: due video o un video su entrambi i flussi usano più CPU/memoria. I monitor locali restano a 10 aggiornamenti/s; il flusso NDI usa gli fps impostati. Il breve test NDI reale a 1920x1080p50 non sostituisce la prova dei tuoi MOV e del carico della postazione in WATCHOUT.
+Fit mantiene le proporzioni di visualizzazione (anche pixel non quadrati), con aree esterne trasparenti. L'alpha incorporato è mantenuto per i codec che lo forniscono e che il decoder legge. L'uscita resta BGRA a 8 bit: questa versione non gestisce HDR o seek arbitrario; l'audio locale è opzionale e non viene incorporato in NDI. Program e Preview sono decoder separati: due video o un video su entrambi i flussi usano più CPU/memoria. I monitor locali restano a 10 aggiornamenti/s; il flusso NDI usa gli fps impostati. Il breve test NDI reale a 1920x1080p50 non sostituisce la prova dei tuoi MOV e del carico della postazione in WATCHOUT.
 
 L'installer include **FFmpeg LGPLv3+** e le sue librerie, licenze, sorgenti FFmpeg e ricette di build nella sottocartella `video`. Non servono codec di sistema o installazioni di NDI Tools. Provenienza e SHA256: `third-party/FFmpeg-NOTICE.txt`. `build.ps1` prepara automaticamente FFmpeg se manca; per usare lo ZIP originale verificato in locale esegui prima `installer/prepare-video.ps1 -Archive C:\percorso\archivio.zip`. La build mensile del 31 ottobre è conservata dal fornitore per due anni, non permanentemente: conserva lo ZIP e i sorgenti corrispondenti per gli sviluppi successivi. L'installer completo resta utilizzabile offline.
 
@@ -182,7 +183,7 @@ Non c'è avanzamento automatico né temporizzazione delle playlist in questa ver
 
 **Doppio clic per andare in onda:** con Program già avviato, fai doppio clic sinistro sul file nell'elenco, sulla miniatura oppure dentro il fotogramma del riquadro **SELEZIONE**. Viene inviata l'immagine selezionata con scala/posizione correnti e con il cut o la dissolvenza impostati, esattamente come con INVIA. Il clic singolo prepara solo la selezione; il doppio clic fuori dal fotogramma, nel riquadro Programma o nell'area vuota della libreria non invia nulla. Se Program è fermo o l'immagine non è leggibile, viene mostrato lo stato e non viene avviato un nuovo flusso automaticamente.
 
-**Novità 0.10.0:** nell'anteprima **SELEZIONE** puoi spostare l'immagine trascinando con il tasto sinistro all'interno del bordo. La rotellina ingrandisce/riduce attorno al centro attuale dell'immagine (fattore 10% per scatto); **Maiusc + rotellina** usa il 2% per regolazioni fini. La scala resta tra 1% e 400%. I campi numerici si aggiornano insieme al mouse e restano modificabili a mano. Il monitor PROGRAMMA non è interattivo.
+**Novità 0.10.0:** nell'anteprima **SELEZIONE** puoi spostare l'immagine trascinando con il tasto sinistro all'interno del bordo. La rotellina ingrandisce/riduce attorno al centro attuale dell'immagine (fattore 10% per scatto); **Maiusc + rotellina** usa il 2% per regolazioni fini. La scala resta tra 1% e 400%. I campi numerici si aggiornano insieme al mouse e restano modificabili a mano. Nel monitor PROGRAMMA non sono disponibili trascinamento e zoom.
 
 I campi **Centro X / Centro Y** rappresentano ora il centro dell'immagine nelle coordinate del flusso, con origine nell'angolo in alto a sinistra: a 1920×1080 il centro iniziale è **X=960, Y=540**; a 1280×720 è **X=640, Y=360**. Reset posizione ripristina questo centro e scala 100%. Un'altezza dispari può mostrare mezzo pixel. Cambiare risoluzione conserva lo spostamento rispetto al centro del nuovo formato. Le vecchie preferenze vengono visualizzate nella nuova convenzione mantenendo invariata l'inquadratura: internamente si mantengono gli offset salvati, senza migrazioni distruttive o conversioni ripetute.
 
@@ -196,14 +197,14 @@ Il campo **Nome flusso NDI**, nella sezione Program, permette di scegliere il no
 
 Al centro/destra ci sono due monitor affiancati, ridimensionabili allargando la finestra o spostando il separatore della libreria:
 
-- **SELEZIONE**, bordo azzurro: immagine preparata, con scala e posizione. Cambiare selezione o regolazioni non modifica il programma finché non premi INVIA o fai doppio clic sul file.
-- **PROGRAMMA**, bordo rosso: copia degli ultimi frame dopo che la chiamata sincrona al mittente NDI è terminata. Mostra cut, alpha delle dissolvenze e clear; si aggiorna fino a 10 volte al secondo per contenere il carico UI, indipendentemente dai 50 fps nominali del flusso. Non cambia quando scegli un'altra immagine nella libreria. Arresto ed errori sono indicati esplicitamente.
+- **SELEZIONE**, bordo verde quando Preview NDI è attivo, nero quando è spento o in errore: immagine preparata, con scala e posizione. Cambiare selezione o regolazioni non modifica il programma finché non premi INVIA o fai doppio clic sul file.
+- **PROGRAMMA**, bordo rosso quando Program NDI è attivo, nero quando è spento o in errore: copia degli ultimi frame dopo che la chiamata sincrona al mittente NDI è terminata. Mostra cut, alpha delle dissolvenze e clear; si aggiorna fino a 10 volte al secondo per contenere il carico UI, indipendentemente dai 50 fps nominali del flusso. Non cambia quando scegli un'altra immagine nella libreria. Arresto ed errori sono indicati esplicitamente.
 
 Il Programma è un **monitor locale dei frame consegnati al SDK NDI**, non un ricevitore NDI o un ritorno da WATCHOUT: non verifica perdita di rete, connessione del ricevitore, decodifica o compositing sul server. Per confermare l'uscita finale serve controllare WATCHOUT. I due monitor usano gli stessi confini del fotogramma e nessuna guida viene trasmessa.
 
-Nella versione 0.10.0 l'anteprima mostra un **bordo azzurro che delimita esattamente il fotogramma di uscita** nel rapporto configurato (per esempio 16:9 a 1920×1080). La scacchiera compare solo dentro quel bordo e rappresenta l'alpha; l'area scura esterna non fa parte del flusso. Ridimensionando la finestra, immagine e fotogramma vengono scalati insieme senza cambiare proporzioni. Bordo e scritte sono guide locali e non vengono trasmessi. L'anteprima mostra la selezione: per applicarla in onda premi INVIA o fai doppio clic sul file.
+Il bordo delimita esattamente il fotogramma di uscita nel rapporto configurato (per esempio 16:9 a 1920×1080). La scacchiera compare solo dentro quel bordo e rappresenta l'alpha; l'area scura esterna non fa parte del flusso. Ridimensionando la finestra, immagine e fotogramma vengono scalati insieme senza cambiare proporzioni. Bordo, scritte e controlli sono guide locali e non vengono trasmessi. L'anteprima mostra la selezione: per applicarla in onda premi INVIA o fai doppio clic sul file.
 
-1. Windows 10/11 x64 con .NET Framework 4.8. Esegui `NDIPlayer-0.13.5-Setup-win-x64.exe`: include il redistributable ufficiale **NDI 6 Runtime 6.4.0.2**, senza NDI Tools. Se necessario apre il setup del runtime, con licenza propria da accettare e possibile richiesta amministratore. Poi installa l'app per l'utente corrente e crea il collegamento nel menu Start. Non serve il .NET SDK.
+1. Windows 10/11 x64 con .NET Framework 4.8. Esegui `NDIPlayer-<versione>-Setup-win-x64.exe`: include il redistributable ufficiale **NDI 6 Runtime 6.4.0.2**, senza NDI Tools. Se necessario apre il setup del runtime, con licenza propria da accettare e possibile richiesta amministratore. Poi installa l'app per l'utente corrente e crea il collegamento nel menu Start. Non serve il .NET SDK.
 2. Avvia NDIPlayer dal menu Start. Se usi i soli sorgenti o il vecchio ZIP portabile, il runtime resta da installare separatamente. Informazioni NDI: https://ndi.video/ . NDI® is a registered trademark of Vizrt NDI AB.
 3. Apri una cartella: include sottocartelle, evita collegamenti circolari, segnala cartelle non accessibili. Aggiorna ripete la scansione.
 4. Seleziona un file: anteprima su scacchiera, che indica la trasparenza e non viene trasmessa. PNG, JPEG, BMP, GIF, TIFF e ICO; per formati multipagina/animati viene utilizzato il primo frame. HEIC, WebP, SVG e RAW non sono supportati in questa versione.
@@ -261,6 +262,8 @@ Tecnologia: C# / WinForms, .NET Framework 4.8 x64, Direct3D 11 per rendering del
 
 Build dalla cartella progetto con PowerShell: `./build.ps1`. Test runtime opzionale: `./bin/Tests.exe --ndi`. Alla prima build vengono preparati NAudio 1.10.0 e FFmpeg LGPL dagli archivi verificati tramite SHA-256; per usare un archivio FFmpeg locale eseguire prima `installer/prepare-video.ps1 -Archive C:\percorso\archivio.zip`. `.github/workflows/windows.yml` costruisce, esegue test e genera un artifact su Windows dopo la pubblicazione autorizzata.
 
+La versione dell'ultima build applicativa riuscita è in `VERSION`: ogni esecuzione riuscita di `build.ps1`, inclusa quella richiamata dall'installer, incrementa automaticamente la patch dopo i test. L'app e l'installer riportano la stessa versione. Se i test o la compilazione falliscono, `VERSION` non cambia; se invece fallisce solo la successiva creazione dell'installer, la build applicativa riuscita ha già incrementato la patch. Per condividere il numero occorre committare `VERSION`: la CI non crea commit e checkout separati possono produrre lo stesso numero. `-SkipBuild` crea l'installer senza incrementare e richiede un eseguibile corrispondente a `VERSION`.
+
 Limiti: nessun file watcher; scansione cartelle e decodifica dell'immagine selezionata sulla UI, miniature in sottofondo; rendering/fade CPU in spazio dei valori sRGB, nessuna gestione colore ICC professionale, nessuna garanzia realtime. I file molto grandi possono rallentare la UI e il monitor locale. Il sender invia continuamente anche immagini statiche; errori NDI visibili nello stato, nessuna riconnessione automatica. Audio locale opzionale WDM/WASAPI e ASIO; nessun audio incorporato nei flussi NDI. Un'istanza per processo.
 
 ## GitHub e più postazioni
@@ -271,7 +274,7 @@ Da altre postazioni: clonare il repository, eseguire `build.ps1`, installare NDI
 
 Nessuna licenza open source applicata automaticamente. Verificare termini NDI prima di distribuire il prodotto o includere runtime/SDK proprietari.
 
-## Installer completo 0.13.5
+## Installer completo
 
 Il pacchetto contiene app, documentazione e redistributable NDI originale. Non scarica il runtime durante l'installazione. .NET Framework 4.8 è un prerequisito verificato dal setup; se assente, installarlo tramite Windows Update. Non si accetta la licenza NDI in silenzio: il setup ufficiale viene aperto quando il runtime manca o è più vecchio. Un runtime uguale o successivo già rilevato viene conservato. Annullando il setup NDI, non si prosegue con l'app.
 

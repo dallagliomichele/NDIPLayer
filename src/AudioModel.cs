@@ -25,9 +25,12 @@ public sealed class AudioMeter {
 }
 // Audio-enabled clips use the device presentation clock, not a second independent playback timer.
 public sealed class MediaTimeline {
- readonly object gate=new object();readonly Stopwatch wall=new Stopwatch();Func<double> external;double last,lastWall,origin;
- public void Start(Func<double> clock){lock(gate){external=clock;origin=0;last=0;lastWall=0;wall.Restart();}}
- public double Seconds {get{lock(gate){if(!wall.IsRunning)return 0;double now=wall.Elapsed.TotalSeconds;double value;if(external!=null){try{value=external();if(Double.IsNaN(value)||Double.IsInfinity(value))throw new InvalidOperationException();last=Math.Max(last,value);lastWall=now;return last;}catch{external=null;origin=last-lastWall;}}value=now+origin;last=Math.Max(last,value);return last;}}}
+ readonly object gate=new object();readonly Stopwatch wall=new Stopwatch();Func<double> external;double last,lastWall,origin,pausedAt,pausedTotal;bool paused;
+ public void Start(Func<double> clock){lock(gate){external=clock;origin=0;last=0;lastWall=0;pausedAt=pausedTotal=0;paused=false;wall.Restart();}}
+ double RawSeconds(){if(!wall.IsRunning)return 0;double now=wall.Elapsed.TotalSeconds;double value;if(external!=null){try{value=external();if(Double.IsNaN(value)||Double.IsInfinity(value))throw new InvalidOperationException();last=Math.Max(last,value);lastWall=now;return last;}catch{external=null;origin=last-lastWall;}}value=now+origin;last=Math.Max(last,value);return last;}
+ public void Pause(){lock(gate){if(paused)return;pausedAt=RawSeconds();paused=true;}}
+ public void Resume(){lock(gate){if(!paused)return;pausedTotal+=Math.Max(0,RawSeconds()-pausedAt);paused=false;}}
+ public double Seconds {get{lock(gate)return Math.Max(0,(paused?pausedAt:RawSeconds())-pausedTotal);}}
 }
 public sealed class AudioEnvelope {
  public readonly long Start,End;public readonly float From,To;

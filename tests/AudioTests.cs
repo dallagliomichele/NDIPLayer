@@ -29,6 +29,7 @@ static class AudioTests {
    using(var p=VideoTools.Start("-f lavfi -i \"color=c=red:s=32x16:r=25:d=2\" -f lavfi -i \"sine=frequency=440:sample_rate=48000:duration=2\" -map 0:v:0 -map 1:a:0 -af \"volume=4,pan=stereo|c0=c0|c1=c0\" -c:v qtrle -c:a pcm_s16le -shortest -y "+VideoTools.Quote(movie))){string error=p.StandardError.ReadToEnd();p.WaitForExit();check(p.ExitCode==0,"genera MOV reale con video e audio stereo di prova");}File.Copy(movie,previewMovie);
    using(var p=VideoTools.Start("-i "+VideoTools.Quote(movie)+" -an -c:v copy -y "+VideoTools.Quote(silent))){var err=p.StandardError.ReadToEnd();p.WaitForExit();check(p.ExitCode==0,"genera MOV senza audio");}
    check(AudioDecoder.ContainsAudio(movie)&&!AudioDecoder.ContainsAudio(silent),"rilevamento traccia audio distingue MOV muti");
+   foreach(double speed in new[]{.5,5.0})using(var decoder=new AudioDecoder(movie,false,speed)){int samples=0;var pcm=new float[4096];var timeout=System.Diagnostics.Stopwatch.StartNew();while(!decoder.Finished&&timeout.ElapsedMilliseconds<10000){samples+=decoder.ReadStereo(pcm,pcm.Length);Thread.Sleep(1);}samples+=decoder.ReadStereo(pcm,pcm.Length);double seconds=samples/(2.0*AudioDecoder.Rate);check(decoder.Error==null&&decoder.Finished&&Math.Abs(seconds-2/speed)<.18,"durata audio segue velocità "+speed+" ("+seconds+" s)");}
    var sink=new FakeSink(8);int opens=0;using(var manager=new AudioManager(Config(),route=>{opens++;return sink;})){
     check(opens==1&&manager.Program.Engine==manager.Preview.Engine,"Program e Preview condividono un unico motore ASIO");
     var pgm=manager.Program.Prepare(movie,true,0);var pv=manager.Preview.Prepare(previewMovie,true,-6.020599913);check(pgm.Decoder.Error==null&&pv.Decoder.Error==null,"decoder audio preparano buffer PCM senza errori");pgm.Activate(0);pv.Activate(0);
@@ -45,12 +46,19 @@ static class AudioTests {
    var syncSink=new FakeSink(2);var syncConfig=Config();syncConfig.Preview.Enabled=false;using(var manager=new AudioManager(syncConfig,r=>syncSink)){
     byte[] initial=Renderer.Render(movie,16,16,new Placement());using(var video=new VideoSession(movie,16,16,50,new Placement(),true,initial,manager.Program,0))using(var playout=new Playout(new Sender(),16,16,50)){
      playout.CueSource(video,initial,0,movie);syncSink.Pump(24000);Wait(()=>video.DecodedFrames>=24);VideoPlaybackStatus status;video.ReadPlaybackFrame(out status);check(Math.Abs(status.Position-.5)<.03,"video e countdown seguono i campioni presentati dalla scheda");
-     for(int i=0;i<120;i++){syncSink.Pump(960);Thread.Sleep(2);}Wait(()=>video.DecodedFrames>=140);video.ReadPlaybackFrame(out status);check(status.Loop&&status.Position>=.8&&status.Position<1.1&&!video.Ended,"Loop audio e video proseguono sullo stesso clock");
+     video.SetPaused(true);long paused=video.DecodedFrames;var silence=syncSink.Pump(24000);Thread.Sleep(100);check(Peak(silence,2,0)==0&&video.DecodedFrames==paused,"pausa ferma audio e video senza avanzare il clock");
+     video.SetPaused(false);syncSink.Pump(4800);Wait(()=>video.DecodedFrames>=paused+4);video.ReadPlaybackFrame(out status);check(status.Position>=.55&&status.Position<.7,"ripresa mantiene sincronismo dopo la pausa");
+     for(int i=0;i<120;i++){syncSink.Pump(960);Thread.Sleep(2);}Wait(()=>video.DecodedFrames>=140);video.ReadPlaybackFrame(out status);check(status.Loop&&status.Position>=.9&&status.Position<1.2&&!video.Ended,"Loop audio e video proseguono sullo stesso clock");
      syncSink.Error="driver perso";long frames=video.DecodedFrames;Thread.Sleep(100);Wait(()=>video.DecodedFrames>frames);check(playout.Error==null,"errore audio non interrompe il mittente video");
     }
    }
    var eofSink=new FakeSink(2);using(var manager=new AudioManager(syncConfig,r=>eofSink)){
     var voice=manager.Program.Prepare(movie,false,0);voice.Activate(0);for(int i=0;i<110;i++){eofSink.Pump(960);Thread.Sleep(2);}Wait(()=>voice.Decoder.Finished);var tail=eofSink.Pump(960);check(Peak(tail,2,0)==0,"video senza Loop termina l'audio senza ripetere l'ultimo buffer");voice.Release();eofSink.Pump(960);
+   }
+   var speedSink=new FakeSink(2);using(var manager=new AudioManager(syncConfig,r=>speedSink)){
+    byte[] initial=Renderer.Render(movie,16,16,new Placement());using(var video=new VideoSession(movie,16,16,50,new Placement(),true,initial,manager.Program,0,2))using(var playout=new Playout(new Sender(),16,16,50)){
+     playout.CueSource(video,initial,0,movie);speedSink.Pump(24000);Wait(()=>video.DecodedFrames>=49);VideoPlaybackStatus playback;video.ReadPlaybackFrame(out playback);check(Math.Abs(playback.Position-1)<.04&&Math.Abs(playback.Remaining-.5)<.03,"video a 2× segue il clock audio e countdown indica il tempo reale restante");
+    }
    }
    var data=new Settings{Root=dir,Audio=Config()};data.AudioGains[movie]=-7.5;data.Images[movie]=new Placement{Loop=true,X=10};string path=Path.Combine(dir,"audio.ndiproj");ProjectStore.Write(path,data);var loaded=ProjectStore.Read(path);check(loaded.Audio.Program.Enabled&&loaded.Audio.Preview.FirstChannel==3&&loaded.AudioGains[movie]==-7.5,"progetto salva routing e gain per singolo video");ProjectStore.Relocate(loaded,Path.Combine(dir,"new"));check(loaded.AudioGains[Path.Combine(dir,"new","audio.mov")]==-7.5,"ricollegamento cartella mantiene gain audio dei file");
    var prefs=Path.Combine(dir,"prefs.json");var uiData=new Settings{Root=dir,OutputWidth=16,OutputHeight=16,OutputFps=50};uiData.AudioGains[movie]=-6;var only=ProjectStore.AddBlock(uiData,"Audio");ProjectStore.AddFiles(only,new[]{movie});uiData.ActiveBlockId=only.Id;File.WriteAllText(prefs,new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(uiData));

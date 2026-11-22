@@ -17,6 +17,7 @@ La configurazione delle uscite si cambia con Program vuoto, per evitare riapertu
 
 - Seleziona un video e imposta **Gain video dB** da −60 a +12 dB. Il valore appartiene al file ed è condiviso dalle sue occorrenze nei blocchi. Viene salvato nel progetto e aggiornato anche se il file è già in riproduzione.
 - **Mute Program** e **Mute Preview** agiscono separatamente, mantenendo la riproduzione sincronizzata. Preview riparte dalla selezione e non è un ritorno del Program.
+- Pausa e riavvio controllano anche l'audio del rispettivo monitor. Cambiare velocità riavvia video e audio e attiva automaticamente il relativo mute; puoi disattivarlo manualmente. L'audio viene adattato alla velocità selezionata.
 - L'audio segue Loop e le dissolvenze del video. A fine video senza Loop diventa silenzioso mentre resta l'ultimo fotogramma. Un video senza traccia audio resta silenzioso.
 - Clear in dissolvenza sfuma anche l'audio. Clear in cut applica una rampa audio minima di circa 5 ms contro i clic, oltre alla latenza del buffer della scheda.
 - I vumeter stereo mostrano RMS, picco, mantenimento del picco e avviso CLIP. Il segnale viene limitato a ±1 prima dell'uscita: se appare CLIP, riduci il gain per evitare distorsione.
@@ -29,7 +30,7 @@ Con l'audio abilitato il video segue il clock di presentazione del dispositivo; 
 
 Prova un filmato con lampo e impulso sonoro sull'uscita reale di WATCHOUT; confronta più cicli e ripeti dopo cambi di buffer. Con due dispositivi indipendenti non è garantito un clock hardware comune. In caso di errore del driver il software segnala l'errore e prosegue il video sul clock interno; pulisci Program e riapplica le uscite per ripristinare l'audio.
 
-I test automatici verificano PCM decodificato da un MOV reale, routing multicanale con dispositivo simulato, gain, mute, fade, clip, loop, fine file, clock e persistenza. Non sostituiscono il collaudo con la tua scheda WDM o Dante/ASIO: verifica coppie, assenza di suoni su canali non assegnati, sincronismo, clear e riproduzione prolungata prima dell'uso in trasmissione.
+I test automatici verificano PCM decodificato da un MOV reale, routing multicanale con dispositivo simulato, gain, mute, pausa, velocità, fade, clip, loop, fine file, clock e persistenza. Non sostituiscono il collaudo con la tua scheda WDM o Dante/ASIO: verifica coppie, assenza di suoni su canali non assegnati, sincronismo anche dopo pausa e cambio velocità, clear e riproduzione prolungata prima dell'uso in trasmissione.
 
 ## Installazione e dipendenze
 

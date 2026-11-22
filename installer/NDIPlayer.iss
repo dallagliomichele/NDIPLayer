@@ -1,11 +1,14 @@
 #ifndef RuntimeFile
   #error RuntimeFile must point to the verified official NDI 6 redistributable
 #endif
+#ifndef AppVersion
+  #error AppVersion must match the compiled application
+#endif
 
 [Setup]
 AppId={{4031E489-7E18-4ED7-A0AA-49283A04AA63}
 AppName=NDIPlayer
-AppVersion=0.13.5
+AppVersion={#AppVersion}
 AppPublisher=Michele Dallaglio
 AppPublisherURL=https://github.com/dallagliomichele/NDIPLayer
 DefaultDirName={localappdata}\Programs\NDIPlayer
@@ -15,7 +18,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 OutputDir=..\dist
-OutputBaseFilename=NDIPlayer-0.13.5-Setup-win-x64
+OutputBaseFilename=NDIPlayer-{#AppVersion}-Setup-win-x64
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

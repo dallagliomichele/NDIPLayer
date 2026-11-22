@@ -15,5 +15,10 @@ if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notm
 if (!$SkipBuild) {
     & (Join-Path $PSScriptRoot '..\build.ps1')
 }
-& $iscc "/DRuntimeFile=$runtime" (Join-Path $PSScriptRoot 'NDIPlayer.iss')
+$app = Join-Path $PSScriptRoot '..\bin\WatchoutImageNDI.exe'
+if (!(Test-Path -LiteralPath $app)) { throw 'Applicazione non compilata: eseguire build.ps1 prima di usare SkipBuild.' }
+$builtVersion = [Reflection.AssemblyName]::GetAssemblyName((Resolve-Path -LiteralPath $app).Path).Version.ToString(3)
+$currentVersion = [IO.File]::ReadAllText((Join-Path $PSScriptRoot '..\VERSION')).Trim()
+if ($builtVersion -ne $currentVersion) { throw "Versione dell'app ($builtVersion) diversa da VERSION ($currentVersion): ricompilare prima dell'installer." }
+& $iscc "/DRuntimeFile=$runtime" "/DAppVersion=$builtVersion" (Join-Path $PSScriptRoot 'NDIPlayer.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Compilazione installer fallita' }
