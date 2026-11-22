@@ -48,7 +48,7 @@ Le preferenze dell'app sono in `%LOCALAPPDATA%\WatchoutImageNDI\settings.json`; 
 | Windows 10/11 x64, .NET Framework 4.8 | Esecuzione dell'app | `README.md`, `installer/NDIPlayer.iss` |
 | C# / WinForms / Direct3D 11; `csc.exe` di .NET Framework | Compilazione x64 senza file `.csproj` | `build.ps1`, `installer/prepare-gpu.ps1` |
 | SharpDX 4.2.0 | Binding Direct3D 11, DXGI e compilatore shader | `installer/prepare-gpu.ps1`, `third-party/SharpDX-LICENSE.txt` |
-| NDI 6 Runtime 6.3.2.0 | SDK nativo per l'invio NDI, caricato tramite ABI C | `src/Ndi.cs`, `installer/build-installer.ps1` |
+| NDI 6 Runtime 6.4.0.2 | SDK nativo per l'invio NDI, caricato tramite ABI C | `src/Ndi.cs`, `installer/build-installer.ps1` |
 | FFmpeg/ffprobe n8.1, build LGPL del 9 novembre 2026 | Decodifica MOV e audio, metadati | `installer/prepare-video.ps1`, `third-party/FFmpeg-NOTICE.txt` |
 | NAudio 1.10.0 | Uscite audio WDM/WASAPI e ASIO | `installer/prepare-audio.ps1`, `third-party/NAudio-NOTICE.txt` |
 | PowerShell | Preparazione dipendenze, build e test | `build.ps1`, `installer/*.ps1` |

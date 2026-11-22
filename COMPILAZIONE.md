@@ -22,13 +22,23 @@ Per eseguire l'app compilata fuori dall'installer occorre anche il runtime NDI 6
 
 ## Installer Windows
 
-Installare Inno Setup 6.5+ o 7 e procurarsi il redistributable ufficiale NDI 6.3.2.0. Lo script verifica SHA-256 e firma Authenticode del file: un download aggiornato a un'altra versione va verificato e richiede aggiornare il pin nello script.
+Installare Inno Setup 6.5+ o 7 e procurarsi il redistributable ufficiale NDI 6.4.0.2. Lo script verifica SHA-256 e firma Authenticode del file: un download aggiornato a un'altra versione va verificato e richiede aggiornare il pin nello script.
 
 ```powershell
 ./installer/build-installer.ps1 -RuntimeFile C:\percorso\NDI6Runtime.exe -IsccPath C:\percorso\ISCC.exe
 ```
 
 Lo script prepara sempre FFmpeg dall'archivio verificato, lancia la build e crea `dist/NDIPlayer-0.13.5-Setup-win-x64.exe`; non usa una copia già presente in `bin\video` come sostituto della dipendenza verificata. Per usare uno ZIP FFmpeg locale aggiungere `-VideoArchive C:\percorso\archivio.zip`. Il setup include l'app, NAudio, FFmpeg e il redistributable NDI; verifica .NET 4.8 sul PC di destinazione. La compilazione dell'installer richiede che il runtime fornito corrisponda all'hash atteso in `installer/build-installer.ps1`.
+
+## Installazione dipendenze di sviluppo
+
+Per preparare il runtime NDI e verificare .NET Framework, Node.js e Inno Setup:
+
+```powershell
+./install-dependencies.ps1 -InstallInnoSetup
+```
+
+Il runtime NDI e l'installer di Inno Setup vengono scaricati in `dependencies/`, esclusa da Git. I binari sono verificati con SHA-256 e firma Authenticode. Il comando installa Inno Setup in modalità silenziosa se non è già presente; Node.js 26 e .NET Framework 4.8 devono essere già installati.
 
 ## Modulo Bitfocus Companion
 

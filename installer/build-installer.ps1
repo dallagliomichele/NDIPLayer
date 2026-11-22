@@ -7,8 +7,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $runtime = (Resolve-Path -LiteralPath $RuntimeFile).Path
 $iscc = (Resolve-Path -LiteralPath $IsccPath).Path
-$expected = '7EE73EEDB56402BCA5100868353DBAB4E944B6C37D2D9881580698A3B61346CD'
-if ((Get-FileHash -LiteralPath $runtime -Algorithm SHA256).Hash -ne $expected) { throw 'Hash runtime diverso dalla versione verificata 6.3.2.0' }
+$expected = '5972CCA54649039318FF5F167FD9940270CAFC09678B01E0C35695382270A144'
+if ((Get-FileHash -LiteralPath $runtime -Algorithm SHA256).Hash -ne $expected) { throw 'Hash runtime diverso dalla versione verificata 6.4.0.2' }
 $signature = Get-AuthenticodeSignature -LiteralPath $runtime
 if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'O=Vizrt AG') { throw 'Firma runtime NDI non valida' }
 & (Join-Path $PSScriptRoot 'prepare-video.ps1') -Archive $VideoArchive

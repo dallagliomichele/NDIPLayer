@@ -1,6 +1,6 @@
 param(
-    [Parameter(Mandatory=$true)][string]$RuntimeFile,
-    [Parameter(Mandatory=$true)][string]$IsccPath,
+    [string]$RuntimeFile,
+    [string]$IsccPath,
     [string]$VideoArchive,
     [string]$NodePath = 'node',
     [string]$NpmPath = 'npm'
@@ -8,6 +8,25 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
+
+if (!$RuntimeFile) {
+    $RuntimeFile = Join-Path $PSScriptRoot 'dependencies\NDI6Runtime.exe'
+}
+if (!$IsccPath) {
+    $isccCandidates = @(
+        (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'),
+        (Join-Path ${env:ProgramFiles} 'Inno Setup 6\ISCC.exe'),
+        (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 7\ISCC.exe'),
+        (Join-Path ${env:ProgramFiles} 'Inno Setup 7\ISCC.exe')
+    )
+    $IsccPath = $isccCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+}
+if (!(Test-Path -LiteralPath $RuntimeFile)) {
+    throw "Runtime NDI non trovato: $RuntimeFile. Eseguire install-dependencies.ps1."
+}
+if (!$IsccPath) {
+    throw 'Inno Setup non trovato. Eseguire install-dependencies.ps1 -InstallInnoSetup.'
+}
 
 function Invoke-Checked {
     param(
