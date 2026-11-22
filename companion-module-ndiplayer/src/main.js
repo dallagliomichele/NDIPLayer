@@ -9,10 +9,14 @@ export default class NDIPlayerInstance extends InstanceBase {
    last_response: { name: 'Ultima risposta TCP' }, last_command: { name: 'Ultimo comando' },
    last_error: { name: 'Ultimo errore' }, last_selected_number: { name: 'Ultimo numero selezionato con conferma' },
    last_block: { name: 'Ultimo blocco restituito da un comando' },
+   video_state: { name: 'Stato video Program' }, video_countdown: { name: 'Tempo rimanente video Program' }, video_remaining_seconds: { name: 'Secondi rimanenti video Program' },
   })
   this.setActionDefinitions(buildActions(command => this.sendCommand(command)))
   this.setFeedbackDefinitions({
    connected: { name: 'Socket TCP collegato', type: 'boolean', defaultStyle: { bgcolor: 0x126b36, color: 0xffffff }, options: [], callback: () => this.connected === true },
+   video_playing: { name: 'Video Program in riproduzione', type: 'boolean', defaultStyle: { bgcolor: 0x126b36, color: 0xffffff }, options: [], callback: () => this.values.video_state === 'playing' },
+   video_paused: { name: 'Video Program in pausa', type: 'boolean', defaultStyle: { bgcolor: 0x9b7000, color: 0xffffff }, options: [], callback: () => this.values.video_state === 'paused' },
+   video_ended: { name: 'Video Program terminato', type: 'boolean', defaultStyle: { bgcolor: 0x9b1d20, color: 0xffffff }, options: [], callback: () => this.values.video_state === 'ended' },
    last_error: { name: "L'ultimo comando ha prodotto un errore", type: 'boolean', defaultStyle: { bgcolor: 0x9b1d20, color: 0xffffff }, options: [], callback: () => Boolean(this.errorText) },
   })
   await this.configUpdated(config)
@@ -26,9 +30,9 @@ export default class NDIPlayerInstance extends InstanceBase {
   ]
  }
  async configUpdated(config) {
-  this.client?.dispose(); this.client = null; this.connected = false; this.errorText = ''; this.recallBlocked = false
+  clearInterval(this.pollTimer); this.client?.dispose(); this.client = null; this.connected = false; this.errorText = ''; this.recallBlocked = false
   const { presets, structure } = buildPresets(this.label); this.setPresetDefinitions(structure, presets)
-  this.values = { connection: 'Scollegato', number: '?', last_response: '', last_command: '', last_error: '', last_selected_number: '?', last_block: '?' }
+  this.values = { connection: 'Scollegato', number: '?', last_response: '', last_command: '', last_error: '', last_selected_number: '?', last_block: '?', video_state: 'unknown', video_countdown: '?', video_remaining_seconds: '?' }
   this.setVariableValues(this.values); this.checkAllFeedbacks()
   const host = String(config.host ?? '127.0.0.1').trim(); const port = Number(config.port ?? 51235); const seconds = Number(config.timeout ?? 20)
   if (!host || /[\s\r\n]/.test(host) || !Number.isInteger(port) || port < 1 || port > 65535 || !Number.isFinite(seconds) || seconds < 16 || seconds > 60) {
@@ -39,14 +43,22 @@ export default class NDIPlayerInstance extends InstanceBase {
    if (this.client !== client) return
    this.connected = connected
    this.values.connection = connected ? 'Collegato' : 'Scollegato'
-   if (!connected) { this.values.number = '?'; this.values.last_selected_number = '?'; this.values.last_block = '?' }
+   if (!connected) { this.values.number = '?'; this.values.last_selected_number = '?'; this.values.last_block = '?'; this.resetVideo() }
    this.setVariableValues(this.values); this.checkFeedbacks('connected')
    this.updateStatus(connected ? InstanceStatus.Ok : message === 'Collegamento in corso' ? InstanceStatus.Connecting : InstanceStatus.ConnectionFailure, message)
   })
   client.on('response', response => { if (this.client === client) this.applyResponse(response) })
   client.start()
+  this.pollTimer = setInterval(() => { if (this.client === client && client.connected && !client.pending && !client.queue.length) client.send('VIDEO_STATUS').catch(() => {}) }, 500)
  }
+ resetVideo() { this.values.video_state = 'unknown'; this.values.video_countdown = '?'; this.values.video_remaining_seconds = '?'; this.checkFeedbacks('video_playing', 'video_paused', 'video_ended') }
  applyResponse({ ok, line, command }) {
+  if (command === 'VIDEO_STATUS') {
+   const match = ok && /^OK VIDEO_STATUS (playing|paused|ended|none|unavailable) (\?|[0-9]+(?:\.[0-9]+)?)$/.exec(line)
+   if (!match) this.resetVideo()
+   else { this.values.video_state = match[1]; this.values.video_remaining_seconds = match[2]; const seconds = Number(match[2]); this.values.video_countdown = match[2] === '?' ? '?' : (Math.floor(seconds / 3600) ? String(Math.floor(seconds / 3600)).padStart(2, '0') + ':' : '') + String(Math.floor(seconds / 60) % 60).padStart(2, '0') + ':' + (seconds % 60).toFixed(1).padStart(4, '0'); this.checkFeedbacks('video_playing', 'video_paused', 'video_ended') }
+   this.setVariableValues(this.values); return
+  }
   this.values.last_response = line; this.values.last_command = command; this.errorText = ok ? '' : line; this.values.last_error = this.errorText
   if (ok) {
    if (/^(OK NUMBER|OK CANCEL|OK SELECT |OK BLOCK |OK NEXT$|OK PREV$)/.test(line)) this.recallBlocked = false
@@ -70,5 +82,5 @@ export default class NDIPlayerInstance extends InstanceBase {
    this.setVariableValues(this.values); this.checkFeedbacks('last_error'); this.log('warn', error.message)
   }
  }
- async destroy() { this.client?.dispose(); this.client = null; this.connected = false }
+ async destroy() { clearInterval(this.pollTimer); this.client?.dispose(); this.client = null; this.connected = false }
 }

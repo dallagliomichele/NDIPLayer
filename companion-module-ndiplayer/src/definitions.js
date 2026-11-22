@@ -11,6 +11,7 @@ export const simpleCommands = [
  ['clear_cut', 'CLEAR_CUT', 'Clear Program · cut'],
  ['play', 'PLAY', 'Play video · Program'],
  ['pause', 'PAUSE', 'Pausa video · Program'],
+ ['restart', 'RESTART', 'Restart video Program'],
 ]
 export function buildActions(send) {
  const actions = Object.fromEntries(simpleCommands.map(([id, command, name]) => [id, {
@@ -51,6 +52,10 @@ export function buildPresets(label) {
  button('go', 'Manda in onda la selezione', 'GO', 0x126b36, 'go')
  button('play', 'Riprende il video in Program', 'PLAY', 0x126b36, 'play')
  button('pause', 'Mette in pausa il video in Program', 'PAUSE', 0x7a5a00, 'pause')
+ button('restart', 'Riavvia il video in Program', 'RESTART', 0x17436b, 'restart')
+ presets.play.feedbacks.unshift({ feedbackId: 'video_playing', options: {}, style: { bgcolor: 0x29a35a, color: 0xffffff } })
+ presets.pause.feedbacks.unshift({ feedbackId: 'video_paused', options: {}, style: { bgcolor: 0xe2a600, color: 0xffffff } })
+ button('video_countdown', 'Tempo rimanente video Program', 'VIDEO\n$(' + label + ':video_countdown)', 0x152737, null, {}, 'info')
  button('clear_fade', 'Clear in dissolvenza', 'CLEAR\nFADE', 0x9c5400, 'clear_fade')
  button('clear_cut', 'Clear immediato in cut', 'CLEAR\nCUT', 0x9b1d20, 'clear_cut')
  button('select', "Richiamo dedicato: modifica Numero nell'azione", 'SELECT\nNUMERO', 0x17436b, 'select', { number: '1' }, 'nav')

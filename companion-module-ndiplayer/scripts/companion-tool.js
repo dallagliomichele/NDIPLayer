@@ -6,6 +6,8 @@ import { dirname, resolve } from 'node:path'
 const moduleDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const operation = process.argv[2]
 if (!['build', 'check'].includes(operation)) throw new Error('Expected build or check')
+const sync = spawnSync(process.execPath, [resolve(moduleDir, 'scripts/version.js')], { cwd: moduleDir, stdio: 'inherit' })
+if (sync.error || sync.status !== 0) throw sync.error ?? new Error('Sincronizzazione versione fallita')
 const help = resolve(moduleDir, 'companion/HELP.md')
 const source = resolve(moduleDir, '../docs/companion-module-ndiplayer/companion/HELP.md')
 copyFileSync(source, help, constants.COPYFILE_EXCL)

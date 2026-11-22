@@ -7,7 +7,7 @@ import { buildActions, buildPresets } from '../src/definitions.js'
 import { fixture, waitFor, makeClient, context } from './helpers.js'
 
 test('tutti i comandi validi; nessun ritorno a capo o numero errato', () => {
- for (const command of ['NEXT', 'PREV', 'NEXT_BLOCK', 'PREV_BLOCK', 'GO', 'CLEAR_FADE', 'CLEAR_CUT', 'PLAY', 'PAUSE', 'ENTER', 'BACKSPACE', 'CANCEL', 'SELECT 0012', 'DIGIT 9']) assert.ok(validCommand(command))
+ for (const command of ['NEXT', 'PREV', 'NEXT_BLOCK', 'PREV_BLOCK', 'GO', 'CLEAR_FADE', 'CLEAR_CUT', 'PLAY', 'PAUSE', 'RESTART', 'VIDEO_STATUS', 'ENTER', 'BACKSPACE', 'CANCEL', 'SELECT 0012', 'DIGIT 9']) assert.ok(validCommand(command))
  for (const command of ['SELECT -1', 'SELECT 1234567890', 'DIGIT 12', 'GO\nCLEAR_CUT', 'PLAY 1', 'INVALID']) assert.equal(validCommand(command), false)
 })
 test('invio disconnesso rifiutato senza coda offline', async () => {
@@ -52,9 +52,9 @@ test('risposta inattesa rifiutata', async t => {
  const f = await fixture(t, (_, socket) => socket.write('PONG\n'))
  const client = makeClient(t, f.port); await waitFor(() => client.connected); await assert.rejects(client.send('NEXT'), /inattesa/)
 })
-test('25 preset, 14 azioni, SELECT non esegue GO, PLAY e PAUSE inviano il comando Program', async () => {
+test('27 preset, 15 azioni, SELECT non esegue GO, PLAY e PAUSE inviano il comando Program', async () => {
  const sent = []; const actions = buildActions(async command => { sent.push(command) }); const { presets, structure } = buildPresets('Regia')
- assert.equal(Object.keys(actions).length, 14); assert.equal(Object.keys(presets).length, 25); assert.equal(structure.flatMap(s => s.definitions).length, 25)
+ assert.equal(Object.keys(actions).length, 15); assert.equal(Object.keys(presets).length, 27); assert.equal(structure.flatMap(s => s.definitions).length, 27)
  for (const preset of Object.values(presets)) for (const step of preset.steps) for (const action of step.down) assert.ok(actions[action.actionId])
  await actions.select.callback({ options: { number: '0012' } }); assert.deepEqual(sent, ['SELECT 0012'])
  await actions.play.callback({ options: {} }); await actions.pause.callback({ options: {} }); assert.deepEqual(sent.slice(1), ['PLAY', 'PAUSE'])
@@ -69,7 +69,7 @@ test('API Companion reale: definizioni, feedback e variabili da ACK', async t =>
  await data.actions.digit.callback({ options: { digit: '1' } }); assert.equal(data.variables.number, '1')
  await data.actions.select.callback({ options: { number: '999' } }); assert.equal(data.feedbacks.last_error.callback(), true); assert.equal(data.variables.number, '999')
  await data.actions.select.callback({ options: { number: '12' } }); assert.equal(data.variables.number, ''); assert.equal(data.variables.last_selected_number, '12'); assert.equal(data.variables.last_error, '')
- await data.actions.next_block.callback({ options: {} }); assert.equal(data.variables.last_block, 'Apertura'); assert.equal(data.variables.last_selected_number, '?'); assert.equal(Object.keys(data.presets).length, 25)
+ await data.actions.next_block.callback({ options: {} }); assert.equal(data.variables.last_block, 'Apertura'); assert.equal(data.variables.last_selected_number, '?'); assert.equal(Object.keys(data.presets).length, 27)
 })
 test('configurazione nuova invalida chiude la vecchia connessione', async t => {
  const f = await fixture(t, (_, socket) => socket.write('OK NUMBER 1\n')); const { ctx, data } = context(); const instance = new NDIPlayerInstance(ctx)
@@ -82,4 +82,15 @@ test('numero non valido localmente blocca GO sulla vecchia selezione', async t =
  t.after(() => instance.destroy()); await instance.init({ host: '127.0.0.1', port: f.port }); await waitFor(() => instance.connected)
  await data.actions.select.callback({ options: { number: 'abc' } }); await data.actions.go.callback({ options: {} }); assert.deepEqual(f.commands, []); assert.match(data.variables.last_error, /Richiamo non valido/)
  await data.actions.next.callback({ options: {} }); await data.actions.go.callback({ options: {} }); assert.deepEqual(f.commands, ['NEXT', 'GO'])
+})
+
+test('stato video e countdown seguono le risposte periodiche senza alterare ultimo comando', async t => {
+ let state = 'playing 65.2'
+ const f = await fixture(t, (command, socket) => socket.write(command === 'VIDEO_STATUS' ? 'OK VIDEO_STATUS ' + state + '\n' : 'OK ' + command + '\n'))
+ const { ctx, data } = context(); const instance = new NDIPlayerInstance(ctx); t.after(() => instance.destroy())
+ await instance.init({ host: '127.0.0.1', port: f.port }); await waitFor(() => data.variables.video_state === 'playing')
+ assert.equal(data.variables.video_countdown, '01:05.2'); assert.equal(data.feedbacks.video_playing.callback(), true)
+ await data.actions.restart.callback({ options: {} }); state = 'paused 12.0'; await waitFor(() => data.variables.video_state === 'paused')
+ assert.equal(data.feedbacks.video_paused.callback(), true); assert.equal(data.variables.last_command, 'RESTART')
+ state = 'none ?'; await waitFor(() => data.variables.video_state === 'none'); assert.equal(data.variables.video_countdown, '?')
 })

@@ -29,8 +29,12 @@ jobs:
           $ErrorActionPreference = 'Stop'
           ./build.ps1
           ./companion-module-ndiplayer/test-integration.ps1 -NodePath node
+      - name: Read module version
+        id: module_version
+        shell: pwsh
+        run: echo "version=$((Get-Content companion-module-ndiplayer/VERSION -Raw).Trim())" >> $env:GITHUB_OUTPUT
       - uses: actions/upload-artifact@v4
         with:
-          name: ndiplayer-companion-1.0.0
-          path: companion-module-ndiplayer/ndiplayer-1.1.0.tgz
+          name: ndiplayer-companion-${{ steps.module_version.outputs.version }}
+          path: companion-module-ndiplayer/ndiplayer-${{ steps.module_version.outputs.version }}.tgz
           if-no-files-found: error

@@ -29,7 +29,7 @@ Riferimento: [documentazione ufficiale di importazione](https://github.com/bitfo
 
 `connection`, `number`, `last_response`, `last_command`, `last_error`, `last_selected_number`, `last_block`.
 
-Descrivono le risposte ricevute da questa connessione. `?` significa dato non noto, ad esempio dopo una riconnessione. Gli interventi nell'app o da altri controller non vengono trasmessi spontaneamente al modulo. Il protocollo corrente non offre interrogazioni sul Program, sulla foto in onda o sul countdown: questi feedback non vengono inventati. Un socket collegato non conferma che Program NDI sia avviato o ricevuto da WATCHOUT.
+Descrivono le risposte ricevute da questa connessione. `?` significa dato non noto, ad esempio dopo una riconnessione. Gli interventi nell'app o da altri controller non vengono trasmessi spontaneamente al modulo. Lo stato e il countdown video sono interrogati ogni 500 ms; la foto in onda non viene esposta. Un socket collegato non conferma che Program NDI sia avviato o ricevuto da WATCHOUT.
 
 Le notifiche in uscita da NDIPlayer verso Companion restano separate: il modulo usa solo la porta dei comandi in ingresso. Per comandare il programma non servono le due stringhe delle notifiche.
 
@@ -40,3 +40,9 @@ I comandi sono serializzati aspettando la risposta. Il modulo si ricollega autom
 Node 26 e npm: `npm ci`, `npm test`, `npm run package`. Lo strumento ufficiale Bitfocus genera `ndiplayer-1.1.0.tgz` e valida il manifest. Codice MIT; il pacchetto include gli avvisi delle dipendenze.
 
 Prove di integrazione su Windows: dopo la compilazione di NDIPlayer e del pacchetto, esegui `test-integration.ps1`. Verifica sia il sorgente sia il codice contenuto nel .tgz contro il ricevitore TCP di NDIPlayer, con un mittente video simulato. Sono passati 15 test, senza invii a WATCHOUT.
+
+## Video Program e versione
+
+Con una versione di NDIPlayer che supporta `VIDEO_STATUS` e `RESTART`, il modulo espone le variabili `video_state`, `video_countdown` e `video_remaining_seconds` e i feedback video in riproduzione, in pausa e terminato. I preset PLAY e PAUSE evidenziano lo stato; RESTART riparte mantenendo lo stato di pausa. Il countdown indica il tempo alla fine o al prossimo loop, tenendo conto della velocita. `?` indica un valore non disponibile. Con versioni precedenti dell'app lo stato video rimane sconosciuto.
+
+La versione del modulo e indipendente da quella dell'app ed e definita in `companion-module-ndiplayer/VERSION`. `npm run version:patch`, `version:minor` o `version:major` aggiornano il file e sincronizzano package, lockfile e manifest. Anche `npm run package` e `npm run check` sincronizzano i metadati dal file VERSION.

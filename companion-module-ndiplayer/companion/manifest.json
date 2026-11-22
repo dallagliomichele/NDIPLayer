@@ -9,10 +9,28 @@
   "license": "MIT",
   "repository": "git+https://github.com/dallagliomichele/NDIPLayer.git",
   "bugs": "https://github.com/dallagliomichele/NDIPLayer/issues",
-  "maintainers": [{ "name": "Michele Dallaglio", "github": "dallagliomichele" }],
-  "runtime": { "type": "node26", "api": "nodejs-ipc", "apiVersion": "2.1.3", "entrypoint": "../src/main.js" },
+  "maintainers": [
+    {
+      "name": "Michele Dallaglio",
+      "github": "dallagliomichele"
+    }
+  ],
+  "runtime": {
+    "type": "node26",
+    "api": "nodejs-ipc",
+    "apiVersion": "2.1.3",
+    "entrypoint": "../src/main.js"
+  },
   "legacyIds": [],
   "manufacturer": "NDIPlayer",
-  "products": ["NDIPlayer"],
-  "keywords": ["NDI", "WATCHOUT", "immagini", "playout", "TCP"]
+  "products": [
+    "NDIPlayer"
+  ],
+  "keywords": [
+    "NDI",
+    "WATCHOUT",
+    "immagini",
+    "playout",
+    "TCP"
+  ]
 }
