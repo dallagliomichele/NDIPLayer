@@ -14,7 +14,7 @@ public partial class MainWindow {
  readonly Label configNotice=new Label{AutoSize=true,ForeColor=Color.DarkOrange};
  bool loadingProject,refreshingBlocks;string projectPath,savedFingerprint,blockDragId;Point blockDragOrigin;
  PlaylistBlock ActiveBlock {get{return settings.Blocks.Find(b=>b.Id==settings.ActiveBlockId);}}
- void CaptureProjectControls(){if(loadingProject)return;settings.OutputWidth=(int)width.Value;settings.OutputHeight=(int)height.Value;settings.OutputFps=(int)fps.Value;settings.ChannelName=channelName.Text;settings.PreviewChannelName=previewChannelName.Text;settings.Dissolve=dissolve.Checked;settings.FadeMs=(int)fade.Value;settings.EscClearMs=(int)escClearFade.Value;}
+ void CaptureProjectControls(){if(loadingProject)return;settings.OutputWidth=(int)width.Committed;settings.OutputHeight=(int)height.Committed;settings.OutputFps=(int)fps.Committed;settings.ChannelName=channelName.Text;settings.PreviewChannelName=previewChannelName.Text;settings.Dissolve=dissolve.Checked;settings.FadeMs=(int)fade.Value;settings.EscClearMs=(int)escClearFade.Value;}
  void UpdateProjectTitle(){if(savedFingerprint==null)return;Text="NDIPlayer — "+AppVersion.Value+" · "+(projectPath==null?"Progetto locale":Path.GetFileName(projectPath))+(ProjectStore.Fingerprint(settings)==savedFingerprint?"":" *");}
  void InitializeProjects(FlowLayoutPanel top,Control sidebar){
   top.Height=112;

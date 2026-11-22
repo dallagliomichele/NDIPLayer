@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Web.Script.Serialization;
@@ -36,6 +37,9 @@ static class TransformTests {
     check(x.Value==1060&&y.Value==490&&scale.Value==50,"vecchie posizioni mostrate come centro senza cambiare inquadratura ("+x.Value+", "+y.Value+", "+scale.Value+")");
     var width=Find<NumericUpDown>(window,"OutputWidth");var height=Find<NumericUpDown>(window,"OutputHeight");width.Value=1280;height.Value=720;
     check(x.Value==740&&y.Value==310,"cambio risoluzione aggiorna centro conservando offset salvato");
+    var typed=(CommittedNumericUpDown)width;int changes=0;width.ValueChanged+=delegate{changes++;};width.Controls.OfType<TextBox>().First().Text="1";var shown=typeof(MainWindow).GetMethod("UpdateShellStatus",BindingFlags.Instance|BindingFlags.NonPublic);shown.Invoke(window,null);
+    check(changes==0&&width.Text=="1"&&typed.Committed==1280,"campo risoluzione non si autocorregge finché si digita ("+changes+", "+width.Text+", "+typed.Committed+")");
+    var click=typeof(Button).GetMethod("OnClick",BindingFlags.Instance|BindingFlags.NonPublic);check(width.Value==16,"uscita dal campo applica il limite minimo");var preset=Find<Button>(window,"ResolutionPreset3840x2160");click.Invoke(preset,new object[]{EventArgs.Empty});check(width.Value==3840&&height.Value==2160,"preset 4K imposta risoluzione");click.Invoke(Find<Button>(window,"ResolutionPreset1920x1080"),new object[]{EventArgs.Empty});check(width.Value==1920&&height.Value==1080,"preset Full HD imposta risoluzione");width.Value=1280;height.Value=720;
     width.Value=1920;height.Value=1080;x.Value=960;y.Value=540;var saved=json.Deserialize<Settings>(File.ReadAllText(state));
     check(saved.Images[file].X==0&&saved.Images[file].Y==0,"campi centro salvano offset compatibili con versioni precedenti (salvati "+saved.Images[file].X+", "+saved.Images[file].Y+"; campi "+x.Value+", "+y.Value+")");
     var preview=Find<PreviewCanvas>(window,"SelectionPreview");preview.Size=new Size(1000,700);var frame=PreviewCanvas.FrameBounds(preview.Size,1920,1080);var at=new Point(frame.Left+frame.Width/2,frame.Top+frame.Height/2);

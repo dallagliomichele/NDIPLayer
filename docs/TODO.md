@@ -17,5 +17,3 @@ Questa è una lista di possibili sviluppi ricavati dai limiti dichiarati nel rep
 Valutare priorità e requisiti con l'uso reale prima di implementarli. Per la verifica dell'attuale procedura di build e della documentazione vedere [PROBLEMI.md](PROBLEMI.md).
 
 
--nella schermata di impostazioni video non autocorreggere  la cifra dei campi risoluzione fino a che l'utnete non ha tolto focus al campo
--inserire due tasti con preset 192x1080 e 3840x2160
