@@ -5,6 +5,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Test release version options
+        shell: powershell
+        run: ./tests/VersionReleaseTests.ps1
       - name: Build installer and test
         id: build
         shell: powershell

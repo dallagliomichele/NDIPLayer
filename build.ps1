@@ -1,3 +1,8 @@
+param(
+    [ValidateSet('patch','minor','major')]
+    [string]$VersionIncrement = 'patch'
+)
+
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 New-Item -ItemType Directory -Force bin | Out-Null
@@ -12,8 +17,13 @@ $versionFile = Join-Path $PSScriptRoot 'VERSION'
 $current = [IO.File]::ReadAllText($versionFile).Trim()
 if ($current -notmatch '^(0|[1-9]\d{0,4})\.(0|[1-9]\d{0,4})\.(0|[1-9]\d{0,4})$') { throw 'VERSION deve contenere major.minor.patch numerici.' }
 $major = [int]$Matches[1]; $minor = [int]$Matches[2]; $patch = [int]$Matches[3]
-if ($major -gt 65534 -or $minor -gt 65534 -or $patch -ge 65534) { throw 'VERSION supera i limiti della versione assembly; aggiornare manualmente major/minor.' }
-$next = "$major.$minor.$($patch + 1)"
+if ($major -gt 65534 -or $minor -gt 65534 -or $patch -gt 65534) { throw 'VERSION supera i limiti della versione assembly.' }
+switch ($VersionIncrement) {
+    'major' { if ($major -ge 65534) { throw 'Versione major al limite della versione assembly.' }; $major++; $minor = 0; $patch = 0 }
+    'minor' { if ($minor -ge 65534) { throw 'Versione minor al limite della versione assembly.' }; $minor++; $patch = 0 }
+    'patch' { if ($patch -ge 65534) { throw 'Versione patch al limite della versione assembly.' }; $patch++ }
+}
+$next = "$major.$minor.$patch"
 $attributes = "[assembly: System.Reflection.AssemblyVersion(`"$next.0`")]`r`n[assembly: System.Reflection.AssemblyFileVersion(`"$next.0`")]`r`n[assembly: System.Reflection.AssemblyInformationalVersion(`"$next`")]`r`n"
 [IO.File]::WriteAllText($assemblyInfo, $attributes, [Text.Encoding]::ASCII)
 New-Item -ItemType Directory -Path $buildDir | Out-Null

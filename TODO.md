@@ -15,3 +15,7 @@ Questa è una lista di possibili sviluppi ricavati dai limiti dichiarati nel rep
 | Seek, ulteriori formati e HDR | I MOV supportano pausa e riavvio, ma non seek arbitrario; HDR e ulteriori formati immagine richiederebbero anche una revisione della pipeline BGRA a 8 bit. |
 
 Valutare priorità e requisiti con l'uso reale prima di implementarli. Per la verifica dell'attuale procedura di build e della documentazione vedere [PROBLEMI.md](PROBLEMI.md).
+
+
+-nella schermata di impostazioni video non autocorreggere  la cifra dei campi risoluzione fino a che l'utnete non ha tolto focus al campo
+-inserire due tasti con preset 192x1080 e 3840x2160

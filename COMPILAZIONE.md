@@ -28,7 +28,7 @@ Installare Inno Setup 6.5+ o 7 e procurarsi il redistributable ufficiale NDI 6.4
 ./installer/build-installer.ps1 -RuntimeFile C:\percorso\NDI6Runtime.exe -IsccPath C:\percorso\ISCC.exe
 ```
 
-Lo script prepara sempre FFmpeg dall'archivio verificato, lancia la build e crea `dist/NDIPlayer-0.13.5-Setup-win-x64.exe`; non usa una copia già presente in `bin\video` come sostituto della dipendenza verificata. Per usare uno ZIP FFmpeg locale aggiungere `-VideoArchive C:\percorso\archivio.zip`. Il setup include l'app, NAudio, FFmpeg e il redistributable NDI; verifica .NET 4.8 sul PC di destinazione. La compilazione dell'installer richiede che il runtime fornito corrisponda all'hash atteso in `installer/build-installer.ps1`.
+Lo script prepara sempre FFmpeg dall'archivio verificato, lancia la build e crea `dist/NDIPlayer-<versione>-Setup-win-x64.exe`; non usa una copia già presente in `bin\video` come sostituto della dipendenza verificata. Per usare uno ZIP FFmpeg locale aggiungere `-VideoArchive C:\percorso\archivio.zip`. Il setup include l'app, NAudio, FFmpeg e il redistributable NDI; verifica .NET 4.8 sul PC di destinazione. La compilazione dell'installer richiede che il runtime fornito corrisponda all'hash atteso in `installer/build-installer.ps1`.
 
 ## Installazione dipendenze di sviluppo
 
@@ -63,5 +63,15 @@ Per ricompilare applicazione e test, creare il pacchetto del modulo Companion e 
 ```
 
 È possibile fornire un archivio FFmpeg locale con `-VideoArchive`. Il comando usa `node` e `npm` presenti nel `PATH`; per indicare eseguibili diversi usare `-NodePath` e `-NpmPath`.
+
+Per scegliere l'incremento della versione `X.Y.Z`, specificare una sola opzione:
+
+```powershell
+.\build-release.ps1 --patch  # 0.13.7 -> 0.13.8 (predefinito)
+.\build-release.ps1 --minor  # 0.13.7 -> 0.14.0
+.\build-release.ps1 --major  # 0.13.7 -> 1.0.0
+```
+
+Il numero in `VERSION` viene aggiornato dopo la compilazione e i test dell'applicazione; un eventuale errore successivo del modulo o dell'installer non annulla l'incremento. Per condividere la versione aggiornata occorre committare `VERSION`.
 
 Il test d'integrazione richiede l'app già compilata; usa un host C# con sender simulato. Il pacchetto generato è `companion-module-ndiplayer/ndiplayer-1.0.0.tgz`. Le pipeline `.github/workflows/windows.yml` e `companion-module.yml` replicano rispettivamente build/installer e packaging/test del modulo.

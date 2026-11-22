@@ -1,13 +1,39 @@
+[CmdletBinding(PositionalBinding=$false)]
 param(
     [string]$RuntimeFile,
     [string]$IsccPath,
     [string]$VideoArchive,
     [string]$NodePath = 'node',
-    [string]$NpmPath = 'npm'
+    [string]$NpmPath = 'npm',
+    [switch]$Minor,
+    [switch]$Major,
+    [switch]$Patch,
+    [Parameter(ValueFromRemainingArguments=$true)][string[]]$RemainingArguments
 )
 
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
+
+$selected = @()
+if ($Minor) { $selected += 'minor' }
+if ($Major) { $selected += 'major' }
+if ($Patch) { $selected += 'patch' }
+$positionals = @('RuntimeFile','IsccPath','VideoArchive','NodePath','NpmPath')
+$position = 0
+foreach ($argument in $RemainingArguments) {
+    if ($argument -in @('--minor','--major','--patch')) {
+        $selected += $argument.Substring(2).ToLowerInvariant()
+    } elseif ($argument.StartsWith('-')) {
+        throw "Opzione non riconosciuta: $argument"
+    } else {
+        while ($position -lt $positionals.Count -and $PSBoundParameters.ContainsKey($positionals[$position])) { $position++ }
+        if ($position -ge $positionals.Count) { throw "Argomento inatteso: $argument" }
+        Set-Variable -Name $positionals[$position] -Value $argument
+        $position++
+    }
+}
+if ($selected.Count -gt 1) { throw 'Specificare una sola opzione tra --patch, --minor e --major.' }
+$increment = if ($selected.Count -eq 1) { $selected[0] } else { 'patch' }
 
 if (!$RuntimeFile) {
     $RuntimeFile = Join-Path $PSScriptRoot 'dependencies\NDI6Runtime.exe'
@@ -48,7 +74,7 @@ if ($VideoArchive) {
         throw 'Preparazione archivio FFmpeg fallita'
     }
 }
-& (Join-Path $PSScriptRoot 'build.ps1')
+& (Join-Path $PSScriptRoot 'build.ps1') -VersionIncrement $increment
 if ($LASTEXITCODE -ne 0) {
     throw 'Compilazione applicazione fallita'
 }
