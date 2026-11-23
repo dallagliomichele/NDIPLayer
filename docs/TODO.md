@@ -13,7 +13,7 @@ Questa è una lista di possibili sviluppi ricavati dai limiti dichiarati nel rep
 | Aggiornamento automatico della libreria | `README.md`, sezione «Architettura e sviluppo», dichiara l'assenza di file watcher; oggi l'utente usa **Aggiorna**. |
 | Stato Program interrogabile dal modulo Companion | `companion-module-ndiplayer/README.md`, sezione «Variabili», indica l'assenza di interrogazioni per Program, file in onda e countdown. |
 | Seek, ulteriori formati e HDR | I MOV supportano pausa e riavvio, ma non seek arbitrario; HDR e ulteriori formati immagine richiederebbero anche una revisione della pipeline BGRA a 8 bit. |
-| Autostart settabile per i file video in modo che si possano mettere in onda sul primo frame e farli partire su chiamata. |
+| Autostart settabile per i file video | Questo per avere la possibilità di mettere in onda sul primo frame e farli partire su chiamata. |
 
 Valutare priorità e requisiti con l'uso reale prima di implementarli. Per la verifica dell'attuale procedura di build e della documentazione vedere [PROBLEMI.md](PROBLEMI.md).
 
