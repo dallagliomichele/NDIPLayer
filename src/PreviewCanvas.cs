@@ -11,7 +11,7 @@ public class PreviewCanvas:Control {
  public string Heading="SELEZIONE";
  public string Footer="Scacchiera = trasparenza · Premi INVIA per andare in onda";
  public Color BorderColor=Color.FromArgb(55,205,245);
- public bool InteractionEnabled;public bool ShowFooter=true;
+ public bool InteractionEnabled;public bool ShowFooter=true;public bool ShowHeadingTitle=true;
  public event EventHandler DragStarted;
  public event EventHandler<PreviewDragEventArgs> DragMoved;
  public event EventHandler DragCompleted;
@@ -42,7 +42,7 @@ public class PreviewCanvas:Control {
   graphics.Clear(BackColor);
   var frame=FrameBounds(viewport,frameWidth,frameHeight,ShowFooter);
   if(frame.IsEmpty)return;
-  TextRenderer.DrawText(graphics,Heading+" · "+frameWidth+" × "+frameHeight,Font,new Rectangle(12,8,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
+  TextRenderer.DrawText(graphics,(ShowHeadingTitle?Heading+" · ":"")+frameWidth+" × "+frameHeight,Font,new Rectangle(12,8,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
   var saved=graphics.Save();
   try {
    graphics.SetClip(frame);
@@ -53,7 +53,7 @@ public class PreviewCanvas:Control {
    }
    if(image!=null){graphics.CompositingMode=CompositingMode.SourceOver;graphics.InterpolationMode=InterpolationMode.HighQualityBicubic;graphics.DrawImage(image,frame);}
   } finally {graphics.Restore(saved);}
-  using(var border=new Pen(BorderColor,2)) graphics.DrawRectangle(border,frame.Left-1,frame.Top-1,frame.Width+1,frame.Height+1);
+  if(BorderColor.A!=0)using(var border=new Pen(BorderColor,2)) graphics.DrawRectangle(border,frame.Left-1,frame.Top-1,frame.Width+1,frame.Height+1);
   if(ShowFooter)TextRenderer.DrawText(graphics,Footer,Font,new Rectangle(12,viewport.Height-24,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
  }
  protected override void Dispose(bool disposing){if(disposing&&image!=null){image.Dispose();image=null;}base.Dispose(disposing);}

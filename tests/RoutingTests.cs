@@ -22,7 +22,7 @@ static class RoutingTests {
    string a=Path.Combine(dir,"A.png"),b=Path.Combine(dir,"B.png");foreach(var path in new[]{a,b})using(var bmp=new Bitmap(8,8)){using(var g=Graphics.FromImage(bmp))g.Clear(path==a?Color.Red:Color.Blue);bmp.Save(path,System.Drawing.Imaging.ImageFormat.Png);}
    var settings=new Settings{Root=dir,OutputWidth=128,OutputHeight=72};string prefs=Path.Combine(dir,"settings.json");File.WriteAllText(prefs,new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(settings));
    using(var window=new MainWindow(prefs)){
-    check(((Label)Field(window,"programLamp")).Text.Contains("SPENTO")&&((Label)Field(window,"previewLamp")).Text.Contains("SPENTO")&&window.Controls.Find("ProgramOutputSection",true).Length==1&&window.Controls.Find("PreviewOutputSection",true).Length==1,"sezioni Program e Preview distinte inizialmente spente");
+    check(((Label)Field(window,"programLamp")).Text.Contains("SPENTO")&&((Label)Field(window,"previewLamp")).Text.Contains("SPENTO")&&window.Controls.Find("ProgramFrameHeader",true).Length==1&&window.Controls.Find("PreviewFrameHeader",true).Length==1,"sezioni Program e Preview distinte inizialmente spente");
     var previewName=(TextBox)Field(window,"previewChannelName");previewName.Text="Assistente Regia";((TextBox)Field(window,"channelName")).Text="Program Sala";
     check(previewName.Text=="Assistente Regia","modifica nome Program non cambia nome Preview");
     string namedProject=Path.Combine(dir,"names.ndiproj");ProjectStore.Write(namedProject,(Settings)Field(window,"settings"));var restored=ProjectStore.Read(namedProject);check(restored.ChannelName=="Program Sala"&&restored.PreviewChannelName=="Assistente Regia","entrambi i nomi indipendenti salvati e riletti dal progetto");
@@ -32,7 +32,7 @@ static class RoutingTests {
     var browser=(LibraryBrowser)Field(window,"files");var handle=browser.Handle;foreach(Control c in browser.Controls)if(c is ListView){var listHandle=c.Handle;}Call(window,"Scan");
     check(SpinWait.SpinUntil(()=>pv.ReadOnAirStatus().Paths.Contains(a),2000)&&pgm.ReadOnAirStatus().Paths.Length==0,"selezione inviata alla regia senza modificare Programma");
     Call(window,"RefreshOutputIndicators");check(((Label)Field(window,"programLamp")).Text.Contains("ACCESO")&&((Label)Field(window,"previewLamp")).Text.Contains("ACCESO"),"entrambi i flussi mostrano indicatore acceso dopo invio");
-    check(((PreviewCanvas)Field(window,"program")).BorderColor==Color.Red&&((PreviewCanvas)Field(window,"preview")).BorderColor==Color.LimeGreen,"bordi Program rosso e Preview verde con flussi attivi");
+    check(((PreviewCanvas)Field(window,"program")).BorderColor==Color.Transparent&&((PreviewCanvas)Field(window,"preview")).BorderColor==Color.Transparent&&((PreviewCanvas)Field(window,"program")).BackColor==Color.FromArgb(150,20,25)&&((PreviewCanvas)Field(window,"preview")).BackColor==Color.FromArgb(23,105,57),"flussi attivi colorano gli sfondi e disabilitano le cornici");
     Call(window,"UpdateProgram");check(!((Label)Field(window,"status")).Text.Contains("frame"),"stato Program senza contatore dei frame");
     pv.Error="Errore simulato";Call(window,"RefreshOutputIndicators");check(((Label)Field(window,"previewLamp")).Text.Contains("ERRORE")&&((Label)Field(window,"programLamp")).Text.Contains("ACCESO"),"errore Preview distinto dallo stato Program");pv.Error=null;
     Call(window,"Cue",false);check(SpinWait.SpinUntil(()=>pgm.ReadOnAirStatus().Paths.Contains(a),2000),"invio manuale aggiorna Programma");
@@ -51,13 +51,13 @@ static class RoutingTests {
     pgm.Cue(Renderer.Render(b,128,72,new Placement()),0,b);SpinWait.SpinUntil(()=>pgm.ReadOnAirStatus().Paths.Contains(b),2000);((NumericUpDown)Field(window,"fade")).Value=0;typeof(MainWindow).GetMethod("ProcessCmdKey",BindingFlags.NonPublic|BindingFlags.Instance).Invoke(window,key);check(pgm.Clearing,"ESC usa dissolvenza anche con durata impostata a zero");
     long previewFrames=pv.Frames;Call(window,"Toggle");check(Field(window,"output")==null&&Object.ReferenceEquals(Field(window,"previewOutput"),pv)&&SpinWait.SpinUntil(()=>pv.Frames>previewFrames,2000),"arrestare Programma non arresta Preview NDI");
     Call(window,"RefreshOutputIndicators");check(((Label)Field(window,"programLamp")).Text.Contains("SPENTO")&&((Label)Field(window,"previewLamp")).Text.Contains("ACCESO"),"arresto Program aggiorna solo il suo indicatore");
-    check(((PreviewCanvas)Field(window,"program")).BorderColor==Color.Black&&((PreviewCanvas)Field(window,"preview")).BorderColor==Color.LimeGreen,"arresto Program annerisce solo il suo bordo");
+    check(((PreviewCanvas)Field(window,"program")).BorderColor==Color.Red&&((PreviewCanvas)Field(window,"program")).BackColor==Color.Black&&((PreviewCanvas)Field(window,"preview")).BorderColor==Color.Transparent,"arresto Program torna a fondo nero e cornice rossa");
     check(((TextBox)Field(window,"channelName")).Enabled&&!((TextBox)Field(window,"previewChannelName")).Enabled,"nome modificabile solo per il proprio flusso fermo");
     if(ProofPath!=null){var sections=window.Controls.Find("MainHeader",true)[0];var parent=sections.Parent;parent.Controls.Remove(sections);sections.Size=new Size(1100,116);sections.CreateControl();using(var image=new Bitmap(1100,116)){sections.DrawToBitmap(image,new Rectangle(0,0,1100,116));image.Save(ProofPath,System.Drawing.Imaging.ImageFormat.Png);}parent.Controls.Add(sections);}
     ((NumericUpDown)Field(window,"width")).Value=1920;((NumericUpDown)Field(window,"height")).Value=1080;
     check((int)typeof(MainWindow).GetProperty("FrameWidth",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(window,null)==128,"Preview mantiene formato attivo con nuove impostazioni differite");
     Call(window,"StopPreviewOutput");check(Field(window,"previewOutput")==null,"Preview può essere arrestato separatamente");
-    check(((PreviewCanvas)Field(window,"preview")).BorderColor==Color.Black,"arresto Preview annerisce il suo bordo");
+    check(((PreviewCanvas)Field(window,"preview")).BorderColor==Color.LimeGreen&&((PreviewCanvas)Field(window,"preview")).BackColor==Color.Black,"arresto Preview torna a fondo nero e cornice verde");
     check(((NumericUpDown)Field(window,"x")).Value==960&&((NumericUpDown)Field(window,"y")).Value==540,"arresto ultimo flusso riallinea centro al nuovo formato");
     ((TextBox)Field(window,"channelName")).Text="Modificato";previewName.Text="Altro";Call(window,"ApplyProject",restored,namedProject);check(((TextBox)Field(window,"channelName")).Text=="Program Sala"&&previewName.Text=="Assistente Regia","caricamento progetto ripristina entrambi i campi nome");
    }

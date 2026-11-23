@@ -1,8 +1,12 @@
 using System;
 using System.Drawing;
+using System.IO;
 using System.Net;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 using System.Windows.Forms;
 namespace ImageNdi {
 public partial class MainWindow {
@@ -27,6 +31,7 @@ public partial class MainWindow {
    case "PLAY":case "PAUSE":return ControlProgramVideo(command.Name=="PLAY");
    case "RESTART":if(output==null||output.Error!=null)return "ERR Program non attivo";if(output.CurrentVideo==null)return "ERR Nessun video in onda";return RestartVideoCore(true,null,false)?"OK RESTART":"ERR Riavvio video fallito";
    case "VIDEO_STATUS":return ProgramVideoStatus();
+   case "ASSET_STATUS":return CompanionAssetStatus();
    case "CLEAR_FADE":case "CLEAR_CUT":if(output==null||output.Error!=null)return "ERR Program non attivo";ClearProgramWithFade(command.Name=="CLEAR_CUT");return "OK "+command.Name;
   }return "ERR Comando non supportato";
  }
@@ -34,6 +39,7 @@ public partial class MainWindow {
  string SelectRemoteNumber(string number){remoteNumber=number;remoteSelecting=true;try{string message;if(!SelectNumber(number,out message)){remoteInvalid=true;RefreshRemoteNumber();return "ERR "+message;}remoteNumber="";remoteInvalid=false;RefreshRemoteNumber();return "OK SELECT "+number;}finally{remoteSelecting=false;}}
  string NavigateRemoteBlock(int direction){int current=settings.Blocks.FindIndex(b=>b.Id==settings.ActiveBlockId),next=current+direction;if(next<0||next>=settings.Blocks.Count)return "ERR Estremo blocchi";remoteSelecting=true;try{remoteNumber="";remoteInvalid=false;RefreshRemoteNumber();settings.ActiveBlockId=settings.Blocks[next].Id;search.Clear();RefreshBlocks();RefreshVisible();files.SelectFirst();Save();return "OK BLOCK "+settings.Blocks[next].Name;}finally{remoteSelecting=false;}}
  string ProgramVideoStatus(){if(output==null||output.Error!=null)return "OK VIDEO_STATUS unavailable ?";var video=output.CurrentVideo;if(video==null)return "OK VIDEO_STATUS none ?";var clock=output.ReadSentPlayback();string state=video.Ended?"ended":video.Paused?"paused":"playing";string remaining=clock!=null&&clock.Path==video.Path&&clock.Ready&&clock.Duration>0?clock.Remaining.ToString("F1",System.Globalization.CultureInfo.InvariantCulture):"?";return "OK VIDEO_STATUS "+state+" "+remaining;}
+ string CompanionAssetStatus(){var live=output==null?new OnAirStatus():output.ReadOnAirStatus();var numbers=ImageNumbers.Scope(settings);Func<string,object> asset=path=>{if(String.IsNullOrEmpty(path))return null;string number;return new{title=Path.GetFileName(path),number=numbers.TryGetValue(path,out number)?number:""};};var payload=new{preview=asset(selected),program=live.Paths.Select(path=>asset(path)).ToArray()};string json=new JavaScriptSerializer().Serialize(payload);return "OK ASSET_STATUS "+Convert.ToBase64String(Encoding.UTF8.GetBytes(json));}
  void ShowControlDialog(){using(var dialog=new Form{Text="Comandi Companion · TCP in ingresso",Width=650,Height=370,StartPosition=FormStartPosition.CenterParent,FormBorderStyle=FormBorderStyle.FixedDialog,MaximizeBox=false,MinimizeBox=false}){var panel=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,WrapContents=false,Padding=new Padding(12)};var enabled=new CheckBox{Text="Abilita comandi TCP in ingresso",AutoSize=true,Checked=settings.Companion.ControlEnabled};var address=new TextBox{Text=settings.Companion.ControlAddress,Width=240};var port=Number(1,65535,settings.Companion.ControlPort);panel.Controls.Add(enabled);panel.Controls.Add(new Label{Text="Attenzione: comandi senza autenticazione. Usare solo una rete protetta.",AutoSize=true,ForeColor=Color.DarkOrange});panel.Controls.Add(new Label{Text="IP locale di ascolto · 0.0.0.0 = tutte le interfacce",AutoSize=true});panel.Controls.Add(address);panel.Controls.Add(new Label{Text="Porta TCP · diversa dalle notifiche in uscita",AutoSize=true});panel.Controls.Add(port);panel.Controls.Add(new Label{Text="Companion si collega all'IP di questo PC e invia un comando per riga (LF).\r\nNEXT / PREV · NEXT_BLOCK / PREV_BLOCK · SELECT n · GO\r\nDIGIT n · BACKSPACE · CANCEL · ENTER · CLEAR_FADE · CLEAR_CUT · PLAY · PAUSE",AutoSize=true});var buttons=new FlowLayoutPanel{Width=600,Height=35};AddButton(buttons,"Applica",delegate{try{var config=settings.Companion.Copy();config.ControlEnabled=enabled.Checked;config.ControlAddress=address.Text.Trim();config.ControlPort=(int)port.Value;config.Validate();settings.Companion=config;ApplyCompanionControl();Save();if(config.ControlEnabled&&controlServer==null){MessageBox.Show(controlStatus.Text,"Comandi Companion");return;}dialog.DialogResult=DialogResult.OK;}catch(Exception e){MessageBox.Show(e.Message,"Comandi Companion");}});buttons.Controls.Add(new Button{Text="Annulla",AutoSize=true,DialogResult=DialogResult.Cancel});panel.Controls.Add(buttons);dialog.Controls.Add(panel);dialog.ShowDialog(this);}}
 }
 }

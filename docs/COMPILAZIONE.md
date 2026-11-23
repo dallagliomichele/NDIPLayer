@@ -8,9 +8,10 @@ La build usa le quattro librerie SharpDX 4.2.0 per Direct3D 11 e NAudio 1.10.0 p
 
 ```powershell
 ./build.ps1
+./build.ps1 --no-bump
 ```
 
-`build.ps1` prepara NAudio 1.10.0 e, se mancano FFmpeg o FFprobe, richiama `prepare-video.ps1`, che scarica e verifica lo ZIP FFmpeg fissato nello script e prepara `bin/video/` con eseguibili e DLL. Poi compila `bin/WatchoutImageNDI.exe` e `bin/Tests.exe` ed esegue i test. Per usare lo ZIP originale conservato localmente, eseguire prima `./installer/prepare-video.ps1 -Archive C:\percorso\ffmpeg-n8.1.3-27-g8dca1586f4-win64-lgpl-shared-8.1.zip`. La build mensile rimane disponibile dal fornitore solo per due anni: conservare lo ZIP verificato e le dipendenze in `bin\video-package` in un archivio duraturo. Una preparazione completamente offline richiede anche il pacchetto NAudio e i sorgenti FFmpeg e script di build corrispondenti già nella cache.
+`build.ps1` incrementa la patch in `VERSION` dopo la compilazione e i test. Con `--no-bump` compila e testa usando la versione corrente senza modificare `VERSION`. Lo script prepara NAudio 1.10.0 e, se mancano FFmpeg o FFprobe, richiama `prepare-video.ps1`, che scarica e verifica lo ZIP FFmpeg fissato nello script e prepara `bin/video/` con eseguibili e DLL. Poi compila `bin/WatchoutImageNDI.exe` e `bin/Tests.exe` ed esegue i test. Per usare lo ZIP originale conservato localmente, eseguire prima `./installer/prepare-video.ps1 -Archive C:\percorso\ffmpeg-n8.1.3-27-g8dca1586f4-win64-lgpl-shared-8.1.zip`. La build mensile rimane disponibile dal fornitore solo per due anni: conservare lo ZIP verificato e le dipendenze in `bin\video-package` in un archivio duraturo. Una preparazione completamente offline richiede anche il pacchetto NAudio e i sorgenti FFmpeg e script di build corrispondenti già nella cache.
 
 Per la prova opzionale del runtime NDI reale, installarlo prima e poi eseguire:
 
@@ -70,8 +71,9 @@ Per scegliere l'incremento della versione `X.Y.Z`, specificare una sola opzione:
 .\build-release.ps1 --patch  # 0.13.8 -> 0.13.9 (predefinito)
 .\build-release.ps1 --minor  # 0.13.8 -> 0.14.0
 .\build-release.ps1 --major  # 0.13.8 -> 1.0.0
+.\build-release.ps1 --no-bump  # usa la versione corrente senza modificare VERSION
 ```
 
-Il numero in `VERSION` viene aggiornato dopo la compilazione e i test dell'applicazione; un eventuale errore successivo del modulo o dell'installer non annulla l'incremento. Per condividere la versione aggiornata occorre committare `VERSION`.
+Specificare `--no-bump` da solo, senza `--patch`, `--minor` o `--major`. Il numero in `VERSION` viene aggiornato dopo la compilazione e i test dell'applicazione, a meno che si usi `--no-bump`; un eventuale errore successivo del modulo o dell'installer non annulla l'incremento. Per condividere la versione aggiornata occorre committare `VERSION`.
 
 Il test d'integrazione richiede l'app già compilata; usa un host C# con sender simulato. Il pacchetto generato è `companion-module-ndiplayer/ndiplayer-1.1.0.tgz`. Le pipeline `.github/workflows/windows.yml` e `companion-module.yml` replicano rispettivamente build/installer e packaging/test del modulo.

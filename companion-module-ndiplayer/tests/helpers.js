@@ -3,12 +3,17 @@ import net from 'node:net'
 import { once } from 'node:events'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { NDIPlayerClient } from '../src/client.js'
-export async function fixture(t, handler) {
+export async function fixture(t, handler, assetStatus = { preview: null, program: [] }) {
  const sockets = new Set(), commands = []
  const server = net.createServer(socket => {
   sockets.add(socket); socket.on('close', () => sockets.delete(socket)); let buffer = ''
   socket.on('data', data => { buffer += data.toString('ascii'); let at
-   while ((at = buffer.indexOf('\n')) !== -1) { const command = buffer.slice(0, at); buffer = buffer.slice(at + 1); commands.push(command); handler(command, socket) }
+   while ((at = buffer.indexOf('\n')) !== -1) {
+    const command = buffer.slice(0, at); buffer = buffer.slice(at + 1); commands.push(command)
+    if (command === 'ASSET_STATUS') {
+     socket.write(assetStatus === false ? 'ERR Comando sconosciuto o argomenti non validi\n' : 'OK ASSET_STATUS ' + Buffer.from(JSON.stringify(assetStatus), 'utf8').toString('base64') + '\n')
+    } else handler(command, socket)
+   }
   })
  })
  server.listen(0, '127.0.0.1'); await once(server, 'listening')

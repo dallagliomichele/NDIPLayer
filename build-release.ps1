@@ -8,6 +8,7 @@ param(
     [switch]$Minor,
     [switch]$Major,
     [switch]$Patch,
+    [switch]$NoBump,
     [Parameter(ValueFromRemainingArguments=$true)][string[]]$RemainingArguments
 )
 
@@ -18,10 +19,13 @@ $selected = @()
 if ($Minor) { $selected += 'minor' }
 if ($Major) { $selected += 'major' }
 if ($Patch) { $selected += 'patch' }
+$noBumpRequested = $NoBump
 $positionals = @('RuntimeFile','IsccPath','VideoArchive','NodePath','NpmPath')
 $position = 0
 foreach ($argument in $RemainingArguments) {
-    if ($argument -in @('--minor','--major','--patch')) {
+    if ($argument -eq '--no-bump') {
+        $noBumpRequested = $true
+    } elseif ($argument -in @('--minor','--major','--patch')) {
         $selected += $argument.Substring(2).ToLowerInvariant()
     } elseif ($argument.StartsWith('-')) {
         throw "Opzione non riconosciuta: $argument"
@@ -33,6 +37,7 @@ foreach ($argument in $RemainingArguments) {
     }
 }
 if ($selected.Count -gt 1) { throw 'Specificare una sola opzione tra --patch, --minor e --major.' }
+if ($noBumpRequested -and $selected.Count -gt 0) { throw 'Non specificare --no-bump insieme a --patch, --minor o --major.' }
 $increment = if ($selected.Count -eq 1) { $selected[0] } else { 'patch' }
 
 if (!$RuntimeFile) {
@@ -74,7 +79,8 @@ if ($VideoArchive) {
         throw 'Preparazione archivio FFmpeg fallita'
     }
 }
-& (Join-Path $PSScriptRoot 'build.ps1') -VersionIncrement $increment
+$buildArgs = if ($noBumpRequested) { @('--no-bump') } else { @('-VersionIncrement', $increment) }
+& (Join-Path $PSScriptRoot 'build.ps1') @buildArgs
 if ($LASTEXITCODE -ne 0) {
     throw 'Compilazione applicazione fallita'
 }

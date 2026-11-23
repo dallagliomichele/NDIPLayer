@@ -53,6 +53,7 @@ Per preparare il numero 12: premi **1**, **2**, **ENTER**. Verifica la Preview, 
 ## Dettagli del protocollo
 
 - Un comando ASCII per riga, terminatore LF oppure CRLF. I nomi dei comandi non distinguono maiuscole e minuscole.
+- `ASSET_STATUS` restituisce in Base64 JSON il titolo e il numero dell'asset selezionato in Preview e degli asset inviati in Program; il modulo dedicato aggiorna le variabili Companion ogni 500 ms.
 - Numeri da 1 a 9 cifre; DIGIT accetta una sola cifra.
 - Risposte UTF-8 con terminatore LF, ad esempio `OK NEXT`, `OK SELECT 12`, `OK GO`, `ERR Numero assente nel blocco`.
 - Sono accettati pacchetti TCP frammentati o più righe nello stesso pacchetto e connessioni persistenti. Massimo quattro connessioni simultanee e una coda UI limitata; una linea oltre 128 caratteri viene rifiutata.

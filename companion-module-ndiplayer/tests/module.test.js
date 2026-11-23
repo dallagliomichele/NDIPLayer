@@ -7,7 +7,7 @@ import { buildActions, buildPresets } from '../src/definitions.js'
 import { fixture, waitFor, makeClient, context } from './helpers.js'
 
 test('tutti i comandi validi; nessun ritorno a capo o numero errato', () => {
- for (const command of ['NEXT', 'PREV', 'NEXT_BLOCK', 'PREV_BLOCK', 'GO', 'CLEAR_FADE', 'CLEAR_CUT', 'PLAY', 'PAUSE', 'RESTART', 'VIDEO_STATUS', 'ENTER', 'BACKSPACE', 'CANCEL', 'SELECT 0012', 'DIGIT 9']) assert.ok(validCommand(command))
+ for (const command of ['NEXT', 'PREV', 'NEXT_BLOCK', 'PREV_BLOCK', 'GO', 'CLEAR_FADE', 'CLEAR_CUT', 'PLAY', 'PAUSE', 'RESTART', 'VIDEO_STATUS', 'ASSET_STATUS', 'ENTER', 'BACKSPACE', 'CANCEL', 'SELECT 0012', 'DIGIT 9']) assert.ok(validCommand(command))
  for (const command of ['SELECT -1', 'SELECT 1234567890', 'DIGIT 12', 'GO\nCLEAR_CUT', 'PLAY 1', 'INVALID']) assert.equal(validCommand(command), false)
 })
 test('invio disconnesso rifiutato senza coda offline', async () => {
@@ -93,4 +93,32 @@ test('stato video e countdown seguono le risposte periodiche senza alterare ulti
  await data.actions.restart.callback({ options: {} }); state = 'paused 12.0'; await waitFor(() => data.variables.video_state === 'paused')
  assert.equal(data.feedbacks.video_paused.callback(), true); assert.equal(data.variables.last_command, 'RESTART')
  state = 'none ?'; await waitFor(() => data.variables.video_state === 'none'); assert.equal(data.variables.video_countdown, '?')
+})
+
+test('variabili asset aggiornate dallo stato Companion senza alterare l’ultimo comando', async t => {
+ const payload = {
+  preview: { title: 'Anteprima à.png', number: '004' },
+  program: [{ title: 'Foto uno.png', number: '1' }, { title: 'Foto due.png', number: '02' }],
+ }
+ const f = await fixture(t, (command, socket) => socket.write(command === 'VIDEO_STATUS' ? 'OK VIDEO_STATUS none ?\n' : 'OK ' + command + '\n'), payload)
+ const { ctx, data } = context(); const instance = new NDIPlayerInstance(ctx); t.after(() => instance.destroy())
+ await instance.init({ host: '127.0.0.1', port: f.port })
+ await waitFor(() => data.variables.preview_asset_title === 'Anteprima à.png' && data.variables.program_asset_title === 'Foto uno.png + Foto due.png')
+ assert.equal(data.variables.preview_asset_number, '004')
+ assert.equal(data.variables.program_asset_number, '1 + 02')
+ assert.equal(data.variables.last_command, '')
+ assert.equal(data.variables.last_response, '')
+})
+
+test('versione app senza ASSET_STATUS mantiene gli altri stati Companion', async t => {
+ const f = await fixture(t, (command, socket) => socket.write(command === 'VIDEO_STATUS' ? 'OK VIDEO_STATUS playing 5.0\n' : 'OK ' + command + '\n'), false)
+ const { ctx, data } = context(); const instance = new NDIPlayerInstance(ctx); t.after(() => instance.destroy())
+ await instance.init({ host: '127.0.0.1', port: f.port })
+ await waitFor(() => data.variables.video_state === 'playing')
+ assert.equal(data.variables.preview_asset_title, '?')
+ assert.equal(data.variables.program_asset_title, '?')
+ assert.equal(data.variables.last_error, '')
+ await sleep(600)
+ assert.equal(f.commands.filter(command => command === 'ASSET_STATUS').length, 1)
+ assert.ok(f.commands.filter(command => command === 'VIDEO_STATUS').length >= 2)
 })

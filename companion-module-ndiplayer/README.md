@@ -27,9 +27,11 @@ Riferimento: [documentazione ufficiale di importazione](https://github.com/bitfo
 
 ## Variabili
 
-`connection`, `number`, `last_response`, `last_command`, `last_error`, `last_selected_number`, `last_block`.
+`connection`, `number`, `last_response`, `last_command`, `last_error`, `last_selected_number`, `last_block`, `preview_asset_title`, `preview_asset_number`, `program_asset_title`, `program_asset_number`, `video_state`, `video_countdown`, `video_remaining_seconds`.
 
-Descrivono le risposte ricevute da questa connessione. `?` significa dato non noto, ad esempio dopo una riconnessione. Gli interventi nell'app o da altri controller non vengono trasmessi spontaneamente al modulo. Lo stato e il countdown video sono interrogati ogni 500 ms; la foto in onda non viene esposta. Un socket collegato non conferma che Program NDI sia avviato o ricevuto da WATCHOUT.
+Descrivono le risposte ricevute da questa connessione. `?` significa dato non noto, ad esempio dopo una riconnessione. Gli interventi nell'app o da altri controller non vengono trasmessi spontaneamente al modulo: lo stato degli asset e il countdown video sono interrogati ogni 500 ms. Un socket collegato non conferma che Program NDI sia avviato o ricevuto da WATCHOUT.
+
+Le variabili asset sono aggiornate interrogando NDIPlayer: Preview indica l'elemento selezionato e Program gli elementi attualmente inviati. I titoli usano il nome del file; i numeri sono quelli del blocco attivo e restano stringhe per conservare gli zeri iniziali. Durante una dissolvenza, Program unisce i titoli e i numeri con ` + `; `—` indica un contributore senza numero. Valore vuoto indica che non c'è un asset o un numero assegnato; `?` indica stato non disponibile. Servono le versioni dell'app che supportano `ASSET_STATUS`.
 
 Le notifiche in uscita da NDIPlayer verso Companion restano separate: il modulo usa solo la porta dei comandi in ingresso. Per comandare il programma non servono le due stringhe delle notifiche.
 

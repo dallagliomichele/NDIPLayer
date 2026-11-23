@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Web.Script.Serialization;
@@ -15,6 +16,7 @@ public sealed class VideoPlaybackStatus {
 public interface IPlaybackSource {byte[] ReadPlaybackFrame(out VideoPlaybackStatus status);}
 public static class VideoMetadata {
  static readonly ConcurrentDictionary<string,double> durations=new ConcurrentDictionary<string,double>(StringComparer.OrdinalIgnoreCase);
+ public static Size Dimensions(string path){string executable=System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"video","ffprobe.exe");using(var probe=new Process{StartInfo=new ProcessStartInfo(executable,"-v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "+VideoTools.Quote(path)){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true}}){probe.Start();string output=probe.StandardOutput.ReadToEnd();if(!probe.WaitForExit(5000)){try{probe.Kill();}catch(InvalidOperationException){}throw new IOException("Tempo scaduto durante la lettura del formato video.");}if(probe.ExitCode!=0)throw new IOException("Formato video non leggibile.");string[] parts=output.Trim().Split('x');int w,h;if(parts.Length!=2||!Int32.TryParse(parts[0],out w)||!Int32.TryParse(parts[1],out h)||w<1||h<1)throw new IOException("Dimensioni video non disponibili.");return new Size(w,h);}}
  public static double Duration(string path){var info=new FileInfo(path);string key=info.FullName+"|"+info.Length+"|"+info.LastWriteTimeUtc.Ticks;double found;if(durations.TryGetValue(key,out found))return found;
   string executable=System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"video","ffprobe.exe");
   using(var probe=new Process{StartInfo=new ProcessStartInfo(executable,"-v error -select_streams v:0 -show_entries stream=duration:format=duration -of json "+VideoTools.Quote(path)){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true}}){probe.Start();var output=probe.StandardOutput.ReadToEndAsync();var error=probe.StandardError.ReadToEndAsync();if(!probe.WaitForExit(5000)){try{probe.Kill();}catch(InvalidOperationException){}return 0;}if(probe.ExitCode!=0)return 0;var data=new JavaScriptSerializer().Deserialize<Metadata>(output.Result);if(data!=null){if(data.streams!=null)foreach(var stream in data.streams)if(TryDuration(stream.duration,out found))break;if(found<=0&&data.format!=null)TryDuration(data.format.duration,out found);}}

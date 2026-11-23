@@ -1,10 +1,30 @@
 param(
-    [ValidateSet('patch','minor','major')]
-    [string]$VersionIncrement = 'patch'
+    [string]$VersionIncrement = 'patch',
+    [switch]$NoBump,
+    [Parameter(ValueFromRemainingArguments=$true)][string[]]$RemainingArguments
 )
 
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
+$noBumpRequested = $NoBump
+$noBumpWasVersionArgument = $VersionIncrement -eq '--no-bump'
+if ($noBumpWasVersionArgument) {
+    $noBumpRequested = $true
+    $VersionIncrement = 'patch'
+}
+foreach ($argument in $RemainingArguments) {
+    if ($argument -eq '--no-bump') {
+        $noBumpRequested = $true
+    } else {
+        throw "Opzione non riconosciuta: $argument"
+    }
+}
+if ($VersionIncrement -notin @('patch','minor','major')) {
+    throw "Incremento versione non riconosciuto: $VersionIncrement"
+}
+if ($noBumpRequested -and $PSBoundParameters.ContainsKey('VersionIncrement') -and !$noBumpWasVersionArgument) {
+    throw 'Non specificare VersionIncrement insieme a --no-bump.'
+}
 New-Item -ItemType Directory -Force bin | Out-Null
 $lock = [IO.File]::Open((Join-Path $PSScriptRoot 'bin\version.lock'), [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
 $id = [Guid]::NewGuid().ToString('N')
@@ -18,10 +38,12 @@ $current = [IO.File]::ReadAllText($versionFile).Trim()
 if ($current -notmatch '^(0|[1-9]\d{0,4})\.(0|[1-9]\d{0,4})\.(0|[1-9]\d{0,4})$') { throw 'VERSION deve contenere major.minor.patch numerici.' }
 $major = [int]$Matches[1]; $minor = [int]$Matches[2]; $patch = [int]$Matches[3]
 if ($major -gt 65534 -or $minor -gt 65534 -or $patch -gt 65534) { throw 'VERSION supera i limiti della versione assembly.' }
-switch ($VersionIncrement) {
-    'major' { if ($major -ge 65534) { throw 'Versione major al limite della versione assembly.' }; $major++; $minor = 0; $patch = 0 }
-    'minor' { if ($minor -ge 65534) { throw 'Versione minor al limite della versione assembly.' }; $minor++; $patch = 0 }
-    'patch' { if ($patch -ge 65534) { throw 'Versione patch al limite della versione assembly.' }; $patch++ }
+if (!$noBumpRequested) {
+    switch ($VersionIncrement) {
+        'major' { if ($major -ge 65534) { throw 'Versione major al limite della versione assembly.' }; $major++; $minor = 0; $patch = 0 }
+        'minor' { if ($minor -ge 65534) { throw 'Versione minor al limite della versione assembly.' }; $minor++; $patch = 0 }
+        'patch' { if ($patch -ge 65534) { throw 'Versione patch al limite della versione assembly.' }; $patch++ }
+    }
 }
 $next = "$major.$minor.$patch"
 $attributes = "[assembly: System.Reflection.AssemblyVersion(`"$next.0`")]`r`n[assembly: System.Reflection.AssemblyFileVersion(`"$next.0`")]`r`n[assembly: System.Reflection.AssemblyInformationalVersion(`"$next`")]`r`n"
@@ -40,9 +62,11 @@ if ($LASTEXITCODE -ne 0) { throw 'Build test fallita' }
 & .\bin\Tests.exe
 if ($LASTEXITCODE -ne 0) { throw 'Test falliti' }
 Move-Item -LiteralPath $stagedApp -Destination (Join-Path $PSScriptRoot 'bin\WatchoutImageNDI.exe') -Force
-[IO.File]::WriteAllText($nextFile, "$next`n", [Text.Encoding]::ASCII)
-[IO.File]::Replace($nextFile, $versionFile, $backupFile)
-Write-Host "Versione build: $next"
+if (!$noBumpRequested) {
+    [IO.File]::WriteAllText($nextFile, "$next`n", [Text.Encoding]::ASCII)
+    [IO.File]::Replace($nextFile, $versionFile, $backupFile)
+}
+Write-Host "Versione build: $next$(if ($noBumpRequested) { ' (senza bump)' })"
 } finally {
  $lock.Dispose()
  if (Test-Path -LiteralPath $assemblyInfo) { Remove-Item -LiteralPath $assemblyInfo -Force }

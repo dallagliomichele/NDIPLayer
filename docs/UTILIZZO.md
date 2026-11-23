@@ -2,6 +2,8 @@
 
 ## Avvio e preparazione
 
+In **Impostazioni > Video e NDI** puoi attivare la modalità scura, che comprende anche gli elenchi di asset e blocchi. La scelta viene salvata nelle preferenze locali della postazione. Stato NDI, nome del flusso e pulsante di avvio/arresto si trovano sopra ciascun monitor. Quando il rispettivo flusso è spento o in errore, lo sfondo è nero e la cornice del fotogramma è verde per Preview o rossa per Program. Quando è attivo, lo sfondo assume quel colore e la cornice del fotogramma scompare. Questi colori non vengono trasmessi via NDI.
+
 1. Su Windows 10/11 x64 installa l'app con `NDIPlayer-<versione>-Setup-win-x64.exe`. Sono richiesti .NET Framework 4.8 e NDI Runtime 6; il setup avvia l'installazione del runtime se necessario.
 2. Apri **NDIPlayer** e scegli **Apri cartella**. La libreria mostra immagini supportate e video `.mov`; **Aggiorna** ripete la scansione.
 3. Imposta formato, fps e nomi dei due flussi nelle **Impostazioni**. Avvia **Program** per la messa in onda e, se serve, **Preview** per la regia. Cerca le sorgenti NDI dal ricevitore WATCHOUT.
