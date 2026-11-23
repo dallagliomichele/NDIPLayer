@@ -79,8 +79,12 @@ if ($VideoArchive) {
         throw 'Preparazione archivio FFmpeg fallita'
     }
 }
-$buildArgs = if ($noBumpRequested) { @('--no-bump') } else { @('-VersionIncrement', $increment) }
-& (Join-Path $PSScriptRoot 'build.ps1') @buildArgs
+$buildScript = Join-Path $PSScriptRoot 'build.ps1'
+if ($noBumpRequested) {
+    & $buildScript --no-bump
+} else {
+    & $buildScript -VersionIncrement $increment
+}
 if ($LASTEXITCODE -ne 0) {
     throw 'Compilazione applicazione fallita'
 }
