@@ -5,8 +5,10 @@
 In **Impostazioni > Video e NDI** puoi attivare la modalità scura, che comprende anche gli elenchi di asset e blocchi. La scelta viene salvata nelle preferenze locali della postazione. Stato NDI, nome del flusso e pulsante di avvio/arresto si trovano sopra ciascun monitor. Quando il rispettivo flusso è spento o in errore, lo sfondo è nero e la cornice del fotogramma è verde per Preview o rossa per Program. Quando è attivo, lo sfondo assume quel colore e la cornice del fotogramma scompare. Questi colori non vengono trasmessi via NDI.
 
 1. Su Windows 10/11 x64 installa l'app con `NDIPlayer-<versione>-Setup-win-x64.exe`. Sono richiesti .NET Framework 4.8 e NDI Runtime 6; il setup avvia l'installazione del runtime se necessario.
-2. Apri **NDIPlayer** e scegli **Apri cartella**. La libreria mostra immagini supportate e video `.mov`; **Aggiorna** ripete la scansione.
+2. Apri **NDIPlayer** e scegli **Apri cartella > Sfoglia…**. La libreria mostra immagini supportate e video `.mov`. Il pallino rosso nella barra Libreria segnala file aggiunti, modificati o rimossi nella cartella sorgente. Passa sul pallino per vedere il numero di percorsi interessati, poi premi **Aggiorna** per applicare le modifiche.
 3. Imposta formato, fps e nomi dei due flussi nelle **Impostazioni**. Avvia **Program** per la messa in onda e, se serve, **Preview** per la regia. Cerca le sorgenti NDI dal ricevitore WATCHOUT.
+
+Nel menu **Apri cartella** puoi aggiungere la cartella corrente ai preferiti o rimuoverla. I preferiti sono salvati sulla postazione e disponibili anche in **Ricollega cartella**.
 
 ## Messa in onda
 
@@ -18,6 +20,10 @@ In **Impostazioni > Video e NDI** puoi attivare la modalità scura, che comprend
 ## Organizzazione e progetti
 
 Crea blocchi, aggiungi file, riordinali, cerca nel blocco e assegna numeri di richiamo per file. **Salva progetto** crea un `.ndiproj` con playlist e impostazioni; i file multimediali rimangono nella cartella originale. Quando sposti la libreria su un altro PC, conserva i percorsi relativi oppure usa **Ricollega cartella**. Aprire un progetto o cambiare selezione non manda automaticamente un nuovo file in onda.
+
+**Ctrl+A** seleziona gli asset visibili del blocco corrente, rispettando il filtro **Cerca**, e lascia in Preview l’asset già caricato. Nell’area vuota dell’elenco o delle miniature, il primo clic torna a quell’asset e il secondo svuota la Preview. Nei campi di testo Ctrl+A seleziona il testo.
+
+Con il tasto destro su un asset, **Crea copia** aggiunge un’istanza nella libreria e, se sei in un blocco, la inserisce subito dopo l’originale. Parte dalle stesse regolazioni e puoi cambiare scala, posizione, loop, punti video, Autostart, velocità e gain separatamente. Assegna alla copia un numero di richiamo dal menu contestuale. Originale e copia leggono lo stesso file. I progetti con copie usano il formato `.ndiproj` versione 3.
 
 ## Video, audio e Companion
 

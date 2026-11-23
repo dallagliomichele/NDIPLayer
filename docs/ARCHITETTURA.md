@@ -32,7 +32,7 @@ Il monitor Program visualizza i frame che il sender locale ha accettato; non ric
 | --- | --- | --- |
 | Interfaccia e stato | `src/App.cs`, `ShellUi.cs`, `WindowPlacement.cs`, `CountdownUi.cs` | Finestra principale, controlli, timer UI e preferenze locali. `MainWindow` è una classe `partial` divisa tra più file. |
 | Libreria e rendering | `Core.cs`, `GpuRenderer.cs`, `LibraryBrowser.cs`, `LibraryNavigation.cs`, `LibraryActions.cs`, `PreviewCanvas.cs`, `ImageNumbers.cs` | Scansione, filtri, blocchi, miniature, trasformazioni e frame BGRA. GDI+ decodifica le immagini; Direct3D 11 compone immagini e dissolvenze sulla GPU. |
-| Progetti | `Projects.cs`, `ProjectUi.cs` | Serializzazione JSON `.ndiproj` versione 2, percorsi relativi quando possibile, backup `.bak` e ricollegamento cartella. Le immagini restano esterne al progetto. |
+| Progetti | `Projects.cs`, `ProjectUi.cs` | Serializzazione JSON `.ndiproj` versioni 2 e 3 (con copie asset), percorsi relativi quando possibile, backup `.bak` e ricollegamento cartella. Le immagini restano esterne al progetto. |
 | Video | `Video.cs`, `VideoClock.cs`, `VideoUi.cs` | Processi `ffmpeg.exe`/`ffprobe.exe`, decodifica MOV, loop, durata e countdown. Program e Preview possono avere decoder distinti. |
 | NDI | `Ndi.cs`, `PreviewOutput.cs` | Binding P/Invoke al runtime NDI nativo, due sender, thread di playout, transizioni, clear trasparente e snapshot del frame inviato. |
 | Audio | `AudioModel.cs`, `AudioDecoder.cs`, `AudioEngine.cs`, `AudioDevices.cs`, `AudioUi.cs` | Decodifica audio, mix e dissolvenze, gain/mute, vumeter e uscite locali tramite NAudio. |

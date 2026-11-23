@@ -20,9 +20,9 @@ public partial class MainWindow {
  bool SelectNumber(string number,out string message){
   message="";if(number.Length==0){message="Digita un numero";return false;}
   System.Collections.Generic.List<string> matches;
-  try{matches=ImageNumbers.Find(settings,ActiveBlock==null?catalog.Concat(settings.Blocks.SelectMany(b=>b.Files)):ActiveBlock.Files,number);}catch(ArgumentException){message="Solo cifre (massimo 9)";return false;}
+  try{matches=ImageNumbers.Find(settings,ActiveBlock==null?AllAssetKeys():ActiveBlock.Files,number);}catch(ArgumentException){message="Solo cifre (massimo 9)";return false;}
   if(matches.Count!=1){message=matches.Count==0?"Numero assente nel blocco":"Numero duplicato: correggi le assegnazioni";return false;}
-  string path=matches[0];if(!System.IO.File.Exists(path)||!Library.Displayable(path)){message="File non disponibile";return false;}
+  string path=matches[0];if(!System.IO.File.Exists(SourcePath(path))||!Library.Displayable(SourcePath(path))){message="File non disponibile";return false;}
   recallingNumber=true;try{if(search.Text.Length>0)search.Clear();RefreshVisible();files.SelectPaths(new[]{path});}finally{recallingNumber=false;}
   bool valid=String.Equals(selected,path,StringComparison.OrdinalIgnoreCase)&&pending!=null&&selectedSource!=null;if(!valid)message="Immagine non leggibile";return valid;
  }

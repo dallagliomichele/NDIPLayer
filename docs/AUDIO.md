@@ -15,7 +15,7 @@ La configurazione delle uscite si cambia con Program vuoto, per evitare riapertu
 
 ## Uso
 
-- Seleziona un video e imposta **Gain video dB** da −60 a +12 dB. Il valore appartiene al file ed è condiviso dalle sue occorrenze nei blocchi. Viene salvato nel progetto e aggiornato anche se il file è già in riproduzione.
+- Seleziona un video e imposta **Gain video dB** da −60 a +12 dB. Il valore appartiene all’asset ed è condiviso dalle sue occorrenze nei blocchi. Le istanze create con **Crea copia** hanno un gain proprio. Viene salvato nel progetto e aggiornato anche se il file è già in riproduzione.
 - **Mute Program** e **Mute Preview** agiscono separatamente, mantenendo la riproduzione sincronizzata. Preview riparte dalla selezione e non è un ritorno del Program.
 - Pausa e riavvio controllano anche l'audio del rispettivo monitor. Cambiare **Velocità video ×** riavvia video e audio della Preview e attiva **Mute Preview**; puoi disattivarlo manualmente. L'audio viene adattato alla velocità selezionata e Program la usa al prossimo invio.
 - L'audio segue Loop e le dissolvenze del video. A fine video senza Loop diventa silenzioso mentre resta l'ultimo fotogramma. Un video senza traccia audio resta silenzioso.

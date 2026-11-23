@@ -7,7 +7,7 @@ namespace ImageNdi {
 public interface IAudioSink:IDisposable {int Channels {get;}string Name {get;}string Error {get;}double PositionSeconds {get;}void Start(IWaveProvider provider);void Stop();}
 public sealed class AudioVoice {
  public readonly string Path;public readonly AudioBus Bus;public readonly AudioDecoder Decoder;public long StartFrame;public volatile float TargetGain;float currentGain,gainEnd;int ramp;volatile AudioEnvelope envelope;public bool Attached;int retired;float[] scratch=new float[0];volatile bool paused;
- public AudioVoice(AudioBus bus,string path,bool loop,double gain,double speed=1,double startSeconds=0,double outSeconds=0){Bus=bus;Path=path;TargetGain=currentGain=gainEnd=(float)Math.Pow(10,gain/20);Decoder=new AudioDecoder(path,loop,speed,startSeconds,outSeconds);}
+ public AudioVoice(AudioBus bus,string path,bool loop,double gain,double speed=1,double startSeconds=0,double outSeconds=0,string assetKey=null){Bus=bus;Path=assetKey??path;TargetGain=currentGain=gainEnd=(float)Math.Pow(10,gain/20);Decoder=new AudioDecoder(path,loop,speed,startSeconds,outSeconds);}
  public void SetPaused(bool value){Bus.Engine.SetVoicePaused(this,value);}
  internal void ApplyPaused(bool value){paused=value;}
  public double Activate(double fade){Bus.Engine.Attach(this,fade);return Math.Max(0,StartFrame/(double)AudioDecoder.Rate-Bus.Engine.PresentationSeconds);}
@@ -23,7 +23,7 @@ public sealed class AudioVoice {
 public sealed class AudioBus {
  public readonly AudioRoute Route;public readonly AudioEngine Engine;public readonly AudioMeter Meter=new AudioMeter();public volatile bool Muted;
  internal AudioBus(AudioEngine engine,AudioRoute route){Engine=engine;Route=route.Copy();Muted=route.Muted;}
- public AudioVoice Prepare(string path,bool loop,double gain,double speed=1,double startSeconds=0,double outSeconds=0){return new AudioVoice(this,path,loop,gain,speed,startSeconds,outSeconds);}
+ public AudioVoice Prepare(string path,bool loop,double gain,double speed=1,double startSeconds=0,double outSeconds=0,string assetKey=null){return new AudioVoice(this,path,loop,gain,speed,startSeconds,outSeconds,assetKey);}
  public string Error {get{return Engine.BusError(this);}}
 }
 public sealed class AudioEngine:IWaveProvider,IDisposable {

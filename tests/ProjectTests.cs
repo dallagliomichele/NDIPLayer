@@ -31,11 +31,25 @@ static class ProjectTests {
    string moved=Path.Combine(dir,"postazione2");Directory.CreateDirectory(moved);string movedProject=Path.Combine(moved,"show.ndiproj");File.Copy(project,movedProject);var portable=ProjectStore.Read(movedProject);check(portable.Root==Path.Combine(moved,"assets")&&portable.Blocks[0].Files.All(p=>p.StartsWith(moved,StringComparison.OrdinalIgnoreCase)),"progetto copiato risolve immagini rispetto alla nuova cartella");
    ProjectStore.Write(project,restored);check(File.Exists(project+".bak"),"salvataggio sostitutivo conserva backup precedente");
    string relocated=Path.Combine(dir,"altro");ProjectStore.Relocate(restored,relocated);check(restored.Root==relocated&&restored.Images.ContainsKey(Path.Combine(relocated,"Foto 00.png"))&&restored.Blocks[1].Files[0]==Path.Combine(relocated,"Foto 06.png"),"ricollegamento cartella aggiorna playlist e posizioni insieme");
+   var copies=ProjectStore.Read(project);copies.VideoCues[paths[0]]=new VideoCue{InSeconds=1,OutSeconds=3,AutoStart=false};
+   copies.AudioGains[paths[0]]=-6;copies.VideoSpeeds[paths[0]]=2;
+   string copy=ProjectStore.CopyAsset(copies,paths[0]);var copyBlock=copies.Blocks[0];
+   check(copyBlock.Files.IndexOf(copy)==copyBlock.Files.IndexOf(paths[0])+1&&ProjectStore.SourcePath(copies,copy)==paths[0]&&!copyBlock.Numbers.ContainsKey(copy),"copia nello stesso blocco con sorgente condivisa e numero libero");
+   copies.Images[copy].Scale=.5;copies.VideoCues[copy].InSeconds=2;
+   check(copies.Images[paths[0]].Scale==.75&&copies.VideoCues[paths[0]].InSeconds==1&&copies.AudioGains[copy]==-6&&copies.VideoSpeeds[copy]==2,"copia inizializza regolazioni indipendenti");
+   string copyProject=Path.Combine(dir,"copies.ndiproj");ProjectStore.Write(copyProject,copies);
+   copies=ProjectStore.Read(copyProject);ProjectStore.Relocate(copies,relocated);
+   check(copies.Blocks[0].Files.Contains(copy)&&copies.Images[copy].Scale==.5&&copies.VideoCues[copy].InSeconds==2&&ProjectStore.SourcePath(copies,copy)==Path.Combine(relocated,"Foto 00.png"),"copia conserva identità e regolazioni dopo salvataggio e ricollegamento");
    string bad=Path.Combine(dir,"bad.ndiproj");File.WriteAllText(bad,"{\"Version\":99,\"Data\":{}}");bool rejected=false;try{ProjectStore.Read(bad);}catch(InvalidDataException){rejected=true;}check(rejected,"versione progetto sconosciuta rifiutata");
    using(var browser=new LibraryBrowser()){
     browser.Size=new Size(520,500);var handle=browser.Handle;browser.SetPreferences(false,128);browser.SetFiles(paths.Take(3).ToList());browser.SelectPaths(new[]{paths[1],paths[2]});browser.SetOnAir(new OnAirStatus{Paths=new[]{paths[0]}});
     check(browser.SelectedPaths.Count==2&&browser.IndicatorsFor(paths[0])=="IN ONDA"&&browser.IndicatorsFor(paths[1])=="SELEZIONATA","indicatori distinguono selezione multipla e immagine in onda");
     browser.SelectPaths(new[]{paths[0]});check(browser.IndicatorsFor(paths[0]).Contains("SELEZIONATA")&&browser.IndicatorsFor(paths[0]).Contains("IN ONDA"),"stessa immagine può essere selezionata e in onda");
+    browser.SelectPaths(new[]{paths[1]});int changes=0;browser.SelectionChanged+=delegate{changes++;};
+    var listView=browser.Controls.OfType<BrowserListView>().Single();
+    check(browser.NavigateKey(Keys.Control|Keys.A)&&browser.SelectedPaths.Count==3&&browser.SelectedPath==paths[1]&&changes==0,"Ctrl+A seleziona la vista senza cambiare Preview");
+    check(listView.BeforeLeftClick(new Point(20,350))&&browser.SelectedPaths.SequenceEqual(new[]{paths[1]})&&changes==0,"clic fuori riduce alla selezione precedente senza cambiare Preview");
+    check(!listView.BeforeLeftClick(new Point(20,350)),"secondo clic fuori delega la deselezione alla ListView");
     if(ProofPath!=null){using(var proof=new Bitmap(1040,500)){using(var g=Graphics.FromImage(proof)){
      using(var detail=new Bitmap(520,500)){browser.DrawToBitmap(detail,new Rectangle(0,0,520,500));g.DrawImageUnscaled(detail,0,0);}
      browser.SetPreferences(true,128);ListView native=null;foreach(Control child in browser.Controls)if(child is ListView)native=(ListView)child;var firstItem=native.Items[0];var deadline=DateTime.UtcNow.AddSeconds(3);while(native.Items[0].ImageIndex==0&&DateTime.UtcNow<deadline){Application.DoEvents();Thread.Sleep(10);}
@@ -55,6 +69,11 @@ static class ProjectTests {
    string prefs=Path.Combine(dir,"prefs.json");File.WriteAllText(prefs,new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(settings));
    using(var window=new MainWindow(prefs)){
     var browser=(LibraryBrowser)Get(window,"files");var handle=browser.Handle;foreach(Control child in browser.Controls)if(child is ListView){var native=child.Handle;}Call(window,"Scan");
+    var dot=(Label)Get(window,"folderNotification");string incoming=Path.Combine(assets,"nuova.png");
+    File.Copy(paths[0],incoming);File.AppendAllText(paths[1],"modifica");File.WriteAllText(Path.Combine(assets,"ignorato.txt"),"test");
+    check(SpinWait.SpinUntil(()=>{Call(window,"UpdateFolderNotification");return dot.AccessibleDescription=="2 file da aggiornare";},4000)&&!((List<string>)Get(window,"catalog")).Contains(incoming),"watcher conta aggiunte e modifiche senza aggiornare il catalogo");
+    Call(window,"Scan");
+    check(dot.AccessibleDescription=="0 file da aggiornare"&&((List<string>)Get(window,"catalog")).Contains(incoming),"Aggiorna acquisisce i file e azzera il conteggio");
     var probe2=new Probe();var output=new Playout(probe2,128,72,50);try{
      Set(window,"outW",128);Set(window,"outH",72);Set(window,"output",output);output.Cue(new byte[128*72*4],0,paths[0]);check(SpinWait.SpinUntil(()=>output.ReadOnAirStatus().Paths.Contains(paths[0]),2000),"prova integrazione ha una foto già in onda");
      var list=(ListBox)Get(window,"blockList");list.SelectedIndex=2;((TextBox)Get(window,"search")).Text="Foto 07";

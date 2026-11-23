@@ -6,6 +6,9 @@ using System.Windows.Forms;
 
 namespace ImageNdi {
 public partial class MainWindow {
+ string SourcePath(string key){return ProjectStore.SourcePath(settings,key);}
+ string AssetTitle(string key){return ProjectStore.AssetTitle(settings,key);}
+ System.Collections.Generic.IEnumerable<string> AllAssetKeys(){return catalog.Concat(settings.AssetCopies.Keys).Concat(settings.Blocks.SelectMany(b=>b.Files));}
  void InitializeLibraryActions(){files.ContextRequested+=delegate(object sender,LibraryContextEventArgs e){BuildImageMenu(e);};}
  void AddImagesToBlock(PlaylistBlock block,string[] paths){ProjectStore.AddFiles(block,paths);RefreshBlocks();RefreshVisible();files.SelectPaths(paths);Save();status.Text="Foto aggiunte al blocco «"+block.Name+"».";}
  void SetImageNumber(string path,string value){ImageNumbers.Set(settings,path,value);RefreshVisible();files.SelectPaths(new[]{path});Save();}
@@ -16,8 +19,12 @@ public partial class MainWindow {
   foreach(var block in settings.Blocks){var target=block;var item=new ToolStripMenuItem(block.Name){Tag=block.Id};item.Click+=delegate{AddImagesToBlock(target,request.Paths);};add.DropDownItems.Add(item);}
   if(add.DropDownItems.Count>0)add.DropDownItems.Add(new ToolStripSeparator());
   var create=new ToolStripMenuItem("Nuovo blocco…"){Name="AddToNewBlock"};create.Click+=delegate{string name=AskText("Nuovo blocco","Nome del blocco","");if(String.IsNullOrWhiteSpace(name))return;AddImagesToBlock(ProjectStore.AddBlock(settings,name),request.Paths);};add.DropDownItems.Add(create);request.Menu.Items.Add(add);
-  string path=request.FocusedPath;string number;ImageNumbers.Scope(settings).TryGetValue(path,out number);
-  var edit=new ToolStripMenuItem(request.Paths.Length==1?(ActiveBlock==null?"Numero in Tutta la libreria…":"Numero nel blocco «"+ActiveBlock.Name+"»…"):"Numero per «"+Path.GetFileName(path)+"»…"){Name="EditImageNumber"};edit.Click+=delegate{string value=AskText("Numero foto","Numero di riferimento (vuoto per rimuovere)",number??"");if(value==null)return;try{SetImageNumber(path,value);}catch(ArgumentException error){MessageBox.Show(error.Message,"Numero foto");}};request.Menu.Items.Add(edit);
+  string path=request.FocusedPath;
+  var copy=new ToolStripMenuItem("Crea copia"){Name="CopyAsset",Enabled=File.Exists(SourcePath(path))};
+  copy.Click+=delegate{string key=ProjectStore.CopyAsset(settings,path);RefreshBlocks();search.Clear();RefreshVisible();files.SelectPaths(new[]{key});Save();status.Text="Creata "+AssetTitle(key);};
+  request.Menu.Items.Add(copy);
+  string number;ImageNumbers.Scope(settings).TryGetValue(path,out number);
+  var edit=new ToolStripMenuItem(request.Paths.Length==1?(ActiveBlock==null?"Numero in Tutta la libreria…":"Numero nel blocco «"+ActiveBlock.Name+"»…"):"Numero per «"+AssetTitle(path)+"»…"){Name="EditImageNumber"};edit.Click+=delegate{string value=AskText("Numero foto","Numero di riferimento (vuoto per rimuovere)",number??"");if(value==null)return;try{SetImageNumber(path,value);}catch(ArgumentException error){MessageBox.Show(error.Message,"Numero foto");}};request.Menu.Items.Add(edit);
   var automatic=new ToolStripMenuItem("Numera automaticamente la selezione"){Name="AutoNumberImages",Enabled=request.Paths.Length>0};automatic.Click+=delegate{try{int count=ImageNumbers.AutoNumber(settings,request.Paths);RefreshVisible();files.SelectPaths(request.Paths);Save();status.Text=count+" file numerati nell'ordine visualizzato ("+(ActiveBlock==null?"Tutta la libreria":ActiveBlock.Name)+").";}catch(ArgumentException error){MessageBox.Show(error.Message,"Numerazione automatica");}};request.Menu.Items.Add(automatic);
   var from=new ToolStripMenuItem("Numera partendo da…"){Name="NumberImagesFrom",Enabled=request.Paths.Length>0};from.Click+=delegate{ShowNumberStartDialog(request.Paths);};request.Menu.Items.Add(from);
   var removeSelected=new ToolStripMenuItem("Rimuovi numeri dalla selezione"){Name="RemoveSelectedImageNumbers",Enabled=request.Paths.Any(p=>ImageNumbers.Scope(settings).ContainsKey(p))};removeSelected.Click+=delegate{int count=ImageNumbers.RemoveSelected(settings,request.Paths);RefreshVisible();files.SelectPaths(request.Paths);Save();status.Text="Numerazione rimossa da "+count+" file nel blocco corrente.";};request.Menu.Items.Add(removeSelected);

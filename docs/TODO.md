@@ -6,13 +6,13 @@ Performance
 
 Funzionalità
 
-- aggiungiamo un watcher per la cartella osservata, non aggironiamo automaticamente ma segnaliamo con un pallino notifica rosso che la cartella è cambiata, il tooltip segnalerà quanti file ci sono da aggiornare
-- aggiunta shortcut ctrl+a per selezionare tutti gli asset del corrente blocco (l'asset correntemente selezionato e mandato in preview nn cambia, e se l'utente clicca altrove per deselezionare si ritorna alla selezione unica, se clicca un'altra volta si deseleziona anche il contenuto in preview come ora)
-- nel menu di scelta della cartella sorgente "browse for folder" visualizziamo anche cartelle preferite?
+- [x] Monitoraggio della cartella sorgente con pallino rosso e conteggio dei file da aggiornare. Scansione applicata con Aggiorna.
+- [x] Ctrl+A seleziona gli asset visibili del blocco corrente mantenendo la Preview. Un clic nell’area vuota ripristina la selezione singola, il secondo la cancella.
+- [x] Cartelle preferite nei menu Apri cartella e Ricollega cartella.
 - [x] Seek dei video e punti di entrata e uscita salvati per file; il Program riproduce il tratto impostato.
 - [x] Autostart per file video: se disattivato, Program si prepara sul frame di entrata e parte con Play.
 - [x] In Impostazioni > Video e NDI, "Copia risoluzione Preview" legge una volta le dimensioni originali dell'asset selezionato e le applica al formato NDI.
--aggiungiamo una voce al menù contestuale che si apre clickando col bottone destro su un asset: "crea copia" -> dovrebbe creare un'istanza dell'asset a cui possiamo associare altre impostazioni, senz aper forza creare una copia del file su disco. In questo modo possiamo avere un asset settato ad esempio su zoom 50% e una sua versione con zoom 100%
+- [x] Crea copia nel menu contestuale di un asset, con impostazioni indipendenti e lo stesso file sorgente.
 
 
 
