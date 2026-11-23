@@ -17,3 +17,8 @@ Questa è una lista di possibili sviluppi ricavati dai limiti dichiarati nel rep
 Valutare priorità e requisiti con l'uso reale prima di implementarli. Per la verifica dell'attuale procedura di build e della documentazione vedere [PROBLEMI.md](PROBLEMI.md).
 
 
+- nel menu impostazioni, al tab "video e ndi" aggiungiamo un tasto "copia risoluzione preview" collegato a una funzione che legge l'attuale contenuto dalla preview (una volta sola sulal preview corrente) e lo applica alle dimensioni del flusso NDI
+- aggiungiamo i tooltip a tutti i bottoni, si attivano dopo 2s di mouse over
+- modalità dark selezionabie nelle impostazioni
+- estendiamo il colore rosso del program a tutto il frame program e il colore verde a tutto il frame preview
+- aggiunta shortcut ctrl+a per selezionare tutti gli asset del corrente blocco (l'asset correntemente selezionato e mandato in preview nn cambia, e se l'utente clicca altrove per deselezionare si ritorna alla selezione unica, se clicca un'altra volta si deseleziona anche il contenuto in preview come ora)
