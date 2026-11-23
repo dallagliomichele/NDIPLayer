@@ -5,7 +5,6 @@ Performance
 - Verificare la possibilità di fare cache dei thumbnail ed evitare i falsh da refresh con molti asset
 
 Funzionalità
-
 - [x] Monitoraggio della cartella sorgente con pallino rosso e conteggio dei file da aggiornare. Scansione applicata con Aggiorna.
 - [x] Ctrl+A seleziona gli asset visibili del blocco corrente mantenendo la Preview. Un clic nell’area vuota ripristina la selezione singola, il secondo la cancella.
 - [x] Cartelle preferite nei menu Apri cartella e Ricollega cartella.
@@ -21,6 +20,9 @@ GUI
 - [x] Fascia superiore dei monitor con stato NDI e pulsante di avvio/arresto.
 - [x] Pulsanti delle righe superiori allineati.
 - [x] Cornice rossa del Program e verde della Preview estesa ai monitor.
+- aggiungere alla fine della riga "libreria" il nome della cartella corrente
+- lanciare un alert pop-up alla chiusura "sei sicuro?"
+- spostare i VU meter laterlamente per sfruttare meglio lo spazio
 
 Documentazione
 - aggiungiamo i tooltip a tutti i bottoni, si attivano dopo 2s di mouse over
