@@ -61,7 +61,7 @@ Il divisorio orizzontale tra Preview e Program si trascina per assegnare spazio 
 
 ## Novità 0.12.3 · Disposizione monitor
 
-Preview sopra e Program sotto, ciascuno con il proprio vumeter; countdown nel riquadro Program. La posizione del divisorio tra libreria e monitor viene salvata insieme alla finestra e ripristinata sulla stessa configurazione monitor, limitandola allo spazio disponibile. Queste preferenze restano locali e indipendenti dal progetto.
+Preview sopra e Program sotto, ciascuno con il proprio vumeter laterale; countdown nel riquadro Program. La posizione del divisorio tra libreria e monitor viene salvata insieme alla finestra e ripristinata sulla stessa configurazione monitor, limitandola allo spazio disponibile. Queste preferenze restano locali e indipendenti dal progetto.
 
 ## Novità 0.12.2 · Posizione finestra
 
@@ -98,7 +98,7 @@ Il catalogo include `.mov`, anche nelle sottocartelle e nei blocchi. Miniature, 
 
 - Seleziona il video: l'anteprima parte automaticamente. Se Preview NDI è acceso, invia questa riproduzione alla regia.
 - **Loop video**: ripete il clip senza scadenza; la scelta è salvata per file insieme a scala e posizione. Disattivato: alla fine resta l'ultimo fotogramma. Il cambio Loop in anteprima viene applicato a Program al prossimo invio.
-- Nei monitor Preview e Program, in basso a destra e in linea con il vumetro (che si restringe per fare posto), i comandi agiscono indipendentemente sul rispettivo video: **play/pausa** congela o riprende video e audio; **riavvia** torna al primo fotogramma, mantenendo la pausa se attiva. I comandi sono sempre visibili e si attivano quando il monitor riproduce un MOV.
+- Nei monitor Preview e Program, nel pannello a destra, sotto il vumetro, i comandi agiscono indipendentemente sul rispettivo video: **play/pausa** congela o riprende video e audio; **riavvia** torna al primo fotogramma, mantenendo la pausa se attiva. I comandi sono sempre visibili e si attivano quando il monitor riproduce un MOV.
 - Il selettore **Velocità video ×** nella barra comandi in basso (accanto a Gain video dB) va da 0,5× a 5×, con passi di 0,1×; il valore è salvato nel progetto per ciascun video. Agisce sul video in Preview: cambiarlo lo riavvia dall'inizio, mantenendo l'eventuale pausa, e attiva **Mute Preview** (disattivabile a mano). Program non cambia mentre è in onda: usa la velocità salvata al prossimo invio.
 - **INVIA / Invio / doppio clic**: avvia una riproduzione Program indipendente, sempre dall'inizio, con la transizione impostata. Passare a un altro blocco/file lascia il video in onda invariato.
 - Scala, centro X/Y, trascinamento e rotellina funzionano come per le foto. Le modifiche preparano l'anteprima; per applicarle a Program occorre inviare nuovamente. Dopo una regolazione l'anteprima video riparte dall'inizio, con un breve ritardo per evitare di riavviare il decoder a ogni movimento del mouse.
@@ -200,7 +200,7 @@ Non c'è avanzamento automatico né temporizzazione delle playlist in questa ver
 
 **Doppio clic per andare in onda:** con Program già avviato, fai doppio clic sinistro sul file nell'elenco, sulla miniatura oppure dentro il fotogramma del riquadro **SELEZIONE**. Viene inviata l'immagine selezionata con scala/posizione correnti e con il cut o la dissolvenza impostati, esattamente come con INVIA. Il clic singolo prepara solo la selezione; il doppio clic fuori dal fotogramma, nel riquadro Programma o nell'area vuota della libreria non invia nulla. Se Program è fermo o l'immagine non è leggibile, viene mostrato lo stato e non viene avviato un nuovo flusso automaticamente.
 
-**Novità 0.10.0:** nell'anteprima **SELEZIONE** puoi spostare l'immagine trascinando con il tasto sinistro all'interno del bordo. La rotellina ingrandisce/riduce attorno al centro attuale dell'immagine (fattore 10% per scatto); **Maiusc + rotellina** usa il 2% per regolazioni fini. Non c'è un limite pratico allo zoom della preview. I campi numerici si aggiornano insieme al mouse e restano modificabili a mano. Nel monitor PROGRAMMA non sono disponibili trascinamento e zoom.
+**Novità 0.10.0:** nell'anteprima **SELEZIONE** puoi spostare l'immagine trascinando con il tasto sinistro all'interno del bordo. La rotellina ingrandisce/riduce attorno alla posizione del cursore (fattore 10% per scatto); **Maiusc + rotellina** usa il 2% per regolazioni fini. Non c'è un limite pratico allo zoom della preview. I campi numerici si aggiornano insieme al mouse e restano modificabili a mano. Nel monitor PROGRAMMA non sono disponibili trascinamento e zoom.
 
 I campi **Centro X / Centro Y** rappresentano ora il centro dell'immagine nelle coordinate del flusso, con origine nell'angolo in alto a sinistra: a 1920×1080 il centro iniziale è **X=960, Y=540**; a 1280×720 è **X=640, Y=360**. Reset posizione ripristina questo centro e scala 100%. Un'altezza dispari può mostrare mezzo pixel. Cambiare risoluzione conserva lo spostamento rispetto al centro del nuovo formato. Le vecchie preferenze vengono visualizzate nella nuova convenzione mantenendo invariata l'inquadratura: internamente si mantengono gli offset salvati, senza migrazioni distruttive o conversioni ripetute.
 

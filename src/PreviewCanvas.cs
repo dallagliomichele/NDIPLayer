@@ -27,7 +27,7 @@ public class PreviewCanvas:Control {
  protected override void OnMouseCaptureChanged(EventArgs e){base.OnMouseCaptureChanged(e);if(!Capture)CancelInteraction();}
  protected override void OnResize(EventArgs e){CancelInteraction();base.OnResize(e);}
  protected override void OnMouseEnter(EventArgs e){base.OnMouseEnter(e);if(InteractionEnabled&&image!=null)Focus();}
- protected override void OnMouseWheel(MouseEventArgs e){base.OnMouseWheel(e);if(!InteractionEnabled||image==null||dragging||!FrameBounds(ClientSize,frameWidth,frameHeight).Contains(e.Location))return;if(ZoomRequested!=null)ZoomRequested(this,new PreviewZoomEventArgs(e.Delta,(ModifierKeys&Keys.Shift)!=0));}
+ protected override void OnMouseWheel(MouseEventArgs e){base.OnMouseWheel(e);var frame=FrameBounds(ClientSize,frameWidth,frameHeight,ShowFooter);if(!InteractionEnabled||image==null||dragging||!frame.Contains(e.Location))return;if(ZoomRequested!=null)ZoomRequested(this,new PreviewZoomEventArgs(e.Delta,(ModifierKeys&Keys.Shift)!=0,new PointF((e.X-frame.Left)*(float)frameWidth/frame.Width,(e.Y-frame.Top)*(float)frameHeight/frame.Height)));}
  public static Rectangle FrameBounds(Size viewport,int width,int height){return FrameBounds(viewport,width,height,true);}
  public static Rectangle FrameBounds(Size viewport,int width,int height,bool showFooter){
   int availableWidth=Math.Max(0,viewport.Width-40), availableHeight=Math.Max(0,viewport.Height-(showFooter?72:48));
@@ -83,5 +83,5 @@ public sealed class VideoTransportBar:Panel {
  public void SetVideo(VideoSession video){Enabled=video!=null;play.ShowPlay=video==null||video.Paused||video.Ended;}
 }
 public sealed class PreviewDragEventArgs:EventArgs {public readonly PointF Delta;public PreviewDragEventArgs(PointF delta){Delta=delta;}}
-public sealed class PreviewZoomEventArgs:EventArgs {public readonly int Delta;public readonly bool Fine;public PreviewZoomEventArgs(int delta,bool fine){Delta=delta;Fine=fine;}}
+public sealed class PreviewZoomEventArgs:EventArgs {public readonly int Delta;public readonly bool Fine;public readonly PointF Anchor;public PreviewZoomEventArgs(int delta,bool fine,PointF anchor){Delta=delta;Fine=fine;Anchor=anchor;}}
 }

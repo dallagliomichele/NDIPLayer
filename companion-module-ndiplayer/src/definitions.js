@@ -63,7 +63,7 @@ export function buildPresets(label) {
  button('enter', 'Conferma numero in Preview', 'ENTER\nPREVIEW', 0x17436b, 'enter', {}, 'keys')
  button('backspace', 'Cancella ultima cifra', 'BACKSPACE', 0x584124, 'backspace', {}, 'keys')
  button('cancel', 'Azzera numero composto', 'CANCEL', 0x67343c, 'cancel', {}, 'keys')
- button('number_display', 'Numero composto · ultima risposta TCP', 'NUMERO\n$(' + label + ':number)', 0x152737, null, {}, 'info')
+ button('number_display', 'Numero composto dal tastierino', 'NUMERO\n$(' + label + ':number)', 0x152737, null, {}, 'info')
  button('connection_display', 'Collegamento TCP', 'TCP\n$(' + label + ':connection)', 0x65302e, null, {}, 'info')
  presets.connection_display.feedbacks = [
   { feedbackId: 'connected', options: {}, style: { bgcolor: 0x126b36, color: 0xffffff } },

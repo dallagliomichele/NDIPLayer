@@ -12,6 +12,8 @@ Funzionalità
 - [x] Autostart per file video: se disattivato, Program si prepara sul frame di entrata e parte con Play.
 - [x] In Impostazioni > Video e NDI, "Copia risoluzione Preview" legge una volta le dimensioni originali dell'asset selezionato e le applica al formato NDI.
 - [x] Crea copia nel menu contestuale di un asset, con impostazioni indipendenti e lo stesso file sorgente.
+- aggiunta comando "swap" di default ON: quando il media in preview va in program il media che era in program si sposta in preview
+
 
 
 
@@ -22,10 +24,13 @@ GUI - UX
 - [x] Cornice rossa del Program e verde della Preview estesa ai monitor.
 - [x] aggiungere alla fine della riga "libreria" il nome della cartella corrente
 - [x] lanciare un alert pop-up alla chiusura "sei sicuro?"
-- spostare i VU meter laterlamente per sfruttare meglio lo spazio
+- [x] spostare i VU meter laterlamente per sfruttare meglio lo spazio
 - [x] rendere globali gli shortcut di messa in onda (enter) e di clear (esc), ovvero indipendenti da quale parte dell'applicazione sia in focus al  momento, con l'eccezione dei campi di inserimento del testo
 - [x] aggiungere uno status "modificata" alle immagini /video nella vista elenco quando abbiamo cambiato scala o posizione o velocita etc etc. Nella vista thumbnail aggiungerei una leggera cornice arancio
 - durante il rescale dell'anteprima effettuare il rescale sulla base della posizione del mouse
+- racchiudi i comandi della barra inferiore tematicamente, e separali in frame
+- segnaliamo nell'elenco dei media se il media è un video con una leggerissima evidenziazione grigia nella riga
+- spostiamo i tasti paus a e rewind in basso a sinistra nei riquadri e facciamoli comparire solo se il media è un video, i VUmeter vanno a tutta altezza, leggermente ridotti in larghezza. 
 
 
 Documentazione

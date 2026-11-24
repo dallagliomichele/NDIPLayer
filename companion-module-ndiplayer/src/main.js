@@ -5,7 +5,7 @@ export const UpgradeScripts = []
 export default class NDIPlayerInstance extends InstanceBase {
  async init(config) {
   this.setVariableDefinitions({
-   connection: { name: 'Collegamento TCP' }, number: { name: 'Numero composto · ultima conferma TCP' },
+   connection: { name: 'Collegamento TCP' }, number: { name: 'Numero composto · tastierino' },
    last_response: { name: 'Ultima risposta TCP' }, last_command: { name: 'Ultimo comando' },
    last_error: { name: 'Ultimo errore' }, last_selected_number: { name: 'Ultimo numero selezionato con conferma' },
    last_block: { name: 'Ultimo blocco restituito da un comando' },

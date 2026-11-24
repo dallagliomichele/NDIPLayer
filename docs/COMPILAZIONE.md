@@ -43,17 +43,17 @@ Il runtime NDI e l'installer di Inno Setup vengono scaricati in `dependencies/`,
 
 ## Modulo Bitfocus Companion
 
-Con Node.js 26 e npm:
+Con Node.js 26 e npm, dalla radice del repository:
 
 ```powershell
-cd companion-module-ndiplayer
-npm ci
-npm test
-npm run package
-npm run check
-cd ..
+./build-companion.ps1
+./build-companion.ps1 --minor
+./build-companion.ps1 --major
+./build-companion.ps1 --no-bump
 ./companion-module-ndiplayer/test-integration.ps1
 ```
+
+`build-companion.ps1` esegue installazione dipendenze, test, sincronizzazione versione, packaging e verifica. Incrementa la patch per impostazione predefinita; `--minor` incrementa la versione minore e azzera la patch, `--major` incrementa la versione maggiore e azzera minore e patch. `--no-bump` usa la versione corrente. Le opzioni di incremento sono mutuamente esclusive; `--patch` è disponibile esplicitamente. La versione del modulo è indipendente da quella dell'app ed è aggiornata in `companion-module-ndiplayer/VERSION`, `package.json`, lockfile e manifest. Il pacchetto `.tgz` risultante usa il nuovo numero, così Companion accetta l'importazione come versione distinta.
 
 ## Build completa
 
@@ -76,4 +76,4 @@ Per scegliere l'incremento della versione `X.Y.Z`, specificare una sola opzione:
 
 Specificare `--no-bump` da solo, senza `--patch`, `--minor` o `--major`. Il numero in `VERSION` viene aggiornato dopo la compilazione e i test dell'applicazione, a meno che si usi `--no-bump`; un eventuale errore successivo del modulo o dell'installer non annulla l'incremento. Per condividere la versione aggiornata occorre committare `VERSION`.
 
-Il test d'integrazione richiede l'app già compilata; usa un host C# con sender simulato. Il pacchetto generato è `companion-module-ndiplayer/ndiplayer-1.1.0.tgz`. Le pipeline `.github/workflows/windows.yml` e `companion-module.yml` replicano rispettivamente build/installer e packaging/test del modulo.
+Il test d'integrazione richiede l'app già compilata; usa un host C# con sender simulato. Il pacchetto generato è `companion-module-ndiplayer/ndiplayer-<versione>.tgz`. Le pipeline `.github/workflows/windows.yml` e `companion-module.yml` replicano rispettivamente build/installer e packaging/test del modulo.

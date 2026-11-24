@@ -52,7 +52,7 @@ public partial class MainWindow:Form {
   preview.DragMoved+=delegate(object sender,PreviewDragEventArgs e){ApplyCenter(dragCenterX+(decimal)e.Delta.X,dragCenterY+(decimal)e.Delta.Y,scale.Value,false);};
   preview.DragCompleted+=delegate{pointerEditing=false;Save();};
   preview.ImageDoubleClicked+=delegate{Cue(false);};
-  preview.ZoomRequested+=delegate(object sender,PreviewZoomEventArgs e){ApplyCenter(x.Value,y.Value,PlacementCoordinates.ZoomPercent(scale.Value,e.Delta,e.Fine),true);};
+  preview.ZoomRequested+=delegate(object sender,PreviewZoomEventArgs e){decimal next=PlacementCoordinates.ZoomPercent(scale.Value,e.Delta,e.Fine);decimal ratio=next/scale.Value;ApplyCenter((decimal)e.Anchor.X+((x.Value-(decimal)e.Anchor.X)*ratio),(decimal)e.Anchor.Y+((y.Value-(decimal)e.Anchor.Y)*ratio),next,true);};
   InitializeCountdown();InitializeVideo(bottom);InitializeProjects(top,split.Panel1);
   InitializePreviewOutput(top);InitializeCompanion(top);InitializeAudio(top,bottom);InitializeShell(top,bottom);
   foreach(var n in new[]{width,height,fps,fade})n.ValueChanged+=delegate{if(!loadingProject)Save();};dissolve.CheckedChanged+=delegate{if(!loadingProject)Save();};

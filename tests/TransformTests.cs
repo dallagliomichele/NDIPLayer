@@ -46,8 +46,10 @@ static class TransformTests {
     Mouse(preview,"OnMouseDown",MouseButtons.Left,at.X,at.Y,0);Mouse(preview,"OnMouseMove",MouseButtons.Left,at.X+24,at.Y+12,0);Mouse(preview,"OnMouseUp",MouseButtons.Left,at.X+24,at.Y+12,0);
     int dx=(int)Math.Round(24*1920m/frame.Width,MidpointRounding.AwayFromZero),dy=(int)Math.Round(12*1080m/frame.Height,MidpointRounding.AwayFromZero);
     check(x.Value==960+dx&&y.Value==540+dy,"drag aggiorna campi centro X/Y");
-    Mouse(preview,"OnMouseWheel",MouseButtons.None,at.X,at.Y,120);check(scale.Value==55&&x.Value==960+dx&&y.Value==540+dy,"rotellina aggiorna scala lasciando fermo il centro ("+scale.Value+", "+x.Value+", "+y.Value+", "+frame+")");
-    saved=json.Deserialize<Settings>(File.ReadAllText(state));check(saved.Images[file].X==dx&&saved.Images[file].Y==dy&&Math.Abs(saved.Images[file].Scale-.55)<.0001,"trasformazioni mouse salvate per singola immagine");
+    decimal anchorX=(decimal)((at.X-frame.Left)*1920f/frame.Width),anchorY=(decimal)((at.Y-frame.Top)*1080f/frame.Height);
+    decimal expectedX=Math.Round(anchorX+(960+dx-anchorX)*1.1m,MidpointRounding.AwayFromZero),expectedY=Math.Round(anchorY+(540+dy-anchorY)*1.1m,MidpointRounding.AwayFromZero);
+    Mouse(preview,"OnMouseWheel",MouseButtons.None,at.X,at.Y,120);check(scale.Value==55&&x.Value==expectedX&&y.Value==expectedY,"rotellina mantiene fermo il punto sotto il cursore ("+scale.Value+", "+x.Value+", "+y.Value+", "+frame+")");
+    saved=json.Deserialize<Settings>(File.ReadAllText(state));check(saved.Images[file].X==expectedX-960&&saved.Images[file].Y==expectedY-540&&Math.Abs(saved.Images[file].Scale-.55)<.0001,"trasformazioni mouse salvate per singola immagine");
     Button reset=Find<Button>(window,"ResetPlacement");
     typeof(Button).GetMethod("OnClick",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(reset,new object[]{EventArgs.Empty});
     check(x.Value==960&&y.Value==540&&scale.Value==100,"reset ripristina centro del flusso e fit 100 percento");

@@ -5,7 +5,7 @@
   "name": "NDIPlayer",
   "shortname": "NDIPlayer",
   "description": "Controllo TCP di NDIPlayer: foto, video, blocchi, tastierino, GO, clear, play e pausa",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "license": "MIT",
   "repository": "git+https://github.com/dallagliomichele/NDIPLayer.git",
   "bugs": "https://github.com/dallagliomichele/NDIPLayer/issues",

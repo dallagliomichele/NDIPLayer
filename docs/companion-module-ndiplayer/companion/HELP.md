@@ -22,14 +22,14 @@ Riferimento: [documentazione ufficiale di importazione](https://github.com/bitfo
 - GO: manda la selezione in Program. SELECT ed ENTER non eseguono GO automaticamente.
 - CLEAR FADE: usa Clear Esc ms dell'app. CLEAR CUT: clear immediato. Lasciano NDI acceso e Preview invariata.
 - PLAY / PAUSE: riprendono o fermano il video in onda nel Program (video e audio); la Preview si controlla dall'app. Senza un video in Program rispondono ERR. PLAY su un video terminato senza Loop lo riavvia dall'inizio; PAUSE su un video terminato risponde OK senza effetti.
-- NUMERO: numero composto restituito dall'ultima conferma TCP.
+- NUMERO: numero composto con il tastierino; si azzera dopo SELECT/ENTER/CANCEL. Non è il numero dell'asset in onda: usa `program_asset_number`.
 - TCP: collegamento verde; ultimo errore rosso. Gli altri pulsanti diventano grigi quando scollegati.
 
 ## Variabili
 
 `connection`, `number`, `last_response`, `last_command`, `last_error`, `last_selected_number`, `last_block`.
 
-Descrivono le risposte ricevute da questa connessione. `?` significa dato non noto, ad esempio dopo una riconnessione. Gli interventi nell'app o da altri controller non vengono trasmessi spontaneamente al modulo. Lo stato e il countdown video sono interrogati ogni 500 ms; la foto in onda non viene esposta. Un socket collegato non conferma che Program NDI sia avviato o ricevuto da WATCHOUT.
+`number` è il numero composto con il tastierino Companion, aggiornato dalle conferme TCP e azzerato dopo SELECT/ENTER/CANCEL; non indica il numero dell'asset in onda. Per quest'ultimo usa `program_asset_number` (per l'elemento selezionato in Preview usa `preview_asset_number`). `last_selected_number` è il numero dell'ultimo SELECT confermato. `?` significa dato non noto, ad esempio dopo una riconnessione. Gli interventi nell'app o da altri controller non vengono trasmessi spontaneamente al modulo. Lo stato e il countdown video sono interrogati ogni 500 ms; la foto in onda non viene esposta. Un socket collegato non conferma che Program NDI sia avviato o ricevuto da WATCHOUT.
 
 Le notifiche in uscita da NDIPlayer verso Companion restano separate: il modulo usa solo la porta dei comandi in ingresso. Per comandare il programma non servono le due stringhe delle notifiche.
 
