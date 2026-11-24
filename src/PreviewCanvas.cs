@@ -11,6 +11,7 @@ public class PreviewCanvas:Control {
  public string Heading="SELEZIONE";
  public string Footer="Scacchiera = trasparenza · Premi INVIA per andare in onda";
  public Color BorderColor=Color.FromArgb(55,205,245);
+ public string HeadingDetail="";
  public bool InteractionEnabled;public bool ShowFooter=true;public bool ShowHeadingTitle=true;
  public event EventHandler DragStarted;
  public event EventHandler<PreviewDragEventArgs> DragMoved;
@@ -42,7 +43,7 @@ public class PreviewCanvas:Control {
   graphics.Clear(BackColor);
   var frame=FrameBounds(viewport,frameWidth,frameHeight,ShowFooter);
   if(frame.IsEmpty)return;
-  TextRenderer.DrawText(graphics,(ShowHeadingTitle?Heading+" · ":"")+frameWidth+" × "+frameHeight,Font,new Rectangle(12,8,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
+  TextRenderer.DrawText(graphics,(ShowHeadingTitle?Heading+" · ":"")+frameWidth+" × "+frameHeight+HeadingDetail,Font,new Rectangle(12,8,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
   var saved=graphics.Save();
   try {
    graphics.SetClip(frame);
@@ -74,13 +75,13 @@ sealed class TransportButton:Control {
   }
   using(var pen=new Pen(Color.FromArgb(120,120,120)))g.DrawRectangle(pen,0,0,Width-1,Height-1);}
 }
-// Sits to the right of the audio meter and stays visible (disabled) when no video is available.
+// Video controls live in the lower left corner of the monitor.
 public sealed class VideoTransportBar:Panel {
  public event EventHandler PlayPauseRequested,RestartRequested;
- readonly TransportButton play=new TransportButton(false){Name="VideoPlayPause",AccessibleName="Riproduci o metti in pausa",Bounds=new Rectangle(8,9,38,34)};
- readonly TransportButton restart=new TransportButton(true){Name="VideoRestart",AccessibleName="Riavvia video",Bounds=new Rectangle(50,9,38,34)};
- public VideoTransportBar(){Size=new Size(100,52);BackColor=Color.FromArgb(30,32,35);Enabled=false;Controls.Add(play);Controls.Add(restart);play.Click+=delegate{if(PlayPauseRequested!=null)PlayPauseRequested(this,EventArgs.Empty);};restart.Click+=delegate{if(RestartRequested!=null)RestartRequested(this,EventArgs.Empty);};}
- public void SetVideo(VideoSession video){Enabled=video!=null;play.ShowPlay=video==null||video.Paused||video.Ended;}
+ readonly TransportButton play=new TransportButton(false){Name="VideoPlayPause",AccessibleName="Riproduci o metti in pausa",Bounds=new Rectangle(8,3,38,34)};
+ readonly TransportButton restart=new TransportButton(true){Name="VideoRestart",AccessibleName="Riavvia video",Bounds=new Rectangle(50,3,38,34)};
+ public VideoTransportBar(){Size=new Size(100,40);BackColor=Color.FromArgb(30,32,35);Enabled=false;Visible=false;Controls.Add(play);Controls.Add(restart);play.Click+=delegate{if(PlayPauseRequested!=null)PlayPauseRequested(this,EventArgs.Empty);};restart.Click+=delegate{if(RestartRequested!=null)RestartRequested(this,EventArgs.Empty);};}
+ public void SetVideo(VideoSession video){Visible=video!=null;Enabled=video!=null;play.ShowPlay=video==null||video.Paused||video.Ended;}
 }
 public sealed class PreviewDragEventArgs:EventArgs {public readonly PointF Delta;public PreviewDragEventArgs(PointF delta){Delta=delta;}}
 public sealed class PreviewZoomEventArgs:EventArgs {public readonly int Delta;public readonly bool Fine;public readonly PointF Anchor;public PreviewZoomEventArgs(int delta,bool fine,PointF anchor){Delta=delta;Fine=fine;Anchor=anchor;}}

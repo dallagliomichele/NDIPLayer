@@ -28,6 +28,7 @@ public sealed partial class LibraryBrowser {
  public bool Sorted {get{return sortColumn>=0;}}
  public List<string> PathsInView {get{return new List<string>(paths);}}
  public bool Navigate(int direction){if(paths.Count==0)return false;int at=paths.FindIndex(p=>String.Equals(p,SelectedPath,StringComparison.OrdinalIgnoreCase));int next=at<0?0:at+Math.Sign(direction);if(next<0||next>=paths.Count)return false;SelectIndex(next);return true;}
+ public bool SelectPath(string path){int index=paths.FindIndex(p=>String.Equals(p,path,StringComparison.OrdinalIgnoreCase));if(index<0)return false;SelectIndex(index);return true;}
  public void SelectFirst(){if(paths.Count>0)SelectIndex(0);}
  void SelectIndex(int index){allSelected=false;view.SelectedIndices.Clear();view.SelectedIndices.Add(index);view.Items[index].Focused=true;view.EnsureVisible(index);}
  bool allSelected,updatingSelection;
