@@ -1,7 +1,7 @@
 
 Performance
 - Verificare su hardware reale WDM/WASAPI e Dante/ASIO: coppie assegnate e canali silenziosi
-- verificare decodifica e composizione dei MOV usa con ffmep (potenziali ottimizzazioni)
+- verificare decodifica e composizione dei MOV usa con ffmpeg (potenziali ottimizzazioni)
 - Verificare la possibilità di fare cache dei thumbnail ed evitare i falsh da refresh con molti asset
 
 Funzionalità
@@ -15,14 +15,18 @@ Funzionalità
 
 
 
-GUI
+GUI - UX
 - [x] Modalità scura selezionabile nelle Impostazioni e salvata localmente.
 - [x] Fascia superiore dei monitor con stato NDI e pulsante di avvio/arresto.
 - [x] Pulsanti delle righe superiori allineati.
 - [x] Cornice rossa del Program e verde della Preview estesa ai monitor.
-- aggiungere alla fine della riga "libreria" il nome della cartella corrente
-- lanciare un alert pop-up alla chiusura "sei sicuro?"
+- [x] aggiungere alla fine della riga "libreria" il nome della cartella corrente
+- [x] lanciare un alert pop-up alla chiusura "sei sicuro?"
 - spostare i VU meter laterlamente per sfruttare meglio lo spazio
+- [x] rendere globali gli shortcut di messa in onda (enter) e di clear (esc), ovvero indipendenti da quale parte dell'applicazione sia in focus al  momento, con l'eccezione dei campi di inserimento del testo
+- [x] aggiungere uno status "modificata" alle immagini /video nella vista elenco quando abbiamo cambiato scala o posizione o velocita etc etc. Nella vista thumbnail aggiungerei una leggera cornice arancio
+- durante il rescale dell'anteprima effettuare il rescale sulla base della posizione del mouse
+
 
 Documentazione
 - aggiungiamo i tooltip a tutti i bottoni, si attivano dopo 2s di mouse over

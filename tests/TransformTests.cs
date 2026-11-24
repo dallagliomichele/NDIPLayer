@@ -15,7 +15,7 @@ static class TransformTests {
   var p=PlacementCoordinates.FromCenter(1060,490,1920,1080,.5);var r=Renderer.Fit(100,100,1920,1080,p);check(r.X+r.Width/2==1060&&r.Y+r.Height/2==490,"coordinate assolute coincidono col centro renderizzato");
   var odd=PlacementCoordinates.Center(new Placement(),1920,1081);check(odd.Y==540.5f&&PlacementCoordinates.FromCenter(960,540.5m,1920,1081,1).Y==0,"centro mezzo pixel su altezza dispari senza spostamento");
   check(PlacementCoordinates.ZoomPercent(100,120,false)==110&&PlacementCoordinates.ZoomPercent(100,120,true)==102,"rotellina 10 percento e Shift 2 percento");
-  check(PlacementCoordinates.ZoomPercent(400,120,false)==400&&PlacementCoordinates.ZoomPercent(1,-120,false)==1,"rotellina rispetta limiti scala");
+  check(PlacementCoordinates.ZoomPercent(400,120,false)==440&&PlacementCoordinates.ZoomPercent(1,-120,false)==1,"rotellina scala oltre il precedente limite e conserva il minimo");
   using(var canvas=new PreviewCanvas()){
    canvas.Size=new Size(1000,700);canvas.SetFrame(new Bitmap(1920,1080),1920,1080);var frame=PreviewCanvas.FrameBounds(canvas.Size,1920,1080);Point at=new Point(frame.Left+frame.Width/2,frame.Top+frame.Height/2);int moves=0,zooms=0;PointF delta=PointF.Empty;
    canvas.DragMoved+=delegate(object sender,PreviewDragEventArgs e){moves++;delta=e.Delta;};canvas.ZoomRequested+=delegate{zooms++;};

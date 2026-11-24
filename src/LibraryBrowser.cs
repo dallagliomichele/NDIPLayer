@@ -11,6 +11,8 @@ using System.Linq;
 namespace ImageNdi {
 // Virtual items and a bounded thumbnail cache keep large folders responsive.
 public sealed partial class LibraryBrowser:UserControl {
+ public Func<string,bool> IsModified;
+ public void RefreshIndicators(){view.Invalidate();}
  const int CacheLimit=128;
  readonly BrowserListView view=new BrowserListView{Dock=DockStyle.Fill,VirtualMode=true,MultiSelect=true,HideSelection=false,ShowItemToolTips=true,AllowDrop=true,OwnerDraw=true};
  readonly ComboBox mode=new ComboBox{DropDownStyle=ComboBoxStyle.DropDownList,Width=100};
@@ -73,7 +75,7 @@ public sealed partial class LibraryBrowser:UserControl {
  public string DisplayLabel(string path){string number=NumberFor(path);return (number.Length>0?"#"+number+" · ":"")+AssetTitle(path);}
  public void SelectPaths(IEnumerable<string> selected){allSelected=false;var set=new HashSet<string>(selected,StringComparer.OrdinalIgnoreCase);view.SelectedIndices.Clear();for(int i=0;i<paths.Count;i++)if(set.Contains(paths[i]))view.SelectedIndices.Add(i);}
  public string IndicatorsFor(string path){int index=paths.FindIndex(p=>String.Equals(p,path,StringComparison.OrdinalIgnoreCase));return IndicatorsFor(path,index>=0&&view.IsIndexSelected(index));}
- string IndicatorsFor(string path,bool selected){string text=(selected?"SELEZIONATA":"")+(onAir.Contains(path)?(selected?" · ":"")+(transitioning?"IN DISSOLVENZA":"IN ONDA"):"");if(!File.Exists(SourcePath(path)))text+=(text.Length>0?" · ":"")+"FILE MANCANTE";return text;}
+ string IndicatorsFor(string path,bool selected){string text=(selected?"SELEZIONATA":"")+(onAir.Contains(path)?(selected?" · ":"")+(transitioning?"IN DISSOLVENZA":"IN ONDA"):"");if(IsModified!=null&&IsModified(path))text+=(text.Length>0?" · ":"")+"MODIFICATA";if(!File.Exists(SourcePath(path)))text+=(text.Length>0?" · ":"")+"FILE MANCANTE";return text;}
  public void SetOnAir(OnAirStatus status){var incoming=new HashSet<string>(status.Paths,StringComparer.OrdinalIgnoreCase);if(transitioning==status.Transitioning&&onAir.SetEquals(incoming))return;onAir.Clear();onAir.UnionWith(incoming);transitioning=status.Transitioning;view.Invalidate();}
  void NotifyPreferences(){if(PreferencesChanged!=null)PreferencesChanged(this,EventArgs.Empty);}
  public void SetFiles(List<string> files){if(sortColumn==2){var chosen=new HashSet<string>(SelectedPaths,StringComparer.OrdinalIgnoreCase);sortStates=files.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(p=>p,p=>IndicatorsFor(p,chosen.Contains(p)),StringComparer.OrdinalIgnoreCase);}string previous=SelectedPath;allSelected=false;view.SelectedIndices.Clear();view.VirtualListSize=0;sourceFiles=new List<string>(files);paths=OrderFiles(sourceFiles);RebuildCache();view.VirtualListSize=paths.Count;int index=previous==null?-1:paths.FindIndex(p=>String.Equals(p,previous,StringComparison.OrdinalIgnoreCase));if(index<0&&paths.Count>0)index=0;if(index>=0){view.SelectedIndices.Add(index);view.EnsureVisible(index);}view.Invalidate();}
@@ -86,6 +88,7 @@ public sealed partial class LibraryBrowser:UserControl {
  void DrawItem(object sender,DrawListViewItemEventArgs e){if(view.View==View.Details)return;string path=paths[e.ItemIndex];bool selected=view.IsIndexSelected(e.ItemIndex),live=onAir.Contains(path);using(var background=new SolidBrush(darkMode?(selected?Color.FromArgb(49,73,91):Color.FromArgb(32,34,38)):(selected?Color.FromArgb(221,241,255):Color.White)))e.Graphics.FillRectangle(background,e.Bounds);
   var icon=view.GetItemRect(e.ItemIndex,ItemBoundsPortion.Icon);int index=e.Item.ImageIndex;if(images!=null&&index>=0&&index<images.Images.Count)using(var bitmap=images.Images[index])e.Graphics.DrawImage(bitmap,icon.Left+(icon.Width-size.Value)/2,icon.Top,size.Value,size.Value);
   var label=new Rectangle(e.Bounds.Left+5,Math.Min(icon.Bottom+1,e.Bounds.Bottom-19),Math.Max(1,e.Bounds.Width-10),18);TextRenderer.DrawText(e.Graphics,DisplayLabel(path),view.Font,label,File.Exists(SourcePath(path))?(darkMode?Color.Gainsboro:Color.Black):Color.Gray,TextFormatFlags.HorizontalCenter|TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine|TextFormatFlags.VerticalCenter|TextFormatFlags.NoPadding);
+  if(IsModified!=null&&IsModified(path))using(var pen=new Pen(Color.Orange,2))e.Graphics.DrawRectangle(pen,icon.Left+1,icon.Top+1,Math.Max(1,icon.Width-3),Math.Max(1,icon.Height-3));
   if(selected)using(var pen=new Pen(Color.DeepSkyBlue,3))e.Graphics.DrawRectangle(pen,e.Bounds.Left+2,e.Bounds.Top+2,Math.Max(1,e.Bounds.Width-5),Math.Max(1,e.Bounds.Height-5));
   if(live){using(var pen=new Pen(Color.Firebrick,3))e.Graphics.DrawRectangle(pen,e.Bounds.Left+6,e.Bounds.Top+6,Math.Max(1,e.Bounds.Width-13),Math.Max(1,e.Bounds.Height-13));var tag=new Rectangle(e.Bounds.Left+7,e.Bounds.Top+7,Math.Max(1,e.Bounds.Width-14),18);e.Graphics.FillRectangle(Brushes.Firebrick,tag);TextRenderer.DrawText(e.Graphics,transitioning?"DISSOLVENZA":"IN ONDA",view.Font,tag,Color.White,TextFormatFlags.HorizontalCenter|TextFormatFlags.EndEllipsis);}
  }

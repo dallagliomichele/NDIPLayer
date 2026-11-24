@@ -8,9 +8,20 @@ Nell'interfaccia attuale, ciascun monitor ha sfondo nero e cornice colorata quan
 
 I MOV hanno ora seek in Preview, punti di entrata e uscita e Autostart per file. Il Program usa l'intervallo salvato; con Autostart spento attende Play sul primo frame. Nelle impostazioni video si può copiare la risoluzione originale dell'asset in Preview nel formato NDI, con i flussi spenti. Dettagli in [Utilizzo](docs/UTILIZZO.md).
 
-## Modulo Companion 1.0.0
+## Modulo Companion 1.1.0
 
 Modulo importabile dedicato a Companion **5.1.2**: 14 azioni (incluse PLAY e PAUSE per il video in Program), 25 preset, tastierino, feedback TCP e risposte di errore. [Guida](companion-module-ndiplayer/README.md) e [pacchetto .tgz](companion-module-ndiplayer/releases/ndiplayer-1.1.0.tgz). Il modulo controlla il ricevitore TCP già presente in NDIPlayer 0.11.1 (PLAY e PAUSE richiedono la versione con i controlli video). Sorgenti e prove sono nella cartella companion-module-ndiplayer.
+
+## Evoluzioni dalla 0.13.5 allo stato attuale
+
+Il file `VERSION` indica attualmente **0.13.12**. Le principali modifiche successive alla 0.13.5 sono:
+
+- **Video:** play/pausa e riavvio indipendenti per Preview e Program, velocità configurabile per file, seek in Preview, punti di entrata e uscita e Autostart opzionale.
+- **Rendering e formato:** composizione GPU con Direct3D 11 e ripiego su GDI+; preset di risoluzione e copia della risoluzione originale dell'asset in Preview.
+- **Interfaccia:** modalità scura, indicatori colorati dello stato NDI e controlli dei flussi sopra i rispettivi monitor.
+- **Libreria e progetti:** avviso delle modifiche alla cartella sorgente, cartelle preferite, selezione multipla e copie degli asset con regolazioni indipendenti; i progetti con copie usano il formato versione 3.
+- **Companion:** modulo 1.1.0 con stato e countdown video, feedback e variabili degli asset in Preview e Program.
+- **Build e distribuzione:** versione applicativa gestita nel file `VERSION`, script di release e preparazione delle dipendenze, aggiornamento del runtime NDI e documentazione di sviluppo riorganizzata.
 
 ## Novità 0.13.5 · Rimozione numeri e stato Program
 
@@ -189,7 +200,7 @@ Non c'è avanzamento automatico né temporizzazione delle playlist in questa ver
 
 **Doppio clic per andare in onda:** con Program già avviato, fai doppio clic sinistro sul file nell'elenco, sulla miniatura oppure dentro il fotogramma del riquadro **SELEZIONE**. Viene inviata l'immagine selezionata con scala/posizione correnti e con il cut o la dissolvenza impostati, esattamente come con INVIA. Il clic singolo prepara solo la selezione; il doppio clic fuori dal fotogramma, nel riquadro Programma o nell'area vuota della libreria non invia nulla. Se Program è fermo o l'immagine non è leggibile, viene mostrato lo stato e non viene avviato un nuovo flusso automaticamente.
 
-**Novità 0.10.0:** nell'anteprima **SELEZIONE** puoi spostare l'immagine trascinando con il tasto sinistro all'interno del bordo. La rotellina ingrandisce/riduce attorno al centro attuale dell'immagine (fattore 10% per scatto); **Maiusc + rotellina** usa il 2% per regolazioni fini. La scala resta tra 1% e 400%. I campi numerici si aggiornano insieme al mouse e restano modificabili a mano. Nel monitor PROGRAMMA non sono disponibili trascinamento e zoom.
+**Novità 0.10.0:** nell'anteprima **SELEZIONE** puoi spostare l'immagine trascinando con il tasto sinistro all'interno del bordo. La rotellina ingrandisce/riduce attorno al centro attuale dell'immagine (fattore 10% per scatto); **Maiusc + rotellina** usa il 2% per regolazioni fini. Non c'è un limite pratico allo zoom della preview. I campi numerici si aggiornano insieme al mouse e restano modificabili a mano. Nel monitor PROGRAMMA non sono disponibili trascinamento e zoom.
 
 I campi **Centro X / Centro Y** rappresentano ora il centro dell'immagine nelle coordinate del flusso, con origine nell'angolo in alto a sinistra: a 1920×1080 il centro iniziale è **X=960, Y=540**; a 1280×720 è **X=640, Y=360**. Reset posizione ripristina questo centro e scala 100%. Un'altezza dispari può mostrare mezzo pixel. Cambiare risoluzione conserva lo spostamento rispetto al centro del nuovo formato. Le vecchie preferenze vengono visualizzate nella nuova convenzione mantenendo invariata l'inquadratura: internamente si mantengono gli offset salvati, senza migrazioni distruttive o conversioni ripetute.
 

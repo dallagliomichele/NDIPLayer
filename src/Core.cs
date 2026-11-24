@@ -13,7 +13,7 @@ public static class PlacementCoordinates {
  public static PointF Center(Placement placement,int width,int height){return new PointF(width/2f+placement.X,height/2f+placement.Y);}
  public static Placement FromCenter(decimal centerX,decimal centerY,int width,int height,double scale){return new Placement{Scale=scale,X=(int)Math.Round(centerX-width/2m,MidpointRounding.AwayFromZero),Y=(int)Math.Round(centerY-height/2m,MidpointRounding.AwayFromZero)};}
  public static PointF DragDelta(Point start,Point end,Rectangle frame,int width,int height){if(frame.Width<=0||frame.Height<=0)return PointF.Empty;return new PointF((end.X-start.X)*(float)width/frame.Width,(end.Y-start.Y)*(float)height/frame.Height);}
- public static decimal ZoomPercent(decimal current,int wheelDelta,bool fine){double next=(double)current*Math.Pow(fine?1.02:1.10,wheelDelta/120.0);return Math.Max(1m,Math.Min(400m,(decimal)Math.Round(next,1)));}
+ public static decimal ZoomPercent(decimal current,int wheelDelta,bool fine){double next=(double)current*Math.Pow(fine?1.02:1.10,wheelDelta/120.0);return Math.Max(1m,Math.Min(1000000m,(decimal)Math.Round(next,1)));}
 }
 public static class Renderer {
  static readonly object GpuGate=new object();

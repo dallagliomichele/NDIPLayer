@@ -34,7 +34,6 @@ public partial class MainWindow {
   int key=(int)(keyData&Keys.KeyCode);int digit=key>=(int)Keys.D0&&key<=(int)Keys.D9?key-(int)Keys.D0:key>=(int)Keys.NumPad0&&key<=(int)Keys.NumPad9?key-(int)Keys.NumPad0:-1;
   if(digit>=0&&!own){if(!repeat){recallNumber.Text=digit.ToString();recallNumber.Focus();recallNumber.SelectionStart=recallNumber.TextLength;}return true;}
   if(keyData!=Keys.Enter)return false;
-  if(!own&&recallNumber.TextLength==0&&!(focused is PreviewCanvas)&&focused!=files&&!IsBrowserChild(focused))return false;
   if(repeat)return true;
   if(recallNumber.TextLength>0){if(!ResolveNumberRecall())return true;if(output==null||output.Error!=null){Cue(false);return true;}Cue(false);ResetNumberRecall();preview.Focus();return true;}
   if(pending!=null&&selectedSource!=null)Cue(false);return true;
