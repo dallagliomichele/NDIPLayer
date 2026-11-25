@@ -18,7 +18,7 @@ public sealed partial class LibraryBrowser:UserControl {
  readonly ComboBox mode=new ComboBox{DropDownStyle=ComboBoxStyle.DropDownList,Width=100};
  readonly TrackBar size=new TrackBar{AutoSize=false,Minimum=64,Maximum=256,Value=128,SmallChange=16,LargeChange=32,TickFrequency=64,Width=115,Height=30};
  readonly Label sizeLabel=new Label{AutoSize=true};
- readonly FlowLayoutPanel bar=new FlowLayoutPanel{Dock=DockStyle.Top,Height=96,AutoScroll=false,WrapContents=true};
+ readonly FlowLayoutPanel bar=new FlowLayoutPanel{Dock=DockStyle.Top,AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,AutoScroll=false,WrapContents=true};
  public Control Toolbar {get{return bar;}}
  readonly Dictionary<string,int> cache=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
  readonly HashSet<string> requested=new HashSet<string>(StringComparer.OrdinalIgnoreCase);

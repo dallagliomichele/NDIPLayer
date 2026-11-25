@@ -12,7 +12,7 @@ public class PreviewCanvas:Control {
  public string Footer="Scacchiera = trasparenza · Premi INVIA per andare in onda";
  public Color BorderColor=Color.FromArgb(55,205,245);
  public string HeadingDetail="";
- public bool InteractionEnabled;public bool ShowFooter=true;public bool ShowHeadingTitle=true;
+ public bool InteractionEnabled;public bool ShowFooter=true;public bool ShowHeadingTitle=true;public bool ShowResolutionText=true;
  public event EventHandler DragStarted;
  public event EventHandler<PreviewDragEventArgs> DragMoved;
  public event EventHandler DragCompleted;
@@ -43,7 +43,7 @@ public class PreviewCanvas:Control {
   graphics.Clear(BackColor);
   var frame=FrameBounds(viewport,frameWidth,frameHeight,ShowFooter);
   if(frame.IsEmpty)return;
-  TextRenderer.DrawText(graphics,(ShowHeadingTitle?Heading+" · ":"")+frameWidth+" × "+frameHeight+HeadingDetail,Font,new Rectangle(12,8,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
+  if(ShowResolutionText)TextRenderer.DrawText(graphics,(ShowHeadingTitle?Heading+" · ":"")+frameWidth+" × "+frameHeight+HeadingDetail,Font,new Rectangle(12,8,Math.Max(1,viewport.Width-24),22),Color.Gainsboro,TextFormatFlags.EndEllipsis|TextFormatFlags.NoPadding);
   var saved=graphics.Save();
   try {
    graphics.SetClip(frame);
