@@ -14,8 +14,10 @@ public static class VideoTools {
  public static string Executable {get{string path=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"video","ffmpeg.exe");if(!File.Exists(path))throw new FileNotFoundException("Componente video assente: reinstalla NDIPlayer con il nuovo installer.",path);return path;}}
  public static string Quote(string value){return "\""+value.Replace("\"","\\\"")+"\"";}
  public static Process Start(string arguments){var process=new Process{StartInfo=new ProcessStartInfo(Executable,"-hide_banner -loglevel error -nostdin -threads 2 "+arguments){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true}};process.Start();return process;}
- public static Bitmap Poster(string path){
+ public static Bitmap Poster(string path){return Poster(path,false);}
+ internal static Bitmap Poster(string path,bool lowPriority){
   using(var process=Start("-i "+Quote(path)+" -map 0:v:0 -an -sn -dn -vf \"scale=w='max(1,round(iw*sar))':h=ih,setsar=1,scale=640:640:force_original_aspect_ratio=decrease\" -frames:v 1 -c:v png -threads 1 -f image2pipe pipe:1")){
+   if(lowPriority)try{process.PriorityClass=ProcessPriorityClass.BelowNormal;}catch(System.ComponentModel.Win32Exception){}catch(InvalidOperationException){}
    var errors=process.StandardError.ReadToEndAsync();var bytes=new MemoryStream();var copy=process.StandardOutput.BaseStream.CopyToAsync(bytes);
    if(!copy.Wait(10000)){try{process.Kill();}catch(InvalidOperationException){}throw new IOException("Tempo scaduto durante la lettura del MOV.");}process.WaitForExit();
    if(process.ExitCode!=0||bytes.Length==0)throw new IOException("MOV non leggibile: "+errors.Result);bytes.Position=0;using(bytes)using(var image=Image.FromStream(bytes))return new Bitmap(image);

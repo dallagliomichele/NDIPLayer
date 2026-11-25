@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Drawing;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Linq;
@@ -20,13 +18,19 @@ public sealed partial class LibraryBrowser:UserControl {
  readonly Label sizeLabel=new Label{AutoSize=true};
  readonly FlowLayoutPanel bar=new FlowLayoutPanel{Dock=DockStyle.Top,AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,AutoScroll=false,WrapContents=true};
  public Control Toolbar {get{return bar;}}
- readonly Dictionary<string,int> cache=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
+ sealed class MemoryThumbnail {internal int Index;internal string Key;}
+ readonly Dictionary<string,MemoryThumbnail> cache=new Dictionary<string,MemoryThumbnail>(StringComparer.OrdinalIgnoreCase);
+ readonly HashSet<string> stale=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
  readonly HashSet<string> requested=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
  readonly Queue<string> order=new Queue<string>();
  readonly ContextMenuStrip imageMenu=new ContextMenuStrip{Name="ImageContextMenu"};bool contextOutside;string contextPath;
  Dictionary<string,string> numbers=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
- List<string> paths=new List<string>(); ImageList images; int generation; bool shuttingDown;
- CancellationTokenSource cancellation; BlockingCollection<string> queue;
+ List<string> paths=new List<string>(); ImageList images; bool shuttingDown;
+ readonly ThumbnailWorker thumbnails;
+ Dictionary<string,List<int>> thumbnailRows=new Dictionary<string,List<int>>(StringComparer.OrdinalIgnoreCase);
+ string thumbnailDirectory;
+ string[] thumbnailSources=new string[0];
+ bool playerIdle=true;
  public event EventHandler SelectionChanged;
  public event EventHandler ImageDoubleClicked;
  public event EventHandler PreferencesChanged;
@@ -43,6 +47,7 @@ public sealed partial class LibraryBrowser:UserControl {
  public int ThumbnailSize {get{return size.Value;}}
  public int Count {get{return paths.Count;}}
  public LibraryBrowser(){
+  thumbnails=new ThumbnailWorker(delegate{BeginInvoke((Action)ReceiveThumbnail);});
   mode.Items.AddRange(new object[]{"Elenco","Miniature"});mode.SelectedIndex=0;
   bar.Controls.Add(mode);bar.Controls.Add(new Label{Text="Dimensione",AutoSize=true,Margin=new Padding(3,8,0,0)});bar.Controls.Add(size);bar.Controls.Add(sizeLabel);
 
@@ -64,13 +69,14 @@ public sealed partial class LibraryBrowser:UserControl {
    int index=hit.Item.Index;allSelected=false;if(view.SelectedIndices.Count!=1||view.SelectedIndices[0]!=index){view.SelectedIndices.Clear();view.SelectedIndices.Add(index);}
    if(ImageDoubleClicked!=null)ImageDoubleClicked(this,EventArgs.Empty);
   };
-  mode.SelectedIndexChanged+=delegate{view.View=ThumbnailsEnabled?View.LargeIcon:View.Details;size.Enabled=ThumbnailsEnabled;NotifyPreferences();view.Invalidate();};
+  mode.SelectedIndexChanged+=delegate{view.View=ThumbnailsEnabled?View.LargeIcon:View.Details;size.Enabled=ThumbnailsEnabled;if(!ThumbnailsEnabled)ResetThumbnailRequests();UpdatePrefetch();NotifyPreferences();view.Invalidate();};
   size.ValueChanged+=delegate{sizeLabel.Text=size.Value+" px";};
-  size.MouseUp+=delegate{RebuildCache();NotifyPreferences();};
-  size.KeyUp+=delegate{RebuildCache();NotifyPreferences();};
+  size.MouseUp+=delegate{UpdateThumbnailSize();NotifyPreferences();};
+  size.KeyUp+=delegate{UpdateThumbnailSize();NotifyPreferences();};
   sizeLabel.Text="128 px";size.Enabled=false;
+  UpdateThumbnailSize();
  }
- public void SetPreferences(bool thumbnails,int pixels){size.Value=Math.Max(64,Math.Min(256,pixels));mode.SelectedIndex=thumbnails?1:0;RebuildCache();}
+ public void SetPreferences(bool thumbnails,int pixels){size.Value=Math.Max(64,Math.Min(256,pixels));UpdateThumbnailSize();mode.SelectedIndex=thumbnails?1:0;}
  public void SetNumbers(IDictionary<string,string> values){numbers=new Dictionary<string,string>(values,StringComparer.OrdinalIgnoreCase);view.Invalidate();}
  public string NumberFor(string path){string number;return numbers.TryGetValue(path,out number)?number:"";}
  public string DisplayLabel(string path){string number=NumberFor(path);return (number.Length>0?"#"+number+" · ":"")+AssetTitle(path);}
@@ -79,11 +85,38 @@ public sealed partial class LibraryBrowser:UserControl {
  string IndicatorsFor(string path,bool selected){string text=(selected?"SELEZIONATA":"")+(onAir.Contains(path)?(selected?" · ":"")+(transitioning?"IN DISSOLVENZA":"IN ONDA"):"");if(IsModified!=null&&IsModified(path))text+=(text.Length>0?" · ":"")+"MODIFICATA";if(!File.Exists(SourcePath(path)))text+=(text.Length>0?" · ":"")+"FILE MANCANTE";return text;}
  public void SetOnAir(OnAirStatus status){var incoming=new HashSet<string>(status.Paths,StringComparer.OrdinalIgnoreCase);if(transitioning==status.Transitioning&&onAir.SetEquals(incoming))return;onAir.Clear();onAir.UnionWith(incoming);transitioning=status.Transitioning;view.Invalidate();}
  void NotifyPreferences(){if(PreferencesChanged!=null)PreferencesChanged(this,EventArgs.Empty);}
- public void SetFiles(List<string> files){if(sortColumn==2){var chosen=new HashSet<string>(SelectedPaths,StringComparer.OrdinalIgnoreCase);sortStates=files.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(p=>p,p=>IndicatorsFor(p,chosen.Contains(p)),StringComparer.OrdinalIgnoreCase);}string previous=SelectedPath;allSelected=false;view.SelectedIndices.Clear();view.VirtualListSize=0;sourceFiles=new List<string>(files);paths=OrderFiles(sourceFiles);RebuildCache();view.VirtualListSize=paths.Count;int index=previous==null?-1:paths.FindIndex(p=>String.Equals(p,previous,StringComparison.OrdinalIgnoreCase));if(index<0&&paths.Count>0)index=0;if(index>=0){view.SelectedIndices.Add(index);view.EnsureVisible(index);}view.Invalidate();}
+ public void SetFiles(List<string> files){
+  if(sortColumn==2){
+   var chosen=new HashSet<string>(SelectedPaths,StringComparer.OrdinalIgnoreCase);
+   sortStates=files.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(p=>p,p=>IndicatorsFor(p,chosen.Contains(p)),StringComparer.OrdinalIgnoreCase);
+  }
+  string previous=SelectedPath;
+  view.BeginUpdate();
+  try{
+   allSelected=false;
+   view.SelectedIndices.Clear();
+   view.VirtualListSize=0;
+   sourceFiles=new List<string>(files);
+   paths=OrderFiles(sourceFiles);
+   ResetThumbnailRequests();
+   IndexThumbnailRows();
+   view.VirtualListSize=paths.Count;
+   int index=previous==null?-1:paths.FindIndex(p=>String.Equals(p,previous,StringComparison.OrdinalIgnoreCase));
+   if(index<0&&paths.Count>0)index=0;
+   if(index>=0){view.SelectedIndices.Add(index);view.EnsureVisible(index);}
+  }finally{view.EndUpdate();}
+  view.Invalidate();
+ }
  void Retrieve(object sender,RetrieveVirtualItemEventArgs e){
   if(e.ItemIndex<0||e.ItemIndex>=paths.Count){e.Item=new ListViewItem("");return;}
   string path=paths[e.ItemIndex],source=SourcePath(path);var item=new ListViewItem(AssetTitle(path));item.SubItems.Add(NumberFor(path));item.SubItems.Add(IndicatorsFor(path,view.IsIndexSelected(e.ItemIndex)));item.SubItems.Add(source);item.ToolTipText=DisplayLabel(path)+"\n"+source+(File.Exists(source)?"":" · FILE MANCANTE");
-  if(ThumbnailsEnabled){int index;item.ImageIndex=cache.TryGetValue(source,out index)?index:0;if(item.ImageIndex==0&&!shuttingDown&&queue!=null&&requested.Add(source))queue.Add(source);}
+  if(ThumbnailsEnabled){
+   MemoryThumbnail thumbnail;
+   cache.TryGetValue(source,out thumbnail);
+   item.ImageIndex=thumbnail==null?0:thumbnail.Index;
+   if(!shuttingDown&&IsHandleCreated&&(thumbnail==null||stale.Contains(source))&&requested.Add(source))
+    thumbnails.Request(source,thumbnail==null?null:thumbnail.Key);
+  }
   e.Item=item;
  }
  void DrawItem(object sender,DrawListViewItemEventArgs e){if(view.View==View.Details)return;string path=paths[e.ItemIndex];bool selected=view.IsIndexSelected(e.ItemIndex),live=onAir.Contains(path);using(var background=new SolidBrush(darkMode?(selected?Color.FromArgb(49,73,91):Color.FromArgb(32,34,38)):(selected?Color.FromArgb(221,241,255):Color.White)))e.Graphics.FillRectangle(background,e.Bounds);
@@ -94,34 +127,134 @@ public sealed partial class LibraryBrowser:UserControl {
   if(live){using(var pen=new Pen(Color.Firebrick,3))e.Graphics.DrawRectangle(pen,e.Bounds.Left+6,e.Bounds.Top+6,Math.Max(1,e.Bounds.Width-13),Math.Max(1,e.Bounds.Height-13));var tag=new Rectangle(e.Bounds.Left+7,e.Bounds.Top+7,Math.Max(1,e.Bounds.Width-14),18);e.Graphics.FillRectangle(Brushes.Firebrick,tag);TextRenderer.DrawText(e.Graphics,transitioning?"DISSOLVENZA":"IN ONDA",view.Font,tag,Color.White,TextFormatFlags.HorizontalCenter|TextFormatFlags.EndEllipsis);}
  }
  void DrawSubItem(object sender,DrawListViewSubItemEventArgs e){if(view.View!=View.Details)return;string path=paths[e.ItemIndex];bool selected=view.IsIndexSelected(e.ItemIndex),live=onAir.Contains(path);Color background=darkMode?(selected?Color.FromArgb(49,73,91):live?Color.FromArgb(70,39,43):VideoTools.IsVideo(SourcePath(path))?Color.FromArgb(42,44,48):Color.FromArgb(32,34,38)):(selected?Color.FromArgb(221,241,255):live?Color.FromArgb(255,230,230):VideoTools.IsVideo(SourcePath(path))?Color.FromArgb(246,246,246):Color.White);using(var brush=new SolidBrush(background))e.Graphics.FillRectangle(brush,e.Bounds);string text=e.ColumnIndex==2?IndicatorsFor(path,selected):e.ColumnIndex==1?NumberFor(path):e.SubItem.Text;TextRenderer.DrawText(e.Graphics,text,view.Font,new Rectangle(e.Bounds.X+5,e.Bounds.Y,e.Bounds.Width-5,e.Bounds.Height),e.ColumnIndex==2&&live?(darkMode?Color.FromArgb(255,125,125):Color.Firebrick):(darkMode?Color.Gainsboro:Color.Black),TextFormatFlags.EndEllipsis|TextFormatFlags.VerticalCenter);if(e.ColumnIndex==0){if(live)e.Graphics.FillRectangle(Brushes.Firebrick,e.Bounds.Left,e.Bounds.Top,4,e.Bounds.Height);if(selected)e.Graphics.DrawRectangle(Pens.DeepSkyBlue,e.Bounds.Left+1,e.Bounds.Top,Math.Max(1,e.Bounds.Width-2),Math.Max(1,e.Bounds.Height-1));}}
- void RebuildCache(){
-  if(shuttingDown)return;
-  generation++;CancelWorker();
-  cache.Clear();requested.Clear();order.Clear();
-  var old=images;images=new ImageList{ColorDepth=ColorDepth.Depth32Bit,ImageSize=new Size(size.Value,size.Value)};
-  var imageHandle=images.Handle;
-  using(var placeholder=new Bitmap(size.Value,size.Value))using(var g=Graphics.FromImage(placeholder)){g.Clear(Color.FromArgb(50,54,60));g.DrawString("…",Font,Brushes.White,10,10);images.Images.Add(placeholder);}
-  view.LargeImageList=images;if(old!=null)old.Dispose();
-  cancellation=new CancellationTokenSource();queue=new BlockingCollection<string>();
-  var tokenSource=cancellation;var work=queue;var token=tokenSource.Token;int version=generation,edge=size.Value;
-  Task.Factory.StartNew(delegate{
-   try{foreach(string path in work.GetConsumingEnumerable(token)){
-    Bitmap thumb=null;try{thumb=Renderer.ToBitmap(Renderer.Render(path,edge,edge,new Placement()),edge,edge);}catch(Exception){thumb=new Bitmap(edge,edge);using(var g=Graphics.FromImage(thumb)){g.Clear(Color.DimGray);g.DrawString("Non leggibile",SystemFonts.DefaultFont,Brushes.White,4,edge/2);}}
-    var ready=thumb;
-    if(token.IsCancellationRequested){ready.Dispose();break;}
-    var completed=new TaskCompletionSource<bool>();
-    try{BeginInvoke((Action)delegate{
-     try{if(shuttingDown||IsDisposed||version!=generation)return;requested.Remove(path);int index;
-      if(cache.Count>=CacheLimit){string evicted=order.Dequeue();index=cache[evicted];cache.Remove(evicted);images.Images[index]=ready;}else{images.Images.Add(ready);index=images.Images.Count-1;}
-      cache[path]=index;order.Enqueue(path);view.Invalidate();
-     }finally{ready.Dispose();completed.TrySetResult(true);}
-    });completed.Task.Wait(token);}catch(InvalidOperationException){ready.Dispose();break;}
-   }}catch(OperationCanceledException){}finally{work.Dispose();tokenSource.Dispose();}
-  },CancellationToken.None,TaskCreationOptions.LongRunning,TaskScheduler.Default);
+ void IndexThumbnailRows(){
+  thumbnailRows.Clear();
+  for(int i=0;i<paths.Count;i++){
+   string source=SourcePath(paths[i]);
+   List<int> rows;
+   if(!thumbnailRows.TryGetValue(source,out rows))thumbnailRows[source]=rows=new List<int>();
+   rows.Add(i);
+  }
+ }
+
+ internal void SetThumbnailLibrary(string directory,IEnumerable<string> sources){
+  bool changed=!String.Equals(directory,thumbnailDirectory,StringComparison.OrdinalIgnoreCase);
+  thumbnailDirectory=directory;
+  thumbnailSources=sources.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+  ConfigureThumbnails();
+  if(changed)ResetThumbnailImages();
+  else stale.UnionWith(cache.Keys);
   view.Invalidate();
  }
- void CancelWorker(){var previous=cancellation;queue=null;cancellation=null;if(previous!=null)try{previous.Cancel();}catch(ObjectDisposedException){}}
- protected override void Dispose(bool disposing){if(disposing){shuttingDown=true;generation++;CancelWorker();imageMenu.Dispose();view.LargeImageList=null;if(images!=null){images.Dispose();images=null;}}base.Dispose(disposing);}
+
+ internal void SetThumbnailPlayerIdle(bool idle){
+  playerIdle=idle;
+  UpdatePrefetch();
+ }
+
+ void UpdatePrefetch(){thumbnails.SetPrefetchAllowed(playerIdle&&ThumbnailsEnabled);}
+
+ void ConfigureThumbnails(){
+  requested.Clear();
+  thumbnails.Configure(thumbnailDirectory,size.Value,thumbnailSources);
+ }
+
+ void ResetThumbnailRequests(){
+  requested.Clear();
+  thumbnails.ResetVisible();
+ }
+
+ void UpdateThumbnailSize(){
+  if(images!=null&&images.ImageSize.Width==size.Value)return;
+  ConfigureThumbnails();
+  ResetThumbnailImages();
+  view.Invalidate();
+ }
+
+ internal Task ClearThumbnailCache(){
+  var cleared=thumbnails.Clear();
+  requested.Clear();
+  ResetThumbnailImages();
+  view.Invalidate();
+  return cleared;
+ }
+
+ void ResetThumbnailImages(){
+  cache.Clear();
+  stale.Clear();
+  order.Clear();
+  var old=images;
+  images=new ImageList{ColorDepth=ColorDepth.Depth32Bit,ImageSize=new Size(size.Value,size.Value)};
+  var handle=images.Handle;
+  using(var placeholder=new Bitmap(size.Value,size.Value))
+  using(var graphics=Graphics.FromImage(placeholder)){
+   graphics.Clear(Color.FromArgb(50,54,60));
+   graphics.DrawString("…",Font,Brushes.White,10,10);
+   images.Images.Add(placeholder);
+  }
+  view.LargeImageList=images;
+  if(old!=null)old.Dispose();
+ }
+
+ void ReceiveThumbnail(){
+  using(var ready=thumbnails.TakeResult()){
+   if(ready==null||shuttingDown)return;
+   requested.Remove(ready.Source);
+   stale.Remove(ready.Source);
+   if(ready.Unchanged){
+    if(!cache.ContainsKey(ready.Source))InvalidateThumbnail(ready.Source);
+    return;
+   }
+   MemoryThumbnail thumbnail;
+   if(!cache.TryGetValue(ready.Source,out thumbnail)){
+    thumbnail=new MemoryThumbnail();
+    if(cache.Count>=CacheLimit){
+     string evicted=order.Dequeue();
+     thumbnail.Index=cache[evicted].Index;
+     cache.Remove(evicted);
+     stale.Remove(evicted);
+     InvalidateThumbnail(evicted);
+    }
+    cache.Add(ready.Source,thumbnail);
+    order.Enqueue(ready.Source);
+   }
+   thumbnail.Key=ready.Key;
+   if(ready.Image==null){
+    using(var failure=new Bitmap(images.ImageSize.Width,images.ImageSize.Height))
+    using(var graphics=Graphics.FromImage(failure)){
+     graphics.Clear(Color.DimGray);
+     graphics.DrawString("Non leggibile",SystemFonts.DefaultFont,Brushes.White,4,failure.Height/2);
+     SetThumbnailImage(thumbnail,failure);
+    }
+   }else SetThumbnailImage(thumbnail,ready.Image);
+   InvalidateThumbnail(ready.Source);
+  }
+ }
+
+ void SetThumbnailImage(MemoryThumbnail thumbnail,Bitmap bitmap){
+  if(thumbnail.Index>0)images.Images[thumbnail.Index]=bitmap;
+  else{
+   images.Images.Add(bitmap);
+   thumbnail.Index=images.Images.Count-1;
+  }
+ }
+
+ void InvalidateThumbnail(string source){
+  List<int> rows;
+  if(!ThumbnailsEnabled||!view.IsHandleCreated||!thumbnailRows.TryGetValue(source,out rows))return;
+  foreach(int row in rows)view.Invalidate(view.GetItemRect(row));
+ }
+
+ protected override void Dispose(bool disposing){
+  if(disposing){
+   shuttingDown=true;
+   thumbnails.Dispose();
+   imageMenu.Dispose();
+   view.LargeImageList=null;
+   if(images!=null){images.Dispose();images=null;}
+  }
+  base.Dispose(disposing);
+ }
 }
 public sealed class LibraryDropEventArgs:EventArgs {public readonly string[] Paths;public readonly string Before;public LibraryDropEventArgs(string[] paths,string before){Paths=paths;Before=before;}}
 public sealed class LibraryContextEventArgs:EventArgs {public readonly ContextMenuStrip Menu;public readonly string[] Paths;public readonly string FocusedPath;public LibraryContextEventArgs(ContextMenuStrip menu,string[] paths,string focused){Menu=menu;Paths=paths;FocusedPath=focused;}}

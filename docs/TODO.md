@@ -1,10 +1,9 @@
 
 Performance
-- Verificare su hardware reale WDM/WASAPI e Dante/ASIO: coppie assegnate e canali silenziosi
-- verificare decodifica e composizione dei MOV usa con ffmpeg (potenziali ottimizzazioni)
-- Verificare la possibilità di fare cache dei thumbnail ed evitare i falsh da refresh con molti asset. Separerei il lavoro in un solo processo persistente a bassa priorità, con una cache PNG su disco. Oggi la libreria ha già un worker in background e una cache RAM da 128 thumbnail, ma la cache viene ricostruita quando cambia l’elenco. Inoltre, la generazione passa dal renderer condiviso con il playout e può contendere lo stesso lock Direct3D usato durante le dissolvenze. [LibraryBrowser.cs (line 97)](/C:/Users/Riccardo/Desktop/my_repos/NDIPLayer/src/LibraryBrowser.cs:97) · [Core.cs (line 42)](/C:/Users/Riccardo/Desktop/my_repos/NDIPLayer/src/Core.cs:42)
-
-Darei precedenza agli elementi visibili e farei il pre-cache del resto a player inattivo. Una chiave basata su percorso sorgente, dimensione del file, ultima modifica e risoluzione della thumbnail permette di riutilizzare la cache anche dopo un riavvio. Terrei il worker thumbnail su CPU, così il pre-cache può essere sospeso durante cue e dissolvenze senza contendere il renderer GPU. Verificherei il risultato misurando il tempo di apertura della libreria a cache fredda e calda e gli intervalli tra frame NDI mentre il worker è attivo.
+- [x] Verificare su hardware reale WDM/WASAPI e Dante/ASIO: coppie assegnate e canali silenziosi
+- [x] verificare decodifica e composizione dei MOV usa con ffmpeg (potenziali ottimizzazioni)
+- [x] Cache PNG persistente per progetto, riuso delle miniature in memoria durante i refresh e svuotamento da Impostazioni. Un thread CPU a bassa priorità serve prima le richieste della vista e prepara il resto a player inattivo.
+  - Prova locale con 24 miniature a 128 px, inclusi 6 MOV. Caricamento in 1,96 s a cache fredda e 57 ms a cache calda. Nel test del sender NDI a 1080p50 con dissolvenze, il 95° percentile degli intervalli è stato 21,18 ms senza richieste e 21,27 ms durante la generazione.
 
 Funzionalità
 - [x] Monitoraggio della cartella sorgente con pallino rosso e conteggio dei file da aggiornare. Scansione applicata con Aggiorna.

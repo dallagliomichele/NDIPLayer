@@ -40,15 +40,21 @@ public static class Renderer {
  public static byte[] Render(string path,int w,int h,Placement p) {if(path==null)return RenderImage(null,w,h,p);using(var src=LoadBitmap(path))return RenderImage(src,w,h,p);}
  public static byte[] RenderImage(Image src,int w,int h,Placement p) {
   lock(GpuGate){if(gpu!=null)try{return gpu.Render(src,w,h,p);}catch{gpu.Dispose();gpu=null;}}
-  using(var b=new Bitmap(w,h,PixelFormat.Format32bppArgb)) {
+  using(var b=RenderCpu(src,w,h,p)) {
+   var data=b.LockBits(new Rectangle(0,0,w,h),ImageLockMode.ReadOnly,PixelFormat.Format32bppArgb);
+   try { var bytes=new byte[w*h*4]; for(int y=0;y<h;y++) Marshal.Copy(IntPtr.Add(data.Scan0,y*data.Stride),bytes,y*w*4,w*4); return bytes; } finally {b.UnlockBits(data);}
+  }
+ }
+ internal static Bitmap RenderCpu(Image src,int w,int h,Placement p) {
+  var b=new Bitmap(w,h,PixelFormat.Format32bppArgb);
+  try {
    using(var g=Graphics.FromImage(b)) { g.Clear(Color.Transparent); g.CompositingMode=CompositingMode.SourceCopy; g.InterpolationMode=InterpolationMode.HighQualityBicubic;
     if(src!=null) {
      var r=Fit(src.Width,src.Height,w,h,p); using(var a=new ImageAttributes()){ a.SetWrapMode(WrapMode.TileFlipXY); g.DrawImage(src,Rectangle.Round(r),0,0,src.Width,src.Height,GraphicsUnit.Pixel,a); }
     }
    }
-   var data=b.LockBits(new Rectangle(0,0,w,h),ImageLockMode.ReadOnly,PixelFormat.Format32bppArgb);
-   try { var bytes=new byte[w*h*4]; for(int y=0;y<h;y++) Marshal.Copy(IntPtr.Add(data.Scan0,y*data.Stride),bytes,y*w*4,w*4); return bytes; } finally {b.UnlockBits(data);}
-  }
+   return b;
+  } catch {b.Dispose();throw;}
  }
  public static void Blend(byte[] a,byte[] b,double t,byte[] result){Blend(a,b,t,result,a.Length/4,1);}
  public static void Blend(byte[] a,byte[] b,double t,byte[] result,int width,int height) {

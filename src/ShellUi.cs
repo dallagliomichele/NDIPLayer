@@ -30,6 +30,7 @@ public partial class MainWindow {
   var videoPage=new TabPage("Video e NDI");var videoPanel=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,WrapContents=false,Padding=new Padding(16),AutoScroll=true};var format=ShellRow();format.Dock=DockStyle.None;format.AutoSize=true;format.AutoSizeMode=AutoSizeMode.GrowAndShrink;format.Height=34;ShellField(format,"Larghezza",width);ShellField(format,"Altezza",height);ShellField(format,"fps",fps);var presets=new Button[2];for(int i=0;i<2;i++){int w=i==0?1920:3840,h=i==0?1080:2160;var preset=new Button{Name="ResolutionPreset"+w+"x"+h,Text=w+"×"+h,AutoSize=true};preset.Click+=delegate{width.Value=w;height.Value=h;};format.Controls.Add(preset);presets[i]=preset;}resolutionPresets=presets;videoPanel.Controls.Add(format);AddButton(videoPanel,"Copia risoluzione Preview",CopyPreviewResolution);channelName.Width=420;previewChannelName.Width=420;channelName.Dock=previewChannelName.Dock=DockStyle.None;ShellField(videoPanel,"Nome NDI Program",channelName);ShellField(videoPanel,"Nome NDI Preview",previewChannelName);videoPanel.Controls.Add(new Label{Text="Arresta entrambi i flussi per cambiare formato. Il nome di ogni flusso si cambia quando è arrestato.",AutoSize=true,MaximumSize=new Size(620,0)});videoPanel.Controls.Add(configNotice);AddButton(videoPanel,"Salva impostazioni video",Save);videoPage.Controls.Add(videoPanel);settingsTabs.TabPages.Add(videoPage);
   darkMode=new CheckBox{Name="DarkMode",Text="Modalità scura",AutoSize=true,Checked=windowPreferences!=null&&windowPreferences.DarkMode};darkMode.CheckedChanged+=delegate{if(windowPreferences==null)windowPreferences=new WindowPreferences();windowPreferences.DarkMode=darkMode.Checked;ApplyShellTheme();SaveWindowPreferences();};videoPanel.Controls.Add(darkMode);
   var audioPage=new TabPage("Audio");var audioPanel=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,WrapContents=false,Padding=new Padding(16)};audioNotice.MaximumSize=new Size(660,0);audioPanel.Controls.Add(audioNotice);AddButton(audioPanel,"Configura uscite Program e ascolto Preview…",delegate{RunSettingsAction(ShowAudioDialog);});audioPanel.Controls.Add(new Label{Text="Schede WDM/WASAPI o ASIO, coppie stereo e correzione video.\r\nGain per file, mute e vumeter rimangono nella schermata principale.",AutoSize=true});audioPage.Controls.Add(audioPanel);settingsTabs.TabPages.Add(audioPage);
+  settingsTabs.TabPages.Add(CreateLibrarySettingsPage());
   var companionPage=new TabPage("Companion");var companionPanel=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,WrapContents=false,Padding=new Padding(16),AutoScroll=true};companionStatus.MaximumSize=new Size(660,0);controlStatus.MaximumSize=new Size(660,0);companionPanel.Controls.Add(companionStatus);AddButton(companionPanel,"Notifiche TCP e test stringhe…",delegate{RunSettingsAction(ShowCompanionDialog);});companionPanel.Controls.Add(controlStatus);AddButton(companionPanel,"Comandi TCP in ingresso…",delegate{RunSettingsAction(ShowControlDialog);});companionPage.Controls.Add(companionPanel);settingsTabs.TabPages.Add(companionPage);
   var infoPage=new TabPage("Informazioni");var infoPanel=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,Padding=new Padding(16)};MoveButton(oldTop,infoPanel,"Info","Versione e licenze…");foreach(Control child in oldTop.Controls.Cast<Control>().ToArray())if(child is LinkLabel)infoPanel.Controls.Add(child);infoPage.Controls.Add(infoPanel);settingsTabs.TabPages.Add(infoPage);settingsTabs.TabPages.Add(CreateCountdownSettingsPage());
 
@@ -51,6 +52,29 @@ public partial class MainWindow {
  static void ApplyThemeTree(Control root,Color surface,Color text){if(root is PreviewCanvas||root is CountdownLabel||root is AudioMeterControl||root is VideoTransportBar)return;if(root is TextBox||root is NumericUpDown||root is ComboBox||root is ListBox||root is ListView){root.BackColor=surface==SystemColors.Control?SystemColors.Window:Color.FromArgb(52,54,58);root.ForeColor=text;}else if(root is TrackBar){root.BackColor=surface;root.ForeColor=text;}else if(root is Button){root.BackColor=surface;root.ForeColor=text;((Button)root).UseVisualStyleBackColor=false;}else if(root is Panel||root is TableLayoutPanel||root is FlowLayoutPanel||root is TabPage||root is TabControl||root is Form||root is GroupBox){root.BackColor=surface;root.ForeColor=text;}else if(root is Label||root is CheckBox){root.ForeColor=text;}foreach(Control child in root.Controls)ApplyThemeTree(child,surface,text);}
  void ApplyMonitorFrameColors(){Color programColor=output!=null&&output.Error==null?Color.FromArgb(150,20,25):Color.Black;Color previewColor=previewOutput!=null&&previewOutput.Error==null?Color.FromArgb(23,105,57):Color.Black;SetFrameColor(programFrame,programColor);SetFrameColor(previewFrame,previewColor);if(preview.BackColor!=previewColor)preview.BackColor=previewColor;}
  static void SetFrameColor(Panel frame,Color color){if(frame==null)return;frame.BackColor=color;var bar=frame.Controls.OfType<TableLayoutPanel>().FirstOrDefault();if(bar==null)return;bar.BackColor=color;foreach(Control item in bar.Controls)if(item is Label)item.ForeColor=Color.White;}
+ TabPage CreateLibrarySettingsPage(){
+  var page=new TabPage("Libreria");
+  var panel=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,WrapContents=false,Padding=new Padding(16)};
+  var clear=new Button{Name="ClearThumbnailCache",Text="Svuota cache miniature",AutoSize=true};
+  var feedback=new Label{AutoSize=true,MaximumSize=new Size(650,0)};
+  clear.Click+=async delegate{
+   clear.Enabled=false;
+   feedback.Text="Svuotamento in corso…";
+   try{
+    await files.ClearThumbnailCache();
+    feedback.Text=files.ThumbnailsEnabled
+     ?"Cache del progetto svuotata. Le miniature visibili vengono ricreate."
+     :"Cache del progetto svuotata.";
+   }catch(Exception error){
+    feedback.Text="Impossibile svuotare la cache del progetto. "+error.Message;
+   }finally{clear.Enabled=true;}
+  };
+  panel.Controls.Add(new Label{Text="Miniature salvate su questo PC per il progetto corrente.",AutoSize=true});
+  panel.Controls.Add(clear);
+  panel.Controls.Add(feedback);
+  page.Controls.Add(panel);
+  return page;
+ }
  void RunSettingsAction(Action action){var window=settingsWindow;if(window!=null)window.Hide();try{action();}finally{if(window!=null&&!window.IsDisposed){window.Show(this);window.Activate();}}}
  void ShowSettingsWindow(){if(settingsWindow!=null&&!settingsWindow.IsDisposed){settingsWindow.Activate();return;}LoadCountdownEditor();settingsWindow=new Form{Text="Impostazioni NDIPlayer",Name="SettingsWindow",Size=new Size(800,460),MinimumSize=new Size(720,400),StartPosition=FormStartPosition.CenterParent,ShowInTaskbar=false};settingsWindow.Controls.Add(settingsTabs);settingsTabs.Visible=true;settingsWindow.FormClosed+=delegate{if(!IsDisposed){settingsStorage.Controls.Add(settingsTabs);Save();}settingsWindow=null;};ApplyShellTheme();settingsWindow.Show(this);}
  void UpdateShellStatus(){outputFormat.Text=(output==null?(int)width.Committed:outW)+" × "+(output==null?(int)height.Committed:outH)+" · "+(output==null?(int)fps.Committed:activeProgramFps)+"p";RefreshOutputIndicators();}
