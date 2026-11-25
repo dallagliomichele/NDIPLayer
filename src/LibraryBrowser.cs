@@ -18,6 +18,8 @@ public sealed partial class LibraryBrowser:UserControl {
  readonly ComboBox mode=new ComboBox{DropDownStyle=ComboBoxStyle.DropDownList,Width=100};
  readonly TrackBar size=new TrackBar{AutoSize=false,Minimum=64,Maximum=256,Value=128,SmallChange=16,LargeChange=32,TickFrequency=64,Width=115,Height=30};
  readonly Label sizeLabel=new Label{AutoSize=true};
+ readonly FlowLayoutPanel bar=new FlowLayoutPanel{Dock=DockStyle.Top,Height=96,AutoScroll=false,WrapContents=true};
+ public Control Toolbar {get{return bar;}}
  readonly Dictionary<string,int> cache=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
  readonly HashSet<string> requested=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
  readonly Queue<string> order=new Queue<string>();
@@ -42,7 +44,6 @@ public sealed partial class LibraryBrowser:UserControl {
  public int Count {get{return paths.Count;}}
  public LibraryBrowser(){
   mode.Items.AddRange(new object[]{"Elenco","Miniature"});mode.SelectedIndex=0;
-  var bar=new FlowLayoutPanel{Dock=DockStyle.Top,Height=70,AutoScroll=true};
   bar.Controls.Add(mode);bar.Controls.Add(new Label{Text="Dimensione",AutoSize=true,Margin=new Padding(3,8,0,0)});bar.Controls.Add(size);bar.Controls.Add(sizeLabel);
 
   var manual=new Button{Text="Ordine manuale",AutoSize=true};manual.Click+=delegate{RestoreManualOrder();};bar.Controls.Add(manual);view.Navigation=NavigateKey;view.BeforeLeftClick=BeforeLibraryClick;view.ColumnClick+=delegate(object sender,ColumnClickEventArgs e){SortByColumn(e.Column);};

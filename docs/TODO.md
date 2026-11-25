@@ -2,7 +2,9 @@
 Performance
 - Verificare su hardware reale WDM/WASAPI e Dante/ASIO: coppie assegnate e canali silenziosi
 - verificare decodifica e composizione dei MOV usa con ffmpeg (potenziali ottimizzazioni)
-- Verificare la possibilità di fare cache dei thumbnail ed evitare i falsh da refresh con molti asset
+- Verificare la possibilità di fare cache dei thumbnail ed evitare i falsh da refresh con molti asset. Separerei il lavoro in un solo processo persistente a bassa priorità, con una cache PNG su disco. Oggi la libreria ha già un worker in background e una cache RAM da 128 thumbnail, ma la cache viene ricostruita quando cambia l’elenco. Inoltre, la generazione passa dal renderer condiviso con il playout e può contendere lo stesso lock Direct3D usato durante le dissolvenze. [LibraryBrowser.cs (line 97)](/C:/Users/Riccardo/Desktop/my_repos/NDIPLayer/src/LibraryBrowser.cs:97) · [Core.cs (line 42)](/C:/Users/Riccardo/Desktop/my_repos/NDIPLayer/src/Core.cs:42)
+
+Darei precedenza agli elementi visibili e farei il pre-cache del resto a player inattivo. Una chiave basata su percorso sorgente, dimensione del file, ultima modifica e risoluzione della thumbnail permette di riutilizzare la cache anche dopo un riavvio. Terrei il worker thumbnail su CPU, così il pre-cache può essere sospeso durante cue e dissolvenze senza contendere il renderer GPU. Verificherei il risultato misurando il tempo di apertura della libreria a cache fredda e calda e gli intervalli tra frame NDI mentre il worker è attivo.
 
 Funzionalità
 - [x] Monitoraggio della cartella sorgente con pallino rosso e conteggio dei file da aggiornare. Scansione applicata con Aggiorna.

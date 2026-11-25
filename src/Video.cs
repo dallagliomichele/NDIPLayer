@@ -28,9 +28,12 @@ public sealed class VideoSession:IFrameSource,IPlaybackSource,IAudioVideoSource 
  Process process;readonly Thread reader;readonly MediaTimeline mediaTimeline;readonly AudioVoice voice;readonly AudioBus audioBus;int audioActivated;readonly int frameSize,rate,width,height;readonly string path;readonly double duration,speed,startSeconds,outSeconds;readonly bool loop;readonly Placement placement;readonly byte[] firstFrame;long frameNumber;readonly object gate=new object();byte[] latest;volatile bool stopping,paused;volatile string error;public volatile bool Ended;public long DecodedFrames;
  public string Error {get{return error;}}
  public string Path {get{return path;}} public string AssetKey {get;private set;}public double Speed {get{return speed;}}public bool Paused {get{return paused;}}public double StartSeconds {get{return startSeconds;}}public double OutSeconds {get{return outSeconds;}}
- public VideoSession(string path,int w,int h,int fps,Placement placement,bool loop,byte[] initial,AudioBus audioBus=null,double gainDb=0,double speed=1,bool startPaused=false,double startSeconds=0,double outSeconds=0,string assetKey=null){
+ readonly bool pausedOnAir;
+ bool preparing;
+ public VideoSession(string path,int w,int h,int fps,Placement placement,bool loop,byte[] initial,AudioBus audioBus=null,double gainDb=0,double speed=1,bool startPaused=false,double startSeconds=0,double outSeconds=0,string assetKey=null,bool prepareForCue=false){
   AssetKey=assetKey??path;
   if(w<1||h<1||fps<1||initial==null||initial.Length!=w*h*4||Double.IsNaN(speed)||Double.IsInfinity(speed)||speed<.5||speed>5||startSeconds<0||outSeconds>0&&outSeconds<=startSeconds)throw new ArgumentException("Formato o intervallo video non validi.");this.path=path;this.rate=fps;this.width=w;this.height=h;this.placement=new Placement{Scale=placement.Scale,X=placement.X,Y=placement.Y,Loop=placement.Loop};this.loop=loop;this.speed=speed;this.audioBus=audioBus;this.startSeconds=startSeconds;this.outSeconds=outSeconds;paused=startPaused;try{double full=VideoMetadata.Duration(path);duration=outSeconds>0?outSeconds-startSeconds:Math.Max(0,full-startSeconds);}catch{duration=outSeconds>0?outSeconds-startSeconds:0;}frameSize=w*h*4;firstFrame=(byte[])initial.Clone();latest=firstFrame;
+  preparing=prepareForCue;pausedOnAir=startPaused;paused=startPaused||prepareForCue;
   mediaTimeline=new MediaTimeline();if(audioBus!=null){voice=audioBus.Prepare(path,loop,gainDb,speed,startSeconds,outSeconds,AssetKey);voice.SetPaused(paused);}else{mediaTimeline.Start(null);if(paused)mediaTimeline.Pause();}
   try{process=StartDecoder();}catch{if(voice!=null)voice.Release();throw;}
   reader=new Thread(Read){IsBackground=true,Name="NDIPlayer MOV decoder"};reader.Start();
@@ -40,12 +43,22 @@ public sealed class VideoSession:IFrameSource,IPlaybackSource,IAudioVideoSource 
  public VideoSession RestartAt(double seconds,double newSpeed,bool startPaused,double gainDb){return new VideoSession(path,width,height,rate,placement,loop,firstFrame,audioBus,gainDb,newSpeed,startPaused,seconds,outSeconds,AssetKey);}
  public VideoSession Seek(double seconds,bool startPaused,double gainDb){return new VideoSession(path,width,height,rate,placement,loop,firstFrame,audioBus,gainDb,speed,startPaused,seconds,outSeconds,AssetKey);}
  public void SetPaused(bool value){lock(gate){if(paused==value)return;paused=value;if(value)mediaTimeline.Pause();else mediaTimeline.Resume();if(voice!=null)voice.SetPaused(value);}}
- void Read(){try{while(!stopping){var current=process;var errors=current.StandardError.ReadToEndAsync();var input=current.StandardOutput.BaseStream;while(!stopping){var frame=new byte[frameSize];int offset=0;while(offset<frame.Length&&!stopping){int n=input.Read(frame,offset,frame.Length-offset);if(n==0)break;offset+=n;}if(offset!=frame.Length)break;double due=frameNumber/(double)rate;while(!stopping){lock(gate){if((!paused||frameNumber==0)&&mediaTimeline.Seconds>=due){latest=frame;frameNumber++;Interlocked.Increment(ref DecodedFrames);break;}}Thread.Sleep(1);}if(stopping)break;}if(stopping)break;current.WaitForExit();if(current.ExitCode!=0){error="Errore MOV: "+errors.Result;break;}if(stopping||!loop||startSeconds==0&&outSeconds<=0)break;current.Dispose();process=StartDecoder();}}catch(Exception e){if(!stopping)error="Errore MOV: "+e.Message;}finally{Ended=true;}}
- public double ActivateAudio(double fade){if(voice==null||Interlocked.Exchange(ref audioActivated,1)!=0)return 0;double delay=voice.Activate(fade);lock(gate){mediaTimeline.Start(()=>voice.Position);if(paused)mediaTimeline.Pause();}return delay;}
+ void Read(){try{while(!stopping){var current=process;var errors=current.StandardError.ReadToEndAsync();var input=current.StandardOutput.BaseStream;while(!stopping){var frame=new byte[frameSize];int offset=0;while(offset<frame.Length&&!stopping){int n=input.Read(frame,offset,frame.Length-offset);if(n==0)break;offset+=n;}if(offset!=frame.Length)break;double due=frameNumber/(double)rate;while(!stopping){lock(gate){if((!paused||frameNumber==0)&&mediaTimeline.Seconds>=due){latest=frame;frameNumber++;Interlocked.Increment(ref DecodedFrames);break;}}Thread.Sleep(1);}if(stopping)break;}if(stopping)break;current.WaitForExit();if(current.ExitCode!=0){error="Errore MOV: "+errors.Result;break;}if(stopping||!loop||startSeconds==0&&outSeconds<=0)break;lock(gate){if(stopping)break;process=StartDecoder();current.Dispose();}}}catch(Exception e){if(!stopping)error="Errore MOV: "+e.Message;}finally{Ended=true;}}
+ public void SetAudioGain(double gain){if(voice!=null)voice.SetGain(gain);}
+ public double ActivateAudio(double fade){
+  if(Interlocked.Exchange(ref audioActivated,1)!=0)return 0;
+  lock(gate){
+   if(preparing){preparing=false;paused=pausedOnAir;if(voice!=null)voice.SetPaused(paused);}
+   if(voice==null){if(!paused)mediaTimeline.Resume();return 0;}
+   double delay=voice.Activate(fade);
+   mediaTimeline.Start(()=>voice.Position);if(paused)mediaTimeline.Pause();
+   return delay;
+  }
+ }
  public double FadeAudio(double seconds){return voice==null?0:voice.FadeOut(seconds);}
  public byte[] ReadPlaybackFrame(out VideoPlaybackStatus status){lock(gate){status=VideoPlaybackStatus.FromFrames(path,duration,frameNumber,rate,loop,Ended&&error==null,speed);return latest;}}
  public byte[] ReadFrame(){lock(gate)return latest;}
- public void Dispose(){if(stopping)return;stopping=true;if(voice!=null)voice.Release();try{if(!process.HasExited)process.Kill();}catch(InvalidOperationException){}reader.Join();try{process.WaitForExit(2000);}catch(InvalidOperationException){}process.Dispose();}
+ public void Dispose(){Process current;lock(gate){if(stopping)return;stopping=true;current=process;}if(voice!=null)voice.Release();try{if(!current.HasExited)current.Kill();}catch(InvalidOperationException){}reader.Join();try{current.WaitForExit(2000);}catch(InvalidOperationException){}current.Dispose();}
 }
 public sealed class BorrowedFrames:IFrameSource,IPlaybackSource {readonly IFrameSource source;public BorrowedFrames(IFrameSource value){source=value;}public byte[] ReadFrame(){return source.ReadFrame();}public byte[] ReadPlaybackFrame(out VideoPlaybackStatus status){var clock=source as IPlaybackSource;if(clock!=null)return clock.ReadPlaybackFrame(out status);status=null;return source.ReadFrame();}public string Error{get{return source.Error;}}public void Dispose(){}}
 }
