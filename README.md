@@ -1,27 +1,28 @@
 # Watchout Image NDI
 
-Documentazione: [utilizzo](docs/UTILIZZO.md), [compilazione](docs/COMPILAZIONE.md), [architettura](docs/ARCHITETTURA.md), [audio](docs/AUDIO.md), [Companion](docs/COMPANION.md), [problemi e verifiche](docs/PROBLEMI.md) e [attività aperte](docs/TODO.md).
+Documentazione: [utilizzo](docs/UTILIZZO.md), [compilazione](docs/COMPILAZIONE.md), [architettura](docs/ARCHITETTURA.md), [audio](docs/AUDIO.md), [Companion](docs/COMPANION.md), [problemi e verifiche](docs/BUGS.md) e [attività aperte](docs/TODO.md).
 
-App Windows x64 per inviare immagini su un flusso NDI con alpha. Interfaccia in italiano. Repository privato: https://github.com/dallagliomichele/NDIPLayer. Sorgenti e cronologia condivisi tramite GitHub.
+NDIPlayer è un'app per Windows 10/11 x64 con interfaccia in italiano. Manda in onda immagini e video MOV con trasparenza sui flussi NDI indipendenti Preview e Program, utilizzabili con WATCHOUT. Richiede .NET Framework 4.8. L'installer include NDI Runtime 6 e FFmpeg. Per installazione e primi passi, vedi la [guida all'utilizzo](docs/UTILIZZO.md).
 
-Nell'interfaccia attuale, ciascun monitor ha sfondo nero e cornice colorata quando il suo flusso NDI è spento o in errore; quando il flusso è attivo, lo sfondo diventa verde per Preview o rosso per Program e la cornice scompare. La modalità scura comprende anche gli elenchi di asset e blocchi. Questi colori sono solo locali.
+## Release 0.13.16 · 25 novembre 2026
 
-I MOV hanno ora seek in Preview, punti di entrata e uscita e Autostart per file. Il Program usa l'intervallo salvato; con Autostart spento attende Play sul primo frame. Nelle impostazioni video si può copiare la risoluzione originale dell'asset in Preview nel formato NDI, con i flussi spenti. Dettagli in [Utilizzo](docs/UTILIZZO.md).
+La build di release genera `NDIPlayer-0.13.16-Setup-win-x64.exe` in `dist/`.
 
-## Modulo Companion 1.1.0
+- **Miniature persistenti.** Le anteprime PNG sono salvate su disco per progetto e riutilizzate al riavvio. Le miniature visibili hanno la precedenza e le altre vengono preparate in sottofondo quando il player è inattivo. La cache del progetto corrente si può svuotare da **Impostazioni > Libreria**.
+- **Pre-roll video.** Con Program attivo, selezionare un MOV in Preview prepara in sottofondo la sessione video per Program. Questo riduce il lavoro al momento dell'invio e rispetta il punto di entrata e l'impostazione Autostart dell'asset.
+- **Interfaccia.** Aggiornate le etichette di avvio e stato dei flussi NDI e la disposizione dei comandi. Restano disponibili le novità della 0.13.15: Swap Program / Preview attivo per impostazione predefinita, durata del clip in Preview, evidenziazione dei video nell'elenco e comandi di riproduzione visibili sui monitor quando mostrano un video.
+- **Benchmark video.** Aggiunte prove per confrontare diverse pipeline CPU e GPU, incluse le varianti Hap e Hap Q via Direct3D 11. Il benchmark si esegue separatamente dal player. [Script di misura](tests/Measure-VideoPipeline.ps1)
 
-Modulo importabile dedicato a Companion **5.1.2**: 14 azioni (incluse PLAY e PAUSE per il video in Program), 25 preset, tastierino, feedback TCP e risposte di errore. [Guida](companion-module-ndiplayer/README.md) e [pacchetto .tgz](companion-module-ndiplayer/releases/ndiplayer-1.1.0.tgz). Il modulo controlla il ricevitore TCP già presente in NDIPlayer 0.11.1 (PLAY e PAUSE richiedono la versione con i controlli video). Sorgenti e prove sono nella cartella companion-module-ndiplayer.
+## Stato del progetto
 
-## Evoluzioni dalla 0.13.5 allo stato attuale
+- **Messa in onda.** Flussi Preview e Program con cut, dissolvenze e clear trasparente. I MOV hanno seek in Preview, punti di entrata e uscita, loop, velocità e Autostart per asset. Il Program può attendere Play sul fotogramma di entrata. Le due uscite audio locali supportano WDM/WASAPI e ASIO e hanno vumeter indipendenti.
+- **Libreria e progetti.** Blocchi, numeri di richiamo, ricerca, selezione multipla, cartelle preferite e copie di asset con regolazioni indipendenti. Il monitoraggio della cartella segnala le modifiche, che vengono applicate con **Aggiorna**. I progetti con copie usano il formato `.ndiproj` versione 3.
+- **Rendering e formato NDI.** Direct3D 11 per la composizione delle immagini e le dissolvenze, con ripiego su GDI+. FFmpeg gestisce i MOV. Con i flussi spenti si può usare la risoluzione originale dell'asset in Preview per impostare il formato NDI.
+- **Interfaccia e collaudo.** Modalità scura e indicatori locali verdi per Preview e rossi per Program. Per verificare il segnale ricevuto e la continuità del playout sull'impianto si usa WATCHOUT. [Procedura di collaudo](#collaudo-sullimpianto)
 
-Il file `VERSION` indica attualmente **0.13.12**. Le principali modifiche successive alla 0.13.5 sono:
+## Modulo Companion
 
-- **Video:** play/pausa e riavvio indipendenti per Preview e Program, velocità configurabile per file, seek in Preview, punti di entrata e uscita e Autostart opzionale.
-- **Rendering e formato:** composizione GPU con Direct3D 11 e ripiego su GDI+; preset di risoluzione e copia della risoluzione originale dell'asset in Preview.
-- **Interfaccia:** modalità scura, indicatori colorati dello stato NDI e controlli dei flussi sopra i rispettivi monitor.
-- **Libreria e progetti:** avviso delle modifiche alla cartella sorgente, cartelle preferite, selezione multipla e copie degli asset con regolazioni indipendenti; i progetti con copie usano il formato versione 3.
-- **Companion:** modulo 1.1.0 con stato e countdown video, feedback e variabili degli asset in Preview e Program.
-- **Build e distribuzione:** versione applicativa gestita nel file `VERSION`, script di release e preparazione delle dipendenze, aggiornamento del runtime NDI e documentazione di sviluppo riorganizzata.
+Il pacchetto importabile **1.1.0** per Bitfocus Companion **5.1.2** offre 14 azioni, tra cui PLAY e PAUSE per Program, 25 preset, tastierino, feedback TCP e variabili per gli asset in Preview e Program. I sorgenti del modulo sono alla versione **1.1.2** e si possono pacchettizzare con `./build-companion.ps1 -NoBump`. [Guida](companion-module-ndiplayer/README.md) · [Pacchetto 1.1.0](companion-module-ndiplayer/releases/ndiplayer-1.1.0.tgz)
 
 ## Novità 0.13.5 · Rimozione numeri e stato Program
 
@@ -210,12 +211,14 @@ Il mouse modifica solo la selezione preparata: **premi INVIA (oppure fai doppio 
 
 Il campo **Nome flusso NDI**, nella sezione Program, permette di scegliere il nome della sorgente. Il valore viene salvato nelle preferenze; il default rimane `Watchout Image NDI`. Spazi iniziali/finali vengono rimossi e sono supportati accenti tramite UTF-8. Nomi vuoti, troppo lunghi o con caratteri `\ / : * ? " < > |` e caratteri di controllo vengono rifiutati. Per rinominare un canale già attivo: arresta NDI, modifica il nome, riavvia NDI e seleziona la nuova sorgente in WATCHOUT. Il nome non si modifica mentre il flusso è attivo.
 
-**Novità 0.10.0:** la libreria a sinistra permette di scegliere **Elenco** o **Miniature**. Il cursore **Dimensione** regola le miniature da 64 a 256 pixel; la scelta viene salvata insieme alle preferenze. Le miniature si caricano in sottofondo per gli elementi visualizzati, con una cache limitata a 128 immagini. Per cartelle diverse con nomi uguali, il percorso completo resta visibile nell'elenco e nel suggerimento del file.
+La libreria a sinistra permette di scegliere **Elenco** o **Miniature**. Il cursore **Dimensione** regola le miniature da 64 a 256 pixel. La scelta viene salvata nelle preferenze. Le miniature vengono caricate in sottofondo e riutilizzate dalla cache su disco. Il percorso completo è visibile nell'elenco e nel suggerimento del file.
 
-Al centro/destra ci sono due monitor affiancati, ridimensionabili allargando la finestra o spostando il separatore della libreria:
+Accanto alla libreria, i monitor **Preview** e **Program** sono uno sopra l'altro. I divisori permettono di ridimensionare i monitor e la libreria.
 
-- **SELEZIONE**, bordo verde quando Preview NDI è attivo, nero quando è spento o in errore: immagine preparata, con scala e posizione. Cambiare selezione o regolazioni non modifica il programma finché non premi INVIA o fai doppio clic sul file.
-- **PROGRAMMA**, bordo rosso quando Program NDI è attivo, nero quando è spento o in errore: copia degli ultimi frame dopo che la chiamata sincrona al mittente NDI è terminata. Mostra cut, alpha delle dissolvenze e clear; si aggiorna fino a 10 volte al secondo per contenere il carico UI, indipendentemente dai 50 fps nominali del flusso. Non cambia quando scegli un'altra immagine nella libreria. Arresto ed errori sono indicati esplicitamente.
+- **Preview** mostra l'asset preparato con scala e posizione. Il pulsante **INVIA selezione** o il doppio clic sul file lo manda in Program.
+- **Program** mostra i frame consegnati al mittente NDI, inclusi cut, alpha delle dissolvenze e clear. Si aggiorna fino a 10 volte al secondo, indipendentemente dagli fps del flusso.
+
+Quando il flusso è attivo, lo sfondo del monitor è verde per Preview e rosso per Program. A flusso spento o in errore, lo sfondo diventa nero e il colore passa alla cornice del fotogramma.
 
 Il Programma è un **monitor locale dei frame consegnati al SDK NDI**, non un ricevitore NDI o un ritorno da WATCHOUT: non verifica perdita di rete, connessione del ricevitore, decodifica o compositing sul server. Per confermare l'uscita finale serve controllare WATCHOUT. I due monitor usano gli stessi confini del fotogramma e nessuna guida viene trasmessa.
 
@@ -281,7 +284,7 @@ Build dalla cartella progetto con PowerShell: `./build.ps1`. Test runtime opzion
 
 La versione dell'ultima build applicativa riuscita è in `VERSION`: ogni esecuzione riuscita di `build.ps1`, inclusa quella richiamata dall'installer, incrementa automaticamente la patch dopo i test, salvo `--no-bump`, che usa la versione corrente senza modificare il file. Con `build-release.ps1` è possibile scegliere `--minor` o `--major`, che azzerano rispettivamente patch o minor e patch; `--patch` è il valore predefinito. `--no-bump` è mutuamente esclusivo con queste opzioni. L'app e l'installer riportano la stessa versione. Se i test o la compilazione falliscono, `VERSION` non cambia; se invece fallisce solo la successiva creazione dell'installer, la build applicativa riuscita ha già incrementato la versione. Per condividere il numero occorre committare `VERSION`: la CI non crea commit e checkout separati possono produrre lo stesso numero. `-SkipBuild` crea l'installer senza incrementare e richiede un eseguibile corrispondente a `VERSION`.
 
-Limiti: nessun file watcher; scansione cartelle e decodifica dell'immagine selezionata sulla UI, miniature in sottofondo; composizione e dissolvenze delle immagini statiche con Direct3D 11 (fallback GDI+) in spazio dei valori sRGB, nessuna gestione colore ICC professionale, nessuna garanzia realtime. I file molto grandi possono rallentare la UI e il monitor locale. Il sender invia continuamente anche immagini statiche; errori NDI visibili nello stato, nessuna riconnessione automatica. Audio locale opzionale WDM/WASAPI e ASIO; nessun audio incorporato nei flussi NDI. Un'istanza per processo.
+Il monitoraggio della cartella segnala le modifiche e **Aggiorna** ripete la scansione. La scansione e la decodifica dell'immagine selezionata avvengono sulla UI. Le miniature vengono generate in sottofondo. Composizione e dissolvenze delle immagini statiche lavorano sui valori sRGB con Direct3D 11 o GDI+, senza gestione colore ICC professionale. I file molto grandi possono rallentare la UI e il monitor locale. Le prestazioni realtime dipendono dall'hardware. Il sender invia continuamente anche le immagini statiche e segnala gli errori NDI nello stato. La riconnessione è manuale. L'audio WDM/WASAPI o ASIO esce in locale. L'app usa un'istanza per processo.
 
 ## GitHub e più postazioni
 
@@ -301,4 +304,4 @@ Per ricostruire, scarica il [redistributable ufficiale](https://downloads.ndi.tv
 
 Runtime verificato: versione 6.4.0.2, firma Authenticode valida Vizrt AG, SHA-256 `5972CCA54649039318FF5F167FD9940270CAFC09678B01E0C35695382270A144`. Se NDI aggiorna il download, la build si ferma: verificare firma/versione e aggiornare il pin prima di ricostruire.
 
-Verifiche effettuate: compilazione installer con runtime incorporato e 346 test applicativi, incluso sender NDI reale sulla postazione di sviluppo. Non è stata eseguita un'installazione/disinstallazione su Windows pulito: prima della distribuzione operativa verificare il setup su una macchina di prova senza NDI Tools, inclusi annullamento licenza, avvio, clear e disinstallazione. Le prove WATCHOUT restano quelle indicate sopra.
+Per la 0.13.16 è stato generato l'installer con runtime incorporato. La suite della build locale ha superato 439 test con `./bin/Tests.exe --ndi`, incluso l'invio con il runtime NDI reale. Restano da verificare l'installazione e la disinstallazione su Windows pulito e il playout sull'impianto WATCHOUT.
