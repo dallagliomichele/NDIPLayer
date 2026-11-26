@@ -6,6 +6,9 @@ using System.Windows.Forms;
 namespace ImageNdi {
 internal sealed class BrowserListView:ListView {
  const int LeftButtonDown=0x0201,GetItemState=0x102C,SelectedState=0x0002;
+ const int PaintMessage=0x000F,NonClientPaint=0x0085,WindowPositionChanged=0x0047,VerticalScroll=0x0115,
+  MouseWheelMessage=0x020A,ScrollList=0x1014,SettingsChanged=0x001A;
+ internal event Action ScrollLayoutChanged;
  [System.Runtime.InteropServices.DllImport("user32.dll")]
  static extern IntPtr SendMessage(IntPtr handle,int message,IntPtr index,IntPtr mask);
  // Query the native selection without retrieving the virtual item again.
@@ -18,6 +21,12 @@ internal sealed class BrowserListView:ListView {
    if(BeforeLeftClick(new System.Drawing.Point((short)point,(short)(point>>16))))return;
   }
   base.WndProc(ref message);
+  switch(message.Msg){
+   case PaintMessage:case NonClientPaint:case WindowPositionChanged:case VerticalScroll:
+   case MouseWheelMessage:case ScrollList:case SettingsChanged:
+    if(ScrollLayoutChanged!=null)ScrollLayoutChanged();
+    break;
+  }
  }
  protected override bool ProcessCmdKey(ref Message message,Keys key){if(Navigation!=null&&Navigation(key))return true;return base.ProcessCmdKey(ref message,key);}
 }

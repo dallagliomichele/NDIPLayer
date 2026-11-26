@@ -53,6 +53,7 @@ public sealed partial class LibraryBrowser:UserControl {
 
   var manual=new Button{Text="Ordine manuale",AutoSize=true};manual.Click+=delegate{RestoreManualOrder();};bar.Controls.Add(manual);view.Navigation=NavigateKey;view.BeforeLeftClick=BeforeLibraryClick;view.ColumnClick+=delegate(object sender,ColumnClickEventArgs e){SortByColumn(e.Column);};
   Controls.Add(view);Controls.Add(bar);
+  var scrollBar=new LibraryScrollBar(view);Controls.Add(scrollBar);scrollBar.BringToFront();
   view.Columns.Add("Immagine",180);view.Columns.Add("Numero",75);view.Columns.Add("Stato",170);view.Columns.Add("Percorso",400);view.View=View.Details;view.FullRowSelect=true;
   view.ContextMenuStrip=imageMenu;
   view.MouseDown+=delegate(object sender,MouseEventArgs e){if(e.Button!=MouseButtons.Right)return;var hit=view.HitTest(e.Location);contextOutside=hit.Item==null;contextPath=contextOutside?null:paths[hit.Item.Index];if(hit.Item==null)return;if(allSelected&&hit.Item.Selected)return;allSelected=false;if(!hit.Item.Selected){view.SelectedIndices.Clear();view.SelectedIndices.Add(hit.Item.Index);}hit.Item.Focused=true;if(SelectionChanged!=null)SelectionChanged(this,EventArgs.Empty);};

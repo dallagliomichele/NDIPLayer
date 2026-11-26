@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -100,9 +101,10 @@ public partial class MainWindow {
   foreach(ToolStripItem item in sourceFolders.Items.Cast<ToolStripItem>().ToArray())item.Dispose();
   sourceFolders.Items.Clear();
   sourceFolders.Items.Add("Sfoglia…",null,delegate{
-   using(var dialog=new FolderBrowserDialog{SelectedPath=settings.Root??""}){
-    if(dialog.ShowDialog(this)==DialogResult.OK)ApplySourceFolder(dialog.SelectedPath,relocate);
-   }
+   string folder;
+   try{folder=ExplorerFolderDialog.Pick(Handle,relocate?"Ricollega cartella":"Apri cartella",settings.Root);}
+   catch(COMException error){status.Text="Impossibile aprire il selettore cartelle ("+error.ErrorCode.ToString("X8")+").";return;}
+   if(folder!=null)ApplySourceFolder(folder,relocate);
   });
   sourceFolders.Items.Add(new ToolStripSeparator());
   var favorites=FavoriteFolders;

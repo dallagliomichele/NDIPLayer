@@ -9,3 +9,5 @@
 ## Da verificare sul sistema reale
 
 - [ ] Riprodurre il timeout Companion con l'istanza reale e raccogliere stato/log: il modulo implementa la riconnessione automatica e i test simulati la coprono, ma il timeout segnalato non è stato riprodotto nell'integrazione reale.
+- [ ] cliccare su una voce dell'elenco, cambiare un parametro o zoommare un asset in preview innesca il refresh della lista
+

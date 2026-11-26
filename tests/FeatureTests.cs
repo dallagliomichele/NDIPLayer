@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using ImageNdi;
@@ -51,6 +53,7 @@ static class FeatureTests {
     rect=list.GetItemRect(0,ItemBoundsPortion.Label);doubleClick.Invoke(list,new object[]{new MouseEventArgs(MouseButtons.Left,2,rect.Left+2,rect.Top+2,0)});check(activated==2,"doppio clic elenco attiva immagine");
     browser.SetFiles(new List<string>());check(browser.SelectedPath==null&&browser.Count==0,"cartella vuota rimuove selezione precedente");
    }
+   CheckLibraryScrollBar(dir,check);
   }finally{Directory.Delete(dir,true);}
   string catalog=Path.Combine(Path.GetTempPath(),"NDIPlayer-filter-"+Guid.NewGuid());Directory.CreateDirectory(catalog);
   try{
@@ -75,6 +78,43 @@ static class FeatureTests {
   string preferences=Path.Combine(Path.GetTempPath(),"NDIPlayer-name-"+Guid.NewGuid()+".json");
   try{File.WriteAllText(preferences,serializer.Serialize(saved));using(var window=new MainWindow(preferences)){var fields=window.Controls.Find("NdiChannelName",true);check(fields.Length==1&&fields[0].Text=="Regia È 1","campo nome canale caricato nell'interfaccia");}}
   finally{File.Delete(preferences);}
+ }
+ [DllImport("user32.dll")]
+ static extern IntPtr SendMessage(IntPtr window,int message,IntPtr wParam,IntPtr lParam);
+ static void CheckLibraryScrollBar(string dir,Action<bool,string> check){
+  if(SystemInformation.HighContrast)return;
+  const int leftButtonDown=0x0201,leftButtonUp=0x0202,mouseMove=0x0200;
+  using(var form=new Form{ShowInTaskbar=false,StartPosition=FormStartPosition.Manual,Location=new Point(-3000,-3000),ClientSize=new Size(500,380)})
+  using(var browser=new LibraryBrowser{Dock=DockStyle.Fill}){
+   form.Controls.Add(browser);
+   form.Show();
+   var list=browser.Controls.OfType<ListView>().Single();
+   var bar=browser.Controls.OfType<LibraryScrollBar>().Single();
+   var assets=Enumerable.Range(0,100).Select(i=>Path.Combine(dir,"asset-"+i+".png")).ToList();
+   foreach(bool thumbnails in new[]{false,true}){
+    browser.SetPreferences(thumbnails,96);
+    browser.SetFiles(assets);
+    Application.DoEvents();
+    string mode=thumbnails?"Miniature":"Elenco";
+    check(bar.Visible&&bar.Right<=list.Right&&bar.Left>=list.Left+list.ClientSize.Width,
+     mode+": la barra copre il margine nativo");
+    int x=bar.Width/2;
+    SendMessage(bar.Handle,leftButtonDown,(IntPtr)1,(IntPtr)((bar.Height-2)<<16|x));
+    SendMessage(bar.Handle,leftButtonUp,IntPtr.Zero,(IntPtr)((bar.Height-2)<<16|x));
+    check(list.GetItemRect(0).Top<0&&browser.SelectedPath==assets[0],mode+": il clic scorre di una pagina e conserva la selezione");
+    check(browser.SelectPath(assets[assets.Count-1]),mode+": richiamo dell'ultimo asset");
+    Application.DoEvents();
+    int bottomThumb=bar.Height-Math.Max(1,bar.Width/6)-2;
+    SendMessage(bar.Handle,leftButtonDown,(IntPtr)1,(IntPtr)(bottomThumb<<16|x));
+    SendMessage(bar.Handle,mouseMove,(IntPtr)1,(IntPtr)x);
+    SendMessage(bar.Handle,leftButtonUp,IntPtr.Zero,(IntPtr)x);
+    check(list.GetItemRect(0).Bottom>0&&browser.SelectedPath==assets[assets.Count-1],
+     mode+": il cursore segue il richiamo e torna in cima con il trascinamento");
+    browser.SetFiles(new List<string>{assets[0]});
+    Application.DoEvents();
+    check(!bar.Visible,mode+": la barra sparisce quando il contenuto rientra");
+   }
+  }
  }
  sealed class ControlledSender:IVideoSender {
   public readonly AutoResetEvent Entered=new AutoResetEvent(false),Allow=new AutoResetEvent(false);volatile bool released;

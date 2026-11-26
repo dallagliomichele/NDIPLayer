@@ -33,6 +33,8 @@ GUI - UX
 - [x] segnaliamo nell'elenco dei media se il media è un video con una leggerissima evidenziazione grigia nella riga
 - [x] spostiamo i tasti pausa e rewind in basso a sinistra nei riquadri e facciamoli comparire solo se il media è un video, i VUmeter vanno a tutta altezza, leggermente ridotti in larghezza. 
 - [x] nella preview, accanto alla risoluzione, nel caso di un video aggiungiamo la durata
+- inseriamo un indicazione degli FPS per renderci conto di eventuali affaticamenti della riproduzione
+- [ ] stringiamo lo spazio tra i tasti del blocco e il cmapo cerca
 
 
 Documentazione
