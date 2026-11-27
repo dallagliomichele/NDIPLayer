@@ -13,6 +13,13 @@ static class ProjectTests {
  static object Get(object target,string field){return typeof(MainWindow).GetField(field,BindingFlags.Instance|BindingFlags.NonPublic).GetValue(target);}
  static void Set(object target,string field,object value){typeof(MainWindow).GetField(field,BindingFlags.Instance|BindingFlags.NonPublic).SetValue(target,value);}
  static object Call(object target,string method,params object[] args){return typeof(MainWindow).GetMethod(method,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(target,args);}
+ static bool WaitForSentPhoto(Playout output, string path, long afterSequence){
+  return SpinWait.SpinUntil(()=>{
+   var sent = output.ReadOnAirStatus();
+   return sent.Sequence > afterSequence && !sent.Transitioning &&
+          sent.Paths.Length == 1 && sent.Paths[0] == path;
+  }, 2000);
+ }
  public static void Run(Action<bool,string> check){
   var placement=new WindowPreferences{MonitorLayout="same",Bounds=new System.Drawing.Rectangle(-1800,100,1400,800),Maximized=true};check(WindowPlacement.CanRestore(placement,"same")&&!WindowPlacement.CanRestore(placement,"changed"),"posizione finestra ripristinata solo con stessa configurazione monitor");check(!WindowPlacement.CanRestore(new WindowPreferences(),"same"),"vecchie preferenze finestra senza geometria mantengono apertura predefinita");check(WindowPlacement.VisibleBounds(placement.Bounds,new System.Drawing.Rectangle(-1920,0,1920,1080))==placement.Bounds,"coordinate negative su monitor secondario conservate");check(WindowPlacement.VisibleBounds(new System.Drawing.Rectangle(4000,3000,1600,900),new System.Drawing.Rectangle(0,0,1280,720))==new System.Drawing.Rectangle(0,0,1280,720),"posizione non visibile e dimensioni eccessive ricondotte allo schermo");
   string dir=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"project-test-"+Guid.NewGuid());Directory.CreateDirectory(dir);
@@ -83,9 +90,17 @@ static class ProjectTests {
      check((bool)Call(window,"Cue",false)&&output.TargetPath==paths[0]&&browser.SelectedPath==paths[7],"invii consecutivi scambiano i due media");
      ((CheckBox)Get(window,"swap")).Checked=false;check((bool)Call(window,"Cue",false)&&output.TargetPath==paths[7]&&browser.SelectedPath==paths[7],"swap disattivato conserva Preview");
      check(ProjectStore.Read(project).Swap,"swap predefinito salvato nel progetto");
-     output.Cue(new byte[128*72*4],0,paths[0]);SpinWait.SpinUntil(()=>output.ReadOnAirStatus().Paths.SequenceEqual(new[]{paths[0]}),2000);
+     // Foto 00 era già in onda: prima del richiamo deve essere arrivata Foto 07.
+     check(WaitForSentPhoto(output, paths[7], output.ReadOnAirStatus().Sequence),
+           "Foto 07 è stata trasmessa prima del richiamo di Foto 00");
+     long beforeRecall = output.ReadOnAirStatus().Sequence;
+     output.Cue(new byte[128*72*4], 0, paths[0]);
+     check(WaitForSentPhoto(output, paths[0], beforeRecall),
+           "il richiamo di Foto 00 ha trasmesso un nuovo frame prima del cambio progetto");
      var loaded=ProjectStore.Read(project);loaded.OutputWidth=1920;loaded.OutputHeight=1080;loaded.ChannelName="Altro canale";Call(window,"ApplyProject",loaded,project);
-     check(Object.ReferenceEquals(Get(window,"output"),output)&&output.ReadOnAirStatus().Paths.SequenceEqual(new[]{paths[0]})&&loaded.OutputWidth==1920,"caricare progetto con altro formato conserva sender e immagine in onda");
+     check(Object.ReferenceEquals(Get(window,"output"), output), "il cambio progetto conserva il sender Program");
+     check(output.ReadOnAirStatus().Paths.SequenceEqual(new[]{paths[0]}), "il cambio progetto conserva Foto 00 in onda");
+     check(loaded.OutputWidth == 1920 && loaded.OutputHeight == 1080, "il progetto caricato conserva il formato 1920x1080");
      check((int)typeof(MainWindow).GetProperty("FrameWidth",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(window,null)==128,"preview usa dimensione attiva mentre formato nuovo è differito");
     }finally{Set(window,"output",null);output.Dispose();}
    }
